@@ -1,0 +1,410 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div>
+        <img src="#d15d756ff84cfd033c3efe7f4e9ec07b76e931a4b49f783751aaf9a5b70ab88d@207168743:eos" alt="SavAct Logo">
+        <div class="bigtext">Be part of SavAct</div>
+    </div>
+    <hr>
+    <div class="bigtext">Free Speech</div>
+    <select name="lang" id="lang-select" onchange="showContent(this.options[this.selectedIndex].value)">
+        <option value="ar">ar - العربية</option>
+        <option value="de">de - Deutsch</option>
+        <option value="en" selected>en - English</option>
+        <option value="es">es - Español</option>
+        <option value="fa">fa - فارسی</option>
+        <option value="fr">fr - Français</option>
+        <option value="hi">hi - हिन्दी</option>
+        <option value="ja">ja - 日本語</option>
+        <option value="pt">pt - Português</option>
+        <option value="ru">ru - Русский</option>
+        <option value="tr">tr - Türkçe</option>
+        <option value="ur">ur - اردو</option>
+        <option value="zh">zh - 简体中文</option>
+    </select>
+    <div id="content">
+            <p>We – all human beings – must be free and able to express ourselves, and to seek, receive and impart information and ideas, regardless of frontiers.</p>
+            <p>We neither make threats of violence nor accept violent intimidation.</p>
+            <p>We allow no taboos against and seize every chance for the spread of knowledge.</p>
+            <p>We require uncensored, diverse, trustworthy media so we can make well-informed decisions and participate fully in political life.</p>
+            <p>We express ourselves openly and with robust civility about all kinds of human difference.</p>
+            <p>We respect the believer but not necessarily the content of the belief.</p>
+            <p>We must be able to protect our privacy and to counter slurs on our reputations, but not prevent scrutiny that is in the public interest.</p>
+            <p>We must be empowered to challenge all limits to freedom of information justified on such grounds as national security.</p>
+            <p>We defend the internet and other systems of communication against illegitimate encroachments by both public and private powers.</p>
+            <p>We decide for ourselves and face the consequences.</p>
+    </div>
+    <hr>
+
+<template id="ar">
+        <p>يجب أن نكون –جميع البشر- أحراراً وقادرين على التعبير عن أنفسنا، وعلى طلب، تلقي ونقل المعلومات والأفكار دونما اعتبار للحدود</p>
+        <p>لا نطلق تهديدات بالعنف ولا نقبل الترهيب بالعنف</p>
+        <p>نغتم كل فرصة لنشر المعرفة ولا نسمح بأية محرمات تقف في طريقها</p>
+        <p>نطالب بإعلام غير خاضع للرقابة، متعدد، وموثوق لأجل أن يمكننا صناعة قرارات عليمة ونشارك بشكل كامل في الحياة السياسية</p>
+        <p>نعبر عن أنفسنا بشكل حر وبقدر عال من الكياسة بخصوص جميع أنواع الاختلاف بين البشر</p>
+        <p>نحترم المؤمن لكن ليس بالضرورة مضمون العقيدة</p>
+        <p>يجب أن نكون قادرين على حماية خصوصيتنا ومجابهة الافتراءات على سمعتنا، دون أن نمنع الفحص الدقيق الذي يعد مصلحة عامة</p>
+        <p>يجب أن نكون متمكنين بما يكفي لتحدي كل القيود على حرية المعلومات والتي تبرر بناء على أسس من شاكلة الأمن القومي</p>
+        <p>ندافع عن الإنترنت وغيرها من أنظمة التواصل ضد كل تجاوز غير مشروع من قبل كل من القوى الخاصة والعامة</p>
+        <p>نصنع قراراتنا بأنفسنا، ونواجه التبعات</p>
+</template>
+
+<template id="en">
+        <p>We – all human beings – must be free and able to express ourselves, and to seek, receive and impart information and ideas, regardless of frontiers.</p>
+        <p>We neither make threats of violence nor accept violent intimidation.</p>
+        <p>We allow no taboos against and seize every chance for the spread of knowledge.</p>
+        <p>We require uncensored, diverse, trustworthy media so we can make well-informed decisions and participate fully in political life.</p>
+        <p>We express ourselves openly and with robust civility about all kinds of human difference.</p>
+        <p>We respect the believer but not necessarily the content of the belief.</p>
+        <p>We must be able to protect our privacy and to counter slurs on our reputations, but not prevent scrutiny that is in the public interest.</p>
+        <p>We must be empowered to challenge all limits to freedom of information justified on such grounds as national security.</p>
+        <p>We defend the internet and other systems of communication against illegitimate encroachments by both public and private powers.</p>
+        <p>We decide for ourselves and face the consequences.</p>
+</template>
+
+<template id="de">
+        <p>Alle Menschen müssen in der Lage und befähigt sein, frei ihre Meinung zu äußern und ohne Rücksicht auf Grenzen, Informationen und Ideen zu suchen, zu empfangen und mitzuteilen.</p>
+        <p>Weder drohen wir mit Gewalt noch akzeptieren wir gewaltsame Einschüchterung.</p>
+        <p>Wir nutzen jede Chance, Wissen zu verbreiten und tolerieren hierbei keine Tabus.</p>
+        <p>Wir benötigen unzensierte, vielfältige und vertrauenswürdige Medien, um gut informiert Entscheidungen zu treffen und vollständig am öffentlichen Leben teilzuhaben.</p>
+        <p>Wir sprechen offen und mit robuster Zivilität über alle Arten von Unterschieden zwischen Menschen.</p>
+        <p>Wir respektieren alle Gläubigen, aber nicht unbedingt alle Glaubensinhalte.</p>
+        <p>Wir sollten unsere Privatsphäre schützen und Rufschädigungen entgegentreten können. Jedoch sollten wir auch Einschränkungen der Privatsphäre akzeptieren, sofern dies im öffentlichen Interesse ist.</p>
+        <p>Wir müssen ermächtigt werden, Einschränkungen der Informationsfreiheit zu hinterfragen, die etwa mit dem Schutz der nationalen Sicherheit begründet werden.</p>
+        <p>Wir verteidigen das Internet und andere Kommunikationsmittel gegen illegitime Eingriffe durch öffentliche und private Mächte.</p>
+        <p>Wir treffen unsere eigenen Entscheidungen und tragen dafür die Konsequenzen.</p>
+</template>
+
+<template id="es">
+        <p>Nosotros - todos los seres humanos - debemos ser libres y capaces de expresarnos, y de buscar, recibir y de comunicar información e ideas, sin importar las fronteras.</p>
+        <p>Nosotros ni amenazamos con violencia y aceptamos la intimidación violenta.</p>
+        <p>No permitimos ningún tabú en contra de y aprovechamos todas las oportunidades para la difusión del conocimiento.</p>
+        <p>Nosotros requerimos medios de comunicación sin censura, confiables y diversos para que podamos tomar decisiones bien informadas y participar de forma completa en la vida política.</p>
+        <p>Nosotros nos expresamos abiertamente y con robusta civilidad sobre todo tipo de diferencias humanas.</p>
+        <p>Nosotros respetamos al creyente pero no necesariamente el contenido de la creencia.</p>
+        <p>Nosotros debemos poder ser capaces de proteger nuestra privacidad y enfrentar difamaciones a nuestras reputaciones, pero no evitar el escrutinio que es parte del interés público.</p>
+        <p>Nosotros debemos estar empoderados para retar todos los límites a la libertad de acceso a la información justificados en argumentos como la seguridad nacional.</p>
+        <p>Nosotros defendemos el internet y los otros sistemas de comunicación y rechazamos las invasiones ilegítimas tanto por parte de los poderes públicos como de los privados.</p>
+        <p>Decidimos por nosotros mismos y nos enfrentamos a las consecuencias.</p>
+</template>
+<template id="fa">
+        <p>ما انسانها همه باید ازاد باشیم و بتوانیم ازادانه افکار و عقاید و نظراتمان را بیان کنیم وعلیرغم حدومرزها بتوانیم اطلاعات را پیگیری, دریافت و ابلاغ نماییم</p>
+        <p>ما تهدید به خشونت و زورنمیکنیم و ارعاب جابرانه را نمیپذیریم</p>
+        <p>ما هیچ منع و تحریمی را نمیپذیریم و هرفرصتی را برای بسط و گسترش اطلاعات و دانش غنیمت میشماریم</p>
+        <p>ما برای تصمیم گیریهای روشن بینانه ومشارکت کامل در زندگی سیاسی به وسایط ارتباط جمعی سانسورنشده ,متنوع و موثق و قابل اعتماد نیاز داریم</p>
+        <p>ما صریح و بی پرده و البته با احترام قاطع به تمام تفاوت های انسانی , اعتقادات و نظراتمان را بیان میکنیم</p>
+        <p>ما به افراد معتقد و ایماندارو نه لزوما محتوی دین و ایمانشان احترام میگذاریم</p>
+        <p>ما باید بتوانیم حریم شخصی مان را حفظ کنیم و با هر تهمت و افترا علیه شهرت و اعتبارمان مقابله کنیم ,اما نه با ممانعت از تحقیق و بررسی هایی که به نفع عموم است</p>
+        <p>ما باید قدرت و اختیار تغییر همه محدودیتهای ازادی اطلاعات در زمینه امنیت ملی را داشته باشیم</p>
+        <p>ما با هر دو قدرت عمومی و خصوصی ازاینترنت و سایر سیستم های ارتباطاتی در برابر تعدی و تجاوز غیرقانونی دفاع میکنیم</p>
+        <p>ما خودمان برای خویش تصمیم میگیریم و عواقب ان را نیز می پذیریم</p>
+</template>
+<template id="fr">
+        <p>Nous tous, êtres humains, devons être libres et pouvoir nous exprimer, rechercher, recevoir et émettre des informations et des idées, au-delà des frontières.</p>
+        <p>Nous ne proférerons pas de menaces de violence ni n’acceptons les intimidations violentes.</p>
+        <p>Nous n’acceptons aucune forme de tabous et saisissons toutes les chances qui vont dans le sens du partage de la connaissance.</p>
+        <p>Nous exigeons des médias non-censurés, divers et dignes de confiance, de manière à pouvoir prendre des décisions bien informées et participer réellement à la vie politique.</p>
+        <p>Nous nous exprimons ouvertement et avec un respect inébranlable pour toutes les différences humaines.</p>
+        <p>Nous respectons le croyant mais pas nécessairement le contenu de la croyance.</p>
+        <p>Nous devons êtres capables de protéger notre vie privée et riposter si nos réputations sont attaquées mais ne devons pas empêcher une inquisition quand elle est d’intérêt public.</p>
+        <p>Nous devons nous sentir autorisés à remettre en question toute limite à la liberté d’information, y compris quand il est question de sécurité nationale.</p>
+        <p>Nous défendons Internet ainsi que les autres systèmes de communication contre toute atteinte illégitime de la part de pouvoirs privés ou publics.</p>
+        <p>Nous décidons pour nous-mêmes et en assumons les conséquences.</p>
+</template>
+<template id="hi">
+        <p>बिना किसी भी बाधाओं के सभी मनुष्य को अपने विचार प्रकट करने की तथा विचारो के आदान-प्रदान और उसे प्रसारित करने की पूरी आजादी है</p>
+        <p>हम न हिंसा की धमकी देते है ना ही उसे स्वीकार करते है</p>
+        <p>हम ज्ञान के विस्तार के लिए प्रतिबद्ध है और किसी भी प्रकार की बंदिश के खिलाफ</p>
+        <p>राजनीतिक क्षेत्र में प्रभावी भागीदारी और सूचित निर्णय लेने के लिए विविध, भरोसेमंद तथा स्वतंत्र मीङिया आवश्यक है</p>
+        <p>हम सभी प्रकार के विविधताओं के बारे में सभ्य तरीके से और खुले तौर पर खुद को व्यक्त करते है</p>
+        <p>हम सभी धर्म का सम्मान करते है भले ही हम उनके विचारों से सहमत न हो</p>
+        <p>हम सब को निजता का अधिकार है और अपने प्रतिष्ठा पर लगे आरोपों का जवाब देने के लिए हम सक्षम हैं, लेकिन सार्वजनिक हित के लिए किसी भी समीक्षा से परहेज नहीं करेंगे</p>
+        <p>हमें राष्ट्रीय सुरक्षा के आधार पर सूचना की स्वतंत्रता पर लगे हर बंदिश को चुनौती देने में सक्षम होना चाहिए</p>
+        <p>हमें इंटरनेट और संचार के अन्य माध्यमों को निजी और सार्वजनिक शक्तियों के नाजायज़ अतिक्रमण से बचाये रखना होगा</p>
+        <p>हम अपने निर्णय खुद लेते है और उसके परिणाम स्वरूप किसी भी परिस्थिति के लिए तैयार रहेंगे</p>
+</template>
+<template id="ja">
+        <p>我々人類は、いかなる国においても、自由であり、我々自身を表現し、情報やアイディアを欲求し、受領し、そして伝達することが許されるべきである。</p>
+        <p>我々は暴力によって人々を威嚇するべきではなく、暴力的な脅迫を受けるべきではない。</p>
+        <p>我々は知識を広げるいかなる機会に対するタブーを許さず、またその機会を保持している。</p>
+        <p>我々は十分に情報を得た上で意思決定を行い、政治生活に参加するため、情報コントロールされていない、多様で信憑性のあるメディアを必要としている。</p>
+        <p>我々は自らを自由に表現し、人間のいかなる多様性について敬意を払うべきである。</p>
+        <p>我々は、信仰者は尊重するが、必ずしも信仰の内容自体を尊重するものではない。</p>
+        <p>我々は、自らのプライバシーを守り名誉毀損に反駁することができる一方で、それが公益に関わる場合、プライバシーに関する吟味を妨げることはできない。</p>
+        <p>我々は、国家安全保障のような口実をもとに正当化される、情報の自由に対するあらゆる制限に異議を唱える権限を与えられるべきである。</p>
+        <p>我々は、公権力と私的権力による違法な侵害から、インターネットやその他のコミュニケーション・システムを守る。</p>
+        <p>我々は、我々自身のために決断を下し、結果を受けとめる。</p>
+</template>
+<template id="pt">
+        <p>Nós - todos os humanos - devemos ser livres e capazes de nos expressar, buscar, receber e transmitir informações e ideias, independentemente das fronteiras.</p>
+        <p>Nós não fazemos ameaças nem aceitamos intimidações violentas.</p>
+        <p>Nós não permitimos nenhum tabu contra o conhecimento e aproveitamos cada chance de disseminá-lo.</p>
+        <p>Nós requeremos uma mídia sem censura, diversificada e confiável para que tomemos decisões bem informadas e para que participemos da vida política integralmente.</p>
+        <p>Nós nos expressamos abertamente com imensa civilidade, sobre todos os tipos de diferenças humanas.</p>
+        <p>Nós respeitamos o crente, mas não necessariamente o conteúdo da crença.</p>
+        <p>Devemos ser capazes de proteger a nossa privacidade e conter calúnias sobre a nossa reputação, mas não evitar o escrutínio que está presente no interesse público.</p>
+        <p>Nós devemos ter o poder de desafiar todos os limites da liberdade à informação que a segurança nacional justifique.</p>
+        <p>Nós defendemos a internet e outros sistemas de comunicação contra a intervenção ilegal de ambos os poderes - público e privado.</p>
+        <p>Nós decidimos por nós próprios e encaramos as consequências.</p>
+</template>
+<template id="ru">
+        <p>Мы — все люди — должны иметь возможность свободного самовыражения, а также возможность свободно искать, получать и обмениваться информацией и идеями вне зависимости от существующих границ.</p>
+        <p>Мы не угрожаем насилием и не приемлем запугивания.</p>
+        <p>Мы пользуемся любой возможностью для распространения знаний и не приемлем никаких табу в этой области.</p>
+        <p>Мы должны иметь возможность полноценно участвовать в политической жизни и принимать решения на основе всей полноты информации. Для этого необходимы разнообразные, неподцензурные и заслуживающие доверия медиа.</p>
+        <p>Мы выражаем мнения открыто, но со всем возможным уважением к различиям между людьми.</p>
+        <p>Мы уважаем верующего, но это уважение не обязательно распространяется на содержание его религиозных убеждений.</p>
+        <p>Мы должны иметь право на охрану частной жизни и на защиту репутации, но не на противодействие расследованиям, ведущимся в интересах общества.</p>
+        <p>Мы должны иметь возможность подвергать сомнению любые ограничения свободы слова на основе таких причин как «интересы национальной безопасности»</p>
+        <p>Мы защищаем интернет и другие коммуникационные системы от незаконных посягательств со стороны как государства, так и частных компаний.</p>
+        <p>Мы сами принимаем решения и сами отвечаем за их последствия.</p>
+</template>
+<template id="tr">
+        <p>Biz – tüm insanlar – kendimizi özgürce ifade edebilmeli, bilgi ve fikirleri araştırma, erişme ve iletmekte sınır gözetmeksizin özgür olmalıyız.</p>
+        <p>Şiddet içeren herhangi bir tehditte bulunmadığımız gibi şiddet yanlısı hiçbir sindirme politikasını da kabul etmiyoruz.</p>
+        <p>Bilginin yaygınlaştırılmasına dair hiçbir tabuyu kabul etmiyor, bilgiyi yaygınlaştırmak için her fırsatı değerlendiriyoruz.</p>
+        <p>Yeterli bilgiye sahip olarak karar alabilmek ve siyasal hayata tümüyle katılabilmek için sansürsüz, çoğulcu ve güvenilir bir basın talep ediyoruz.</p>
+        <p>Her tür farklılığımıza dair kendimizi açıklık ve nezaketle ifade ediyoruz.</p>
+        <p>İnanç sahibi kişilere saygı duyuyoruz ama bu inancın içeriğine koşulsuz saygı duyduğumuz anlamına gelmiyor.</p>
+        <p>Gizliliğimizi koruyabilmeli ve itibarımızı zedeleyecek iftiralara karşı çıkabilmeliyiz, fakat kamu yararı için özel hayatımızın incelenmesine de engel olmamalıyız.</p>
+        <p>İfade özgürlüğüne yönelik ulusal güvenlik gibi sebeplerle uygulanmaya çalışılan her tür kısıtlamaya karşı çıkabilmeliyiz.</p>
+        <p>Kamusal ve özel güçlerin gayrimeşru saldırılarına karşı Internet’i ve diğer iletişim sistemlerini savunuyoruz.</p>
+        <p>Kendimiz için karar veriyoruz ve bunun sonuçlarıyla yüzleşiyoruz.</p>
+</template>
+<template id="ur">
+        <p>ہم ۔۔تمام نوعِ انسانی۔۔۔ کواپنے اظہاراور سرحدوں کی قید کے بغیرمعلومات اور تخیلات کی تلاش، وصولی اور دوسروں کو اس سے بہرہ مند کرنے کے آسانی سے قابل ہونا چاہیے</p>
+        <p>ہم نہ تشدد کی دھمکیاں دیتے ہیں اور نہ ہی پر تشدد ڈراوے کوقبول کرتے ہیں۔</p>
+        <p>ہم ممنوع چیزوں کی اجازت نہیں دیتے اور علم کے پھیلاؤ کے ہر موقع کو پکڑتے ہیں</p>
+        <p>ہمیں بغیر پابندی کے، مختلف النوع اور با اعتمادمیڈیا چا ہیےتا کہ ہم باخبر فیصلے کر سکیں اور سیاسی زندگی میں بھرپور حصہ لے سکیں۔</p>
+        <p>ہم انسانی اختلاف کی ہر قسم کے بارے اپنے آپ کا کھلے انداز میں اورصحت مند تہذیب کے ساتھ اظہار کرتے ہیں۔</p>
+        <p>ہم ایمان والے کی عزت کرتے ہیں لیکن ضروری نہیں کہ عقیدے میں موجود مواد کی بھی۔</p>
+        <p>ہمیں اپنے حقِ پوشیدگی کو محفوظ رکھنا چاہیے اور اپنی شہرت پر لگنے والی تہمت کا مقابلہ کرنا چاہیے لیکن عوامی مفاد میں ہونے والی کوپڑتال کو منع نہیں کرنا چاہیے۔</p>
+        <p>ہمیں ایسی بنیادوں جیسا کہ قومی تحفظ کے جواز کی وجہ سے معلومات کی آزادی پر لگنے والی پابندیوں کو للکارنے کے لیے مجاز ہونا چاہیے۔</p>
+        <p>ہم دونوں سرکاری و غیر سرکاری طاقتوں کی طرف سےناجائز مداخلت کے خلاف انٹرنیٹ و دیگر ذرائع ابلاغ کے نظاموں کا دفاع کرتے ہیں۔</p>
+        <p>ہم اپنے لیے خود فیصلے کرتے ہیں اور ان کے نتائج کا سامنا کرتے ہیں</p>
+</template>
+<template id="zh">
+        <p>无分国界，我们所有人都应该有自由、有能力发表意见，并且寻求、接受和传播各种信息和思想。</p>
+        <p>我们既不以武力威胁他人，也不接受武力恐吓。</p>
+        <p>我们不允许为知识的传播设置禁区，并且抓住一切机会传播知识。</p>
+        <p>我们需要不受审查的、多元的、值得信赖的媒体，这样才能掌握全面的信息，做出判断，进而充分地参与政治生活。</p>
+        <p>我们应当以开放和文明的态度讨论人与人之间的差异。</p>
+        <p>我们尊重有信仰的人，但不一定尊重他们信仰的内容。</p>
+        <p>我们应当有能力驳斥对我们声誉的诋毁，但不应妨碍出于公共利益的调查。</p>
+        <p>我们必须被赋予权利来挑战以国家安全等理由对信息自由所做的一切限制。</p>
+        <p>我们捍卫互联网和其他各种通讯方式，使其免受公共和私人势力的非法侵害。</p>
+        <p>我们自主地做出决定，并承担决定的后果。</p>
+</template>
+<div class="italic">Originally published on Free Speech Debate <a href="https://www.freespeechdebate.com">www.freespeechdebate.com</a>. Free Speech Debate is a research project of the Dahrendorf Programme for the Study of Freedom at St Antony's College in the University of Oxford.</div>
+<p></p>
+
+
+</body>
+</html>
+<script type="text/javascript">
+    // Get browser language
+    let userLang = navigator.language || navigator.userLanguage
+    if(userLang.length > 2){
+        userLang = userLang.substr(0, 2)
+    }
+    
+    // Set text language
+    let select = document.getElementById('lang-select')
+    let content = document.getElementById('content')
+    function showContent(value) {
+        content.innerHTML = document.getElementById(value).innerHTML
+    }
+    if(document.getElementById(userLang) != null){
+        select.value = userLang
+        showContent(userLang)
+    }
+</script>
+
+<script type="text/javascript">
+    /**
+     * Handler for communication with the SavWeb browser
+     */
+    class SavWeb {
+        idToken = ''
+        requestResult = {}
+        requestNumber = 0
+        onIni
+        /**
+         * @param onIni Function which will be executed after finishing the initialisation process
+         */
+        constructor(onIni){
+            this.onIni = onIni
+        }
+
+        /**
+         * @param event The event of a post message
+         */
+        validatePostMessage(event){
+            if(event == undefined || event.data == undefined){
+                return
+            }
+            if(event.data){
+                const data = event.data
+                if(data.SavWeb){
+                    const parentMsg = data.SavWeb
+                    if(parentMsg.idToken != undefined && parentMsg.idToken != ''){
+                        this.idToken = parentMsg.idToken
+                        console.log('SavWeb page got idToken', this.idToken)
+                    }
+                    if(typeof parentMsg.validToken == 'boolean'){
+                        if(!parentMsg.validToken){
+                            window.parent.postMessage({ SavWeb:{ go: '#savactsavact' } }, '*');
+                        }
+                    }
+                    switch(parentMsg.f) {
+                        case 'getFileResult':
+                            this.requestResult[parentMsg.id] = parentMsg.file
+                            break
+                        case 'ini':
+                            if(typeof this.onIni == 'function'){
+                                console.log('is function');
+                                this.onIni(parentMsg)
+                            }
+                            break
+                    }
+                }
+            }
+        }
+
+        /**
+         * Sleep for a defined amount of time
+         * @param ms Milliseconds to sleep
+         */
+        static sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        /**
+         * Handle a request message to the parent
+         * @param message   Content for a postMessage
+         * @param maxWaitMs Maximum amount of time to wait for the request
+         * @returns The response of the message
+         */
+        async request(message, maxWaitMs = 3000){
+            const requestId = this.requestNumber++  // Get new request id
+
+            // Set request id if defined
+            if('SavWeb' in message && 'id' in message.SavWeb && message.SavWeb.id == null){
+                message.SavWeb.id = requestId
+            }
+
+            // Send request
+            window.parent.postMessage(message, '*');
+            this.requestResult[requestId] = null
+
+            // Wait for the result but only as long as defined by wait
+            let timespan = 0
+            const interval = 100            // Check each 100 ms 
+            while(timespan < maxWaitMs && (requestId in this.requestResult) && this.requestResult[requestId] === null){
+                await SavWeb.sleep(interval)
+                timespan += interval    
+            }
+
+            // Return the result
+            if(requestId in this.requestResult && this.requestResult[requestId] !== null){
+                const r = this.requestResult[requestId]
+                this.requestResult[requestId] = undefined   // Clear the item
+                return r
+            }
+
+            // Clear the item
+            this.requestResult[requestId] = undefined
+            return undefined
+        }
+        
+        /**
+         * Get a file on blockchain
+         * @param link The address of the file
+         * @returns the file
+         */
+        async getFile(link){
+            // Send request
+            return await this.request({ 
+                SavWeb:{ 
+                    f: 'getFile',
+                    id: null,                           // With value null this parameter will be defined in request id
+                    get: link,
+                    idToken: this.idToken
+                } 
+            })
+        }
+    }
+
+    // Create a connection to the browser
+    const savWeb = new SavWeb((msg)=>{
+        console.log('Connected');
+        // Replace the src of all images
+        const allImages = document.getElementsByTagName('img')
+        for (let img of allImages) {
+            setImageSrc(img)
+        }
+    })
+
+    window.addEventListener('message', (event)=>{
+        savWeb.validatePostMessage(event)
+    }, false)
+
+    // Set source of an image if it is on blockchain
+    async function setImageSrc(img){
+        const src = img.getAttribute('src')
+        console.log('image getAttribute', src);
+        console.log('image src', img);
+        const s = src.indexOf('#')
+        if(s < 0){
+            return
+        }
+        const link = src.substr(s)
+
+        console.log(link);
+        const file = await savWeb.getFile(link)
+        console.log('file ', file);
+        if(file == undefined){
+            return undefined
+        }
+        img.src = URL.createObjectURL(file)
+        console.log('img.src: ', img.src);
+    }
+</script>
+
+<style>
+    body{
+        text-align: center;
+        background: black; 
+        color: white;
+    }
+    a:link {
+        color: rgb(0, 110, 255);
+        text-decoration: none;
+    }
+    a:visited {
+        color: rgb(105, 105, 105);
+        text-decoration: none;
+    }
+    a:hover {
+        color: rgb(0, 153, 255);
+        text-decoration: underline;
+    }
+    a:active {
+        color: rgb(0, 225, 255);
+        text-decoration: underline;
+    }
+    .bigtext{
+        font-size: 1.5em;
+    }
+    .italic{
+        font-style: italic;
+    }
+    #lang-select{
+        margin-top:5px
+    }
+</style>
