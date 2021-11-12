@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html>
+  <!--
+    WARNING! Make sure that you match all Quasar related
+    tags to the same version! (Below it's "@2.0.4")
+  -->
+
+  <head>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/npm/quasar@2.0.4/dist/quasar.prod.css" rel="stylesheet" type="text/css">
+  </head>
+
+  <body>
+    <!-- example of injection point where you write your app template -->
+    <div id="q-app" class="items-center justify-evenly">
+        <div class="q-px-md">
+
+            <div class="q-py-md row">
+                <q-fab square v-model="optionOpen" color="primary" glossy icon="keyboard_arrow_right" direction="right">
+                    <q-fab-action square external-label label-position="top" color="orange" @click="goTo(affiPage)" icon="groups" label="Affiliate"></q-fab-action>
+                    <q-fab-action square external-label label-position="top" color="secondary" @click="reset" icon="restart_alt" label="Reset"></q-fab-action>
+                    <q-fab-action square external-label label-position="top" :color="stylemode?'white':'black'" :text-color="stylemode?'black':'white'" ic @click="stylemode = !stylemode" icon="brightness_medium" label="Style"></q-fab-action>
+                </q-fab>
+                <q-linear-progress v-show="!optionOpen" class="col q-mx-md" :class="stylemode?'bg-grey-10':'bg-grey-2'" size="55px" :value="progress1" color="cyan-13" :track-color="stylemode?'grey-8':'bg-grey-4'" :buffer="progress1 > 0.8? 1 : 0.9">
+                    <div class="absolute-full flex flex-center">
+                        <q-badge color="white" text-color="blue" :label="progressLabel1"/>
+                    </div>
+                </q-linear-progress>
+                <q-btn v-show="!optionOpen" color="secondary" icon-right="update" @click="checkSaleState(5000)" rounded size="md"/>
+            </div>
+
+            <div class="text-center q-py-md">Fill in the form to participate in the SavAct Tokensale</div>
+
+            <div v-if="saleStatus">
+                <div v-if="saleStatus.frozen">
+                    This sale is paused
+                </div>
+                <div v-else-if="saleStart">
+                    This sale starts in
+                    <div class="text-h4">{{saleStart}}</div>
+                    <div class="text-subtitle2">{{saleDate}}</div>
+                    <div class="q-mt-md">Make sure to have enough {{paySymbol}} to participate.</div>
+                </div>
+                <div v-else>
+                    <q-stepper v-model="step" header-nav ref="stepper" color="primary" animated vertical>
+                        <q-step :name="1" title="Select your case" icon="account_circle" :done="done1" :header-nav="step > 1">
+                            <div class="q-gutter-lg">
+                                <div class="q-gutter-sm">
+                                <div>Do you have an {{paySymbol}} account?</div>
+                                <div class="row">
+                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="hasacc" val="true" label="yes"></q-radio>
+                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="hasacc" val="false" label="no"></q-radio>
+                                </div>
+                            </div>
+                            <div class="q-gutter-sm" v-show="hasacc === 'false'">
+                                <div>Would you also like to create a {{paySymbol}} account?</div>
+                                <div class="row">
+                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="wantacc" val="true" label="yes"></q-radio>
+                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="wantacc" val="false" label="no"></q-radio>
+                                </div>
+                            </div>
+                            <div v-show="hasacc === 'true' || wantacc">
+                                <q-input outlined v-model="username" v-if="hasacc == 'true'" :label="`Your ${paySymbol} account name`" >
+                                    <template v-slot:prepend>
+                                        <q-icon name="account_box"></q-icon>
+                                    </template>
+                                </q-input>
+                                <div v-else>
+                                    <div v-if="wantacc == 'true'" class="row q-gutter-md justify-end q-ml-xs q-mb-md">
+                                        <q-input class="col-12 col-sm" outlined v-model="username" label="Wished account name">
+                                            <template v-slot:prepend>
+                                                <q-icon name="account_box"></q-icon>
+                                            </template>
+                                        </q-input>
+                                    </div>
+                                    
+                                    <div class="row q-gutter-md justify-end q-ml-xs">
+                                        <q-input class="col-12 col-sm" outlined v-model="userkey"  :label="`Your ${paySymbol} public key`"></q-input>
+                                        <q-btn class="col-auto" glossy unelevated icon-right="help_center" label="Need a key pair" @click="createKeyDialog = true"></q-btn>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                            <q-stepper-navigation>
+                                <q-btn @click="checkStep1" color="primary" label="Continue" :disable="hasacc == '' || (hasacc === 'false' && wantacc == '')" :loading="check1Loading"></q-btn>
+                            </q-stepper-navigation>
+                        </q-step>
+
+                        <q-step :name="2" title="Purpose" icon="lightbulb" :done="done2" :header-nav="step > 2 || done2" >
+                            <div class="q-gutter-lg">
+                                <div class="q-gutter-sm">
+                                    <div>Do you want to support a specific area of SavAct with your payment?</div>
+                                    <div class="row q-mb-none">
+                                        <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="wantpurpose" val="true" label="yes"></q-radio>
+                                        <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="wantpurpose" val="false" label="no"></q-radio>
+                                    </div>
+                                </div>
+                                <div class="row justify-between" v-if="wantpurpose == 'true'">
+                                    <div class="col-12">
+                                        <q-radio v-model="specialpurpose" val="0" label="Generally for SavAct"></q-radio>
+                                    </div>
+                                    <div class="col-12">
+                                        <q-radio class="q-my-sm" v-model="specialpurpose" val="1" label="SavAct Payments (Independent fraud protection)"></q-radio>
+                                    </div>
+                                    <div class="col-12">
+                                        <q-radio class="q-my-sm" v-model="specialpurpose" val="2" label="SavAct Votings (The system to obey voteing results to get funds)"></q-radio>
+                                    </div>
+                                    <div class="col-12">
+                                        <q-radio class="q-my-sm" v-model="specialpurpose" val="3" label="SavWeb (Browser for decentralized websites)"></q-radio>
+                                    </div>
+                                    <div class="col-12">
+                                        <q-radio v-model="specialpurpose" val="4" label="SavAct Wallet App (Ergonomy and further software tools)"></q-radio>
+                                    </div>
+                                </div>
+                            </div>
+                            <q-stepper-navigation>
+                                <q-btn @click="() => { done2 = true; step = 3 }" color="primary" label="Continue" :disable="wantpurpose == ''"></q-btn>
+                                <q-btn flat @click="step = 1" color="primary" label="Back" class="q-ml-sm"></q-btn>
+                            </q-stepper-navigation>
+                        </q-step>
+                
+                        <q-step :name="3" title="Amount" icon="monetization_on" :done="done3" :header-nav="step > 3 || done3">
+                            <div class="q-gutter-lg">
+                                <q-input outlined v-model.number="payAmountPointed" type="number" label="Amount" :hint="`~${estimateToken}`">
+                                    <template v-slot:prepend>
+                                        <q-icon name="monetization_on"></q-icon>
+                                    </template>
+                                    <template v-slot:append>
+                                        <q-avatar>{{paySymbol}}</q-avatar>
+                                    </template>
+                                </q-input>
+                                <q-input outlined v-model="coupon" label="Coupon code" :hint="hascoupon && coupon.length > 0? `Added ~${estimateExtraToken}` : ''" >
+                                    <template v-slot:prepend>
+                                        <q-icon name="stars"></q-icon>
+                                    </template>
+                                    <template v-slot:after>
+                                        <q-btn round dense flat icon="control_point" @click="checkCoupon"></q-btn>
+                                    </template>
+                                </q-input>
+                            </div>
+                            <q-stepper-navigation>
+                                <q-btn @click="checkStep3" color="primary" label="Continue" :disable="payAmountPointed <= 0" :loading="check3Loading"></q-btn>
+                            </q-stepper-navigation>
+                        </q-step>
+
+                        <q-step :name="4" title="Payment" icon="account_balance" :done="done4" :header-nav="step > 4 || done4">
+                            <div class="q-gutter-md">
+                                <div class="q-gutter-sm">
+                                    <q-btn color="primary" icon="description" label="White Paper" @click="openURL('https://savact.com/wp_en.pdf')"></q-btn>
+                                    <q-btn color="secondary" icon="code" label="Token Sale Contract" @click="openURL('https://github.com/SavAct/TokenSale')"></q-btn>
+                                </div>
+                                <div class="q-gutter-sm">
+                                    <q-checkbox v-model="gtcChecked" label="I have read the SavAct White Paper and its disclaimer. I accept that no compensation can be claimed in case of losses and that the SavAct tokens are issued according to the algorithm of the SavAct Token Sale Contract."></q-checkbox>
+                                </div>
+                                <div v-show="gtcChecked">
+                                <div>
+                                <div class="row">
+                                    <div class="col-12 col-md-8">
+                                        Transaction information
+                                        <q-item clickable v-ripple :active="activePayment" active-class="bg-teal-1 text-grey-8" @click="toClipboard(usedContract)">
+                                            <q-item-section class="payitemname" side>Account</q-item-section>
+                                            <q-item-section>{{usedContract}}</q-item-section>
+                                            <q-item-section avatar>
+                                                <q-icon name="copy_all"></q-icon>
+                                            </q-item-section>
+                                        </q-item>
+                                        <q-item clickable v-ripple :active="activePayment" active-class="bg-teal-1 text-grey-8" @click="toClipboard(fund)">
+                                            <q-item-section class="payitemname" side>Amount</q-item-section>
+                                            <q-item-section>{{fund}}</q-item-section>
+                                            <q-item-section avatar>
+                                                <q-icon name="copy_all"></q-icon>
+                                            </q-item-section>
+                                        </q-item>
+                                        <q-item clickable v-ripple :active="activePayment" active-class="bg-teal-1 text-grey-8" @click="toClipboard(memo)">
+                                            <q-item-section class="payitemname" side>Memo</q-item-section>
+                                            <q-item-section class="full-width"><q-scroll-area class="q-ma-none items-center" :visible="true" style="height: 35px;"><div class="q-mt-sm items-center">{{memo}}</div></q-scroll-area></q-item-section>
+                                            <q-item-section avatar>
+                                                <q-icon name="copy_all"></q-icon>
+                                            </q-item-section>
+                                        </q-item>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                            </div>
+                            <q-stepper-navigation>
+                                <q-btn color="primary" @click="sendToFinish" label="Send" :disable="!gtcChecked"></q-btn>
+                                <q-btn flat @click="step = 3" color="primary" label="Back" class="q-ml-sm"></q-btn>
+                            </q-stepper-navigation>
+                        </q-step>
+                    </q-stepper>
+                </div>
+            </div>
+            <div v-else>
+                <q-spinner v-if="saleStatus != null" size="50px" color="primary"></q-spinner>
+                <div v-else class="text-center">Unable to connect to the sale. <a :href="browserLink + '#' +tokenContract">Click here if you are not using the SavAct App.</a></div>
+            </div>
+            <q-expansion-item expand-separator label="Check your Token amount" expand-icon="info">
+                <q-card>
+                    <q-card-section>
+                        <q-input outlined v-model="checkUser" @keydown.enter.prevent="checkUserAmount" label="Enter your used account name or public key">
+                            <template v-slot:prepend>
+                                <q-icon name="account_circle"></q-icon>
+                            </template>
+                            <template v-slot:after>
+                                <q-btn round dense flat icon="send" @click="checkUserAmount" :loading="checkUserAmountLoading"></q-btn>
+                            </template>
+                        </q-input>
+                        <div>
+                           
+                        </div>
+                        <div class="q-mt-md q-mx-lg row">
+                            <div class="col"></div>
+                            <div class="text-h6 text-green-13">{{checkedUserAmount}}</div>
+                        </div>
+                    </q-card-section>
+                </q-card>
+            </q-expansion-item>
+        </div>     
+        <template>
+            <div class="q-pa-md q-gutter-sm">
+                <q-btn label="Click me" color="primary" @click="persistent = true" />
+            
+                <q-dialog v-model="createKeyDialog" full-width persistent transition-show="scale" transition-hide="scale">
+                    <q-card class="bg-teal text-white" style="width: 300px">
+                    <q-card-section class="q-pb-none">
+                        <div class="text-h5 text-center">Generate a Key pair</div>
+                    </q-card-section>
+            
+                    <q-card-section class="q-my-none q-py-none">
+                        <div class="text-h6">Attention</div>
+                        <div>Write your private key down and keep it safe! Make sure that no other person has access to the private key. In the event of loss or misspeling your private key all funds are permanently lost and cannot be restored. The same applies to unauthorized access of third parties for example like spyware which monitors and gathers information about your computer.</div>
+                        <q-checkbox v-model="createKeyConfirmed" label="I understand and accept the risk."></q-checkbox>
+                        <div v-if="createKeyConfirmed">
+                            <q-btn class="q-mt-sm" color="primary" @click="createKeyPair" icon="rotate_left" label="New pair" size="sm"></q-btn>
+                            <div class="row">
+                                <div class="payitemname q-ma-sm">Private key</div>
+                                <div class="col-grow q-ma-sm items-center"><q-scroll-area :visible="true" style="height: 35px;">{{myPriKey}}</q-scroll-area></div>
+                                <q-icon class="q-ma-sm cursor-pointer" name="copy_all" @click="toClipboard(myPriKey)"></q-icon>
+                            </div>
+                            <div class="row">
+                                <div class="payitemname q-ma-sm">Public key</div>
+                                <div class="col-grow q-ma-sm items-center"><q-scroll-area :visible="true" style="height: 35px;">{{myPubKey}}</q-scroll-area></div>
+                                <q-icon class="q-ma-sm cursor-pointer" name="copy_all" @click="toClipboard(myPubKey)"></q-icon>
+                            </div>
+                        </div>
+                    </q-card-section>
+                    
+                    <q-card-actions align="right" class="bg-white text-primary">
+                        <q-btn flat :label="createKeyConfirmed? 'I have stored my private key safe' : 'Cancel'" v-close-popup />
+                    </q-card-actions>
+                    </q-card>
+                </q-dialog>
+            </div>
+        </template>          
+    </div>
+
+    <!-- Has to be at the end of the body tag -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quasar@2.0.4/dist/quasar.umd.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eosjs-ecc@4.0.4/lib/eosjs-ecc.min.js" integrity="sha512-dYFDmK/d9r3/NCp6toLtfkwOjSMRBaEzaGAx1tfRItC0nsI0hVLERk05iNBQR7uDNI7ludYhcBI4vUiFHdjsTQ==" crossorigin="anonymous">/* https://github.com/EOSIO/eosjs-ecc/releases */</script> 
+
+<script>
+    const usedChain = 'eos' // 'kylin' as testnet
+    const usedContract = 'savtestsale1'
+    const tokenContract = 'savtesttoken'
+    const browserLink = 'https://savact.app'
+    // const savWebLink = '#savtestsale1'
+    const gotoPageError = '#savactsavact'
+    const affiPage = '#savtestsale1/!affiliate'
+    const defaultPaySymbol = 'EOS'              // Will be requested at the start automatically
+    const defaultTokenSymbol = 'SAVACT'         // Will be requested at the start automatically
+
+class SavWeb {
+    idToken = ''
+    names /*: { [key: string]: boolean }*/ = {}
+    requestResult = {}
+    requestNumber = 0
+    onIni
+    constructor(onIni){
+        this.onIni = onIni
+    }
+
+    /**
+     * @param event The event of a post message
+     */
+    validatePostMessage(event){
+        if(event == undefined || event.data == undefined){
+            return
+        }
+        if(event.data){
+            const data = event.data // as {SavWeb: {idToken?: string, validToken?: boolean, f: string, post?: string, result?: unknown}}
+            if(data.SavWeb){
+                const parentMsg = data.SavWeb
+                if(parentMsg.idToken != undefined && parentMsg.idToken != ''){
+                    this.idToken = parentMsg.idToken
+                    // console.log('SavWeb page got idToken', this.idToken)
+                }
+                if(typeof parentMsg.validToken == 'boolean'){
+                    if(!parentMsg.validToken){
+                        window.parent.postMessage({ SavWeb:{ go: gotoPageError } }, '*');
+                    }
+                }
+                switch(parentMsg.f) {
+                    case 'eosioChainApiResult':
+                        switch(parentMsg.post){
+                            case 'get_account':
+                                // console.log('Result in SavWeb page:', parentMsg.result);
+                                // TODO: Wait for the result of a defined name
+                                const result = parentMsg.result // as {account_name: string, } 
+                                if(result == undefined){
+                                    // Set to undefined
+                                    this.setNameValueByMsgId(parentMsg.id, undefined)
+                                } else {
+                                    if('account_name' in result && result.account_name != undefined){
+                                        // console.log('found account name')
+                                        this.names[result.account_name] = true
+                                    } else {
+                                        // Set to false
+                                        this.setNameValueByMsgId(parentMsg.id, false)
+                                    }
+                                }
+                                break
+                            default: // 'get_table_rows'
+                                // console.log('Result in SavWeb page:', parentMsg.result);
+                                const resultTable = parentMsg.result
+                                if(resultTable == undefined){
+                                    // Set to undefined for no result
+                                    this.requestResult[parentMsg.id] = undefined
+                                } else {
+                                    this.requestResult[parentMsg.id] = resultTable
+                                }
+                                break
+                        }
+                        break
+                    case 'ini':
+                        // console.log('set style', this.onIni);
+                        // console.log('set style', typeof this.onIni);
+                        if(typeof this.onIni == 'function'){
+                            // console.log('is function');
+                            this.onIni(parentMsg)
+                        }
+                        break
+                }
+            }
+        }
+    }
+
+    setNameValueByMsgId(id, val){
+        for (const key in this.names) {
+            if(this.names[key] === id){
+                // console.log(`${key}: ${this.names[key]}`, val);
+                this.names[key] = false
+                break
+            }
+        }
+    }
+
+    /**
+     * Sleep for a defined amount of time
+     * @param ms Milliseconds to sleep
+     */
+    static sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Check a name if it exists
+     * @param name EOSIO account name
+     * @param maxWaitMs Maximum of milliseconds to wait
+     * @returns true if the name exists otherwise false and undefined if there is no result
+     */
+    async checkName(chain, name, maxWaitMs = 3000){
+        // If it was already tested then return it
+        if(name in this.names && typeof this.names.name == 'boolean'){
+            return this.names.name
+        }
+
+        const requestId = this.requestNumber++
+        // Request for the account
+        window.parent.postMessage({ 
+            SavWeb:{ 
+            f: 'eosioChainApi',
+            id: requestId,
+            chain,
+            post: 'get_account',
+            params: name,
+            idToken: this.idToken
+            } 
+        }, '*');
+        this.names[name] = requestId
+
+        // Wait for the result but only as long as defined by wait
+        let timespan = 0
+        const interval = 100            // Check each 100 ms 
+        while(timespan < maxWaitMs && (name in this.names) && typeof this.names[name] == 'number'){
+            await SavWeb.sleep(interval)
+            timespan += interval
+        }
+
+        // Return the result
+        if(name in this.names && typeof this.names[name] == 'boolean'){
+            return this.names[name]
+        }
+        return undefined
+    }
+
+    async request(message, maxWaitMs = 3000){
+        const requestId = this.requestNumber++  // Get new request id
+
+        // Set request id if defined
+        if('SavWeb' in message && 'id' in message.SavWeb && message.SavWeb.id == null){
+            message.SavWeb.id = requestId
+        }
+
+        // Send request
+        window.parent.postMessage(message, '*');
+        this.requestResult[requestId] = null
+
+        // Wait for the result but only as long as defined by wait
+        let timespan = 0
+        const interval = 100            // Check each 100 ms 
+        while(timespan < maxWaitMs && (requestId in this.requestResult) && this.requestResult[requestId] === null){
+            await SavWeb.sleep(interval)
+            timespan += interval
+        }
+
+        // Return the result
+        if(requestId in this.requestResult && this.requestResult[requestId] !== null){
+            const r = this.requestResult[requestId]
+            this.requestResult[requestId] = undefined   // Clear the item
+            return r
+        }
+
+        // Clear the item
+        this.requestResult[requestId] = undefined
+        return undefined
+    }
+
+    /** Get the rows of a table
+     * @param chain Chain Id or short name
+     * @param contract Contract account
+     * @param table Table name
+     * @param scope Scope name
+     * @param entry Is a single number or an array. As array the first index descipe the lower_bound and the second the upper_bound
+     * @param maxWaitMs Maximum amount of time to wait until the request should be handled
+     * @returns A single row if there is only one requested and an array of rows if there is an interval requested
+     */
+    async getTableRows(chain, contract, table, scope, entry, maxWaitMs = 3000){
+        let lower_bound
+        let upper_bound
+        if(typeof entry == 'object'){
+            lower_bound = entry[0]
+            upper_bound = entry[1]
+        } else {
+            lower_bound = entry.toString()
+            upper_bound = lower_bound
+        }
+
+        // Send request
+        const result = await this.request({ 
+            SavWeb:{ 
+                f: 'eosioChainApi',
+                id: null,                           // With value null this parameter will be defined in request id
+                chain,
+                post: 'get_table_rows',
+                params: {
+                    code: contract,
+                    table,
+                    scope,
+                    lower_bound,
+                    upper_bound
+                },
+                idToken: this.idToken
+            } 
+        }, maxWaitMs)
+
+        // Return the result
+        if('rows' in result){
+            const rows = result.rows
+            if(rows.length > 0){
+                return typeof entry == 'object'? rows : rows[0]
+            } else {
+                return null
+            }
+        }
+        return undefined
+    }
+
+    async getBalance(chain, contract, account, symbol, maxWaitMs = 3000){
+        // Send request
+        const result = await this.request({ 
+            SavWeb:{ 
+                f: 'eosioChainApi',
+                id: null,                           // With value null this parameter will be defined in request id
+                chain,
+                post: 'get_currency_balance',
+                params: {
+                    code: contract,
+                    account,
+                    symbol
+                },
+                idToken: this.idToken
+            } 
+        }, maxWaitMs)
+
+        // console.log('result on page', result);
+        
+        if(typeof result == 'object'){
+            if('error' in result){
+                return undefined
+            }
+            return result
+        }
+        
+        return undefined
+    }
+
+    static goTo(link){
+        window.parent.postMessage({
+            SavWeb:{ 
+                f: 'go',
+                to: link
+            }   
+        }, '*');
+    }
+    
+    /**
+     * Verifiy the given idToken
+     */
+    verifiy(){
+        window.parent.postMessage({ 
+            SavWeb:{ 
+                f: 'verifiyId',
+                idToken: this.idToken
+            } 
+        }, '*');
+    }
+
+    /**
+     * Send a payment request
+     * @param chain Blockchain of the payment
+     * @param to Recipient
+     * @param pay Asset as string
+     * @param memo Memo as string
+     * @param from Optional sender
+     */
+    payment(chain, to, pay, memo, from = undefined){
+        this.requestNumber++
+        console.log('Send via chain', chain);
+        window.parent.postMessage({ 
+            SavWeb:{ 
+                f: 'pay',
+                id: this.requestNumber,
+                idToken: this.idToken,
+                chain,
+                to,
+                from,
+                pay,
+                memo
+            } 
+        }, '*');
+    }
+  
+}
+
+
+    </script>
+    <script defer>
+const app = Vue.createApp({
+setup () {
+    
+    // Get coupon from url
+    function getPathAffi(){
+        const fullpath = window.location.href;
+        let path = ''
+        if(fullpath.includes('?')){
+            path = fullpath.substr(fullpath.lastIndexOf('?') + 1).trim()
+        }
+        let start = -1
+        if(path.startsWith('affi=')) {
+            start = 5
+        } else if(path.includes('&affi=')){
+            start = path.indexOf('&affi=') + 6
+        }
+        if(start > 0){
+            const end = path.indexOf('&', start)
+            return end > 0? path.substring(start, end) : path.substr(start) 
+        }
+        return ''
+    }
+
+    const coupon = Vue.ref(getPathAffi())
+
+    const createKeyDialog = Vue.ref(false)
+    const createKeyConfirmed = Vue.ref(false)
+
+    const optionOpen = Vue.ref(false)
+    const payPrecision = Vue.ref(4)
+    const paySymbol = Vue.ref(defaultPaySymbol)
+    const conPrecision = Vue.ref(4)
+    const conSymbol = Vue.ref(defaultTokenSymbol)
+
+    const step = Vue.ref(1)
+    const done1 = Vue.ref(false)
+    const done2 = Vue.ref(false)
+    const done3 = Vue.ref(false)
+    const done4 = Vue.ref(false)
+    const check1Loading = Vue.ref(false)
+    const check3Loading = Vue.ref(false)
+    const hasacc = Vue.ref('')
+    const wantacc = Vue.ref('')
+    const hascoupon = Vue.ref(false)
+    const wantpurpose = Vue.ref('false')
+    const specialpurpose = Vue.ref('0')
+    const payAmountPointed = Vue.ref(1)
+    const gtcChecked = Vue.ref(false)
+    const username = Vue.ref('')
+    const userkey = Vue.ref('')
+
+    const saleStatus = Vue.ref(undefined)
+    const saleStart = Vue.ref('')
+    const saleDate = Vue.ref('')
+    
+    const activePayment = Vue.ref(false)
+    
+    const progress1 = Vue.ref(0)
+    const lastPrice = Vue.ref(0)
+    const progressLabel1 = Vue.computed(()=>{
+        // console.log('lastPrice.value',lastPrice.value); //-
+        return `Price: ${assetToString(lastPrice.value, payPrecision.value, paySymbol.value)}`
+    })
+
+    function reset () {
+        step.value = 1
+        done1.value = false
+        done2.value = false
+        done3.value = false
+        done4.value = false
+        hasacc.value = ''
+        wantacc.value = ''
+        hascoupon.value = false
+        wantpurpose.value = 'false'
+        specialpurpose.value = '0'
+        payAmountPointed.value = 1
+        gtcChecked.value = false
+        coupon.value = ''
+        username.value = ''
+        userkey.value = ''
+    }
+
+    const fund = Vue.computed(() => {
+        return `${payAmountPointed.value.toFixed(payPrecision.value)} ${paySymbol.value}`
+    })
+
+    const stylemodeRef = Vue.ref()
+    const stylemode = Vue.computed({
+        set(value){
+            stylemodeRef.value = value
+            Quasar.Dark.set(value)
+        },
+        get(){
+            return stylemodeRef.value
+        }
+    })
+    stylemode.value = true
+
+    const memo = Vue.computed(() => {
+        let m
+        if (gtcChecked.value) {
+            if (hasacc.value === 'true' || wantacc.value === 'true') {
+                m = username.value
+                if (wantacc.value === 'true') {
+                    m += '-' + userkey.value
+                }
+            } else {
+                m = userkey.value
+            }
+
+            if (coupon.value.length > 0) {
+                m += '#' + coupon.value
+            }
+            if (specialpurpose.value !== '0' && wantpurpose.value == 'true') {
+                m += '@' + specialpurpose.value
+            }
+            return m
+        }
+        return ''
+    })
+
+
+    async function checkName(username){
+      if(username.trim() == ''){
+        showError('Please enter a name')  
+        return false
+      }
+      if (!checkNameChars(username)) {
+        showError('Invalid name. Permitted characters are a-z, . and 1-5')
+        return false
+      }
+      // Check name exists
+      const hasName = await savWeb.checkName(usedChain, username)
+      if(hasName == undefined){
+        showError(`Can not verify the name "${username}". Check your connection to the network`)
+        return
+      } else if(hasName == false){
+        showError(`The name "${username}" does not exist`)
+        return false
+      }
+      return true
+    }
+
+    let pP = {
+        sp: 0, ct: 0n, a: 0, k:0, s: 0n, tt: 0n, epA: 0n, p: 0
+    }
+   
+    let runningSaleId = 0
+    async function checkSaleState(progressDelay = 0){
+        const rStatus = await savWeb.getTableRows(usedChain, usedContract, 'stat', usedContract, 0)
+        // console.log('---result---', rStatus);
+        if(rStatus == undefined){
+            showError('Unable to connect to the sale.')
+            return
+        }
+        if('frozen' in rStatus && 'sold' in rStatus && 'start' in rStatus && 'total' in rStatus && 'endprice' in rStatus && 'sp' in rStatus){
+            saleStatus.value = rStatus
+            runningSaleId++
+            progress1.value = 0
+
+            if(Boolean(rStatus.started) === false){
+                // Update remaining time each second until token sale starts
+                saleDate.value = (new Date(rStatus.start * 1000)).toString().substr(4)
+                updateSaleStartTime()
+            }
+
+            // Get end price amount, payment symbol and precision
+            const endPrice = getAssetFromString(rStatus.endprice)
+            payPrecision.value = endPrice.precision
+            paySymbol.value = endPrice.symbol
+            // Get total token amount, token symbol and precision
+            const totalToken = getAssetFromString(rStatus.total)
+            conPrecision.value = totalToken.precision
+            conSymbol.value = totalToken.symbol
+
+            // Calculate parameters to descripe the linear chart
+            pP.sp = Number(rStatus.sp) / Math.pow(10, payPrecision.value)                                               // Start price as number
+            pP.a = ((Number(endPrice.amount) / Math.pow(10, payPrecision.value)) - pP.sp)  / Number(totalToken.amount)  // Parameter for integral calculation
+            pP.k = 2.0 / pP.a                       // Parameter for integral calculation
+            pP.s = BigInt(Math.floor(pP.sp / pP.a)) // Parameter for integral calculation
+            pP.ct = BigInt(rStatus.sold)            // Sold token amount
+            pP.tt = totalToken.amount               // Total amount of token
+            pP.epA = endPrice.amount                // End price as bigint amount
+            pP.p = Number(pP.ct) / Number(pP.tt)    // Percentage of sold token
+
+            // console.log('Status pP', pP);   //- 
+            // Show last price
+            lastPrice.value = calcLastPrice()
+
+            // Start progressbar
+            if(pP.p < 1){
+                const doOver = pP.p < 0.3
+                if(doOver){
+                    progress1.value = pP.p
+                } else {
+                    progress1.value = (pP.p * 3) / 4 
+                }
+                setTimeout(()=>{ runningSale(runningSaleId, doOver) }, progressDelay)
+            } else {
+                progress1.value = 1
+            }            
+        } else {
+            saleStatus.value = null
+        }
+    }
+
+    function calcLastPrice(){
+        return BigInt(Math.floor(((pP.a * (Number(pP.ct) / Math.pow(10, payPrecision.value))) + pP.sp) * Math.pow(10, payPrecision.value)))
+    }
+
+    function getAssetFromString(assetStr){
+        const assetVec = assetStr.split(' ')
+        if(assetVec.length != 2){
+            return undefined
+        }
+        const pIndex = assetVec[0].indexOf('.') + 1
+        
+        return { 
+            amount: BigInt(assetVec[0].replace('.', '')), 
+            precision: pIndex > 0? assetVec[0].length - pIndex : 0, 
+            symbol: assetVec[1] 
+        }
+    }
+
+    const estimateAmount = Vue.computed(()=>{
+        const p = Number(Number(payAmountPointed.value).toFixed(payPrecision.value)) * Math.pow(10, payPrecision.value)
+		const oldS = Number(pP.ct + pP.s)
+
+        // console.log('pP', pP);      //-
+        // console.log('p', p);        //-
+        // console.log('oldS', oldS);  //-
+        
+		let newSoldTotal = BigInt(Math.floor(Math.sqrt((pP.k * p) + (oldS*oldS)))) - pP.s	
+
+        // console.log('newSoldTotal', newSoldTotal);
+
+		return newSoldTotal - pP.ct
+    })
+
+    const estimateToken = Vue.computed(()=>{
+		return assetToString(estimateAmount.value, conPrecision.value, conSymbol.value);
+    })
+
+    const estimateExtraToken = Vue.computed(()=>{
+        return assetToString((estimateAmount.value * 5n) / 100n, conPrecision.value, conSymbol.value);
+        return ''
+    })
+
+    /** Converts asset values to a string
+     * @param amount A bigint not a number
+     * @param precision The amount of decimal places
+     * @param symbol Symbol as string
+     * @returns A string in contract parameter format for assets
+     */
+    function assetToString(amount, precision, symbol){
+        const strA  = amount.toString().padStart(precision + 1, '0')
+        const putI = strA.length - precision
+		return `${strA.slice(0, putI)}.${strA.slice(putI)} ${symbol}`;
+    }
+
+    async function checkStep1 () {
+      check1Loading.value = true
+      await (async ()=>{
+        // Check user
+        if (hasacc.value) {
+          if (hasacc.value === 'true') {
+            if(await checkName(username.value) !== true){
+              return
+            }
+          } else {
+            if (!eosjs_ecc.isValidPublic(userkey.value)) {
+              showError('Invalid public key.')
+              return
+            }
+            if (wantacc.value === 'true') {
+              if(await checkName(username.value) !== true){
+                return
+              }
+            }
+          }
+
+          done1.value = true
+          step.value = 2
+        }
+      })()
+      check1Loading.value = false
+    }
+
+    async function validateCoupon(){
+        coupon.value = coupon.value.trim()
+        if (coupon.value.length > 0) {
+            if (coupon.value.length === 53) {
+                if(hasacc.value === 'false' && coupon.value == userkey.value){
+                    showError('Can not use youreself')
+                    return false
+                }
+                if (eosjs_ecc.isValidPublic(coupon.value)) {
+                    showCongrat('Congratulation, you get +5% more!')
+                    return true
+                }
+            } else if (coupon.value.length <= 12) {
+                if((hasacc.value === 'true' || wantacc.value === 'true') && coupon.value == username.value){
+                    showError('Can not use youreself')
+                    return false
+                }
+                if (await checkName(coupon.value) === true) {
+                    showCongrat('Congratulation, you get +5% more!')
+                    return true
+                }
+                    return false
+                }
+            showError('Invalid coupon code.')
+            coupon.value = ''
+            return false
+        }
+        return undefined
+    }
+    async function checkCoupon () {
+        const r = await validateCoupon()
+        hascoupon.value = r === true? true : false
+        return r
+    }
+
+    function checkNameChars (name) {
+      for (let i = 0; i < name.length; ++i) {
+        if (!'.12345abcdefghijklmnopqrstuvwxyz'.includes(name[i])) {
+          return false
+        }
+      }
+      return true
+    }
+
+    async function checkStep3 () {
+      check3Loading.value = true
+      // Check coupon
+      const result = await checkCoupon()
+      if(result === false){
+        check3Loading.value = false
+        return
+      }
+      // Check amount
+      if (payAmountPointed.value >= 0.1) {
+        done3.value = true
+        step.value = 4
+      } else {
+        showError('Minimum amount is 0.1 EOS')
+      }
+      check3Loading.value = false
+    }
+
+    function showError (text, caption = undefined) {
+      Quasar.Notify.create({
+        color: 'negative',
+        icon: 'report_problem',
+        position: 'top',
+        message: text,
+        caption
+      })
+    }
+
+    function showCongrat (text, caption = undefined) {
+      Quasar.Notify.create({
+        icon: 'star',
+        position: 'top-right',
+        message: text,
+        caption
+      })
+    }
+
+    function toClipboard (text) {
+        Quasar.copyToClipboard(text).then(() => {
+            if (text.length > 0) {
+            Quasar.Notify.create({
+                position: 'top-right',
+                icon: 'copy_all',
+                message: 'Copy to clipboard: ' + text
+            })
+            }
+        }).catch(() => {
+            showError("Can't copy to clipboard.")
+        })
+    }
+
+    function onIni(msg){
+        if(typeof msg.darkstyle == 'boolean'){
+            stylemode.value = msg.darkstyle
+        }
+
+        checkSaleState(30000)
+    }
+
+    const savWeb = new SavWeb(onIni)
+    window.addEventListener('message', (event)=>{
+        savWeb.validatePostMessage(event)
+    }, false)
+
+    function sendToFinish(){
+        done4.value = true
+        savWeb.payment(usedChain, usedContract, fund.value, memo.value)
+    }
+
+    function getCurrentTimeStamp(){
+        return Math.floor(Date.now() / 1000)
+    }
+
+    function updateSaleStartTime(){
+        const timespan = (saleStatus.value.start - getCurrentTimeStamp())
+        if(timespan > 0){
+            let diff = timespan
+            const days = Math.floor(diff / 86400);
+            diff -=  days * 86400
+
+            const hours = Math.floor(diff / 3600);
+            diff -= hours * 3600
+
+            const mins = Math.floor(diff / 60);
+            diff -= mins * 60
+
+            const seconds = Math.floor(diff);
+            
+            const daysStr = `${days} days and`
+            saleStart.value = `${days > 0? daysStr:''} ${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+            setTimeout(updateSaleStartTime, 1000)
+        } else {
+            saleStart.value = ''
+        }
+    }
+
+    let progressInter = 1000
+    function runningSale(id, over = false){
+        if(runningSaleId != id){
+            return
+        }
+
+        progress1.value += ((Math.random() * (0.02 - 0.001)) + 0.001) * (Math.random() * (0.5 - 0.01))* (Math.random() * (0.8 - 0.2))
+        
+        if(over){
+            if(progress1.value >= 0.3){
+                progress1.value = pP.p
+            }
+        }
+        else {
+            if(progress1.value >= pP.p){
+                progress1.value = pP.p
+                return
+            }
+        }
+
+
+        if(progressInter == 1010){
+            progressInter = (Math.random() * (3000 - 1000)) + 1000
+        } else if(progressInter == 2010){
+            progressInter = (Math.random() * (3000 - 8000)) + 8000
+        }
+        
+        setTimeout(()=>{ runningSale(id, over) }, progressInter++)
+    }
+
+    const checkUser = Vue.ref('')
+    const checkUserAmountLoading = Vue.ref(false)
+    const checkedUserAmount = Vue.ref('')
+    
+    async function checkUserAmount(){
+        checkUserAmountLoading.value = true
+
+        const userStr = checkUser.value.trim()
+        checkUser.value = userStr
+        
+        let assets = []
+        let valid = false
+        if (userStr.length > 0) {
+            if (userStr.length === 53) {
+                if (eosjs_ecc.isValidPublic(userStr)) {
+                    valid = true
+                    const amount = await getKeyUserAmount(userStr)
+                    if(amount != undefined && amount != null && amount > 0n){
+                        assets.push(assetToString(amount, conPrecision.value, conSymbol.value))
+                    }
+                }
+            } else if (userStr.length <= 12) {
+                if (await checkName(userStr) === true) {
+                    valid = true
+                    assets = await getNameUserAsset(userStr)
+                }
+            }
+        }
+
+        if(valid){
+            if(typeof assets == 'object' && assets != null && assets.length > 0){
+                const asset = assets.find((item)=>{ 
+                    return item.substr(item.length - conSymbol.value.length) == conSymbol.value? true : false 
+                })
+                if(asset == undefined){
+                    showError(`No ${conSymbol.value} token found for ${userStr}`)
+                    checkedUserAmount.value = ''
+                } else {
+                    showCongrat(`${asset}`, `belongs to ${userStr}`)
+                    checkedUserAmount.value = asset
+                }
+                
+            } else {
+                showError(`No ${conSymbol.value} token found for ${userStr}`)
+                checkedUserAmount.value = ''
+            }
+        }
+         else {
+            checkedUserAmount.value = ''
+        }
+
+        checkUserAmountLoading.value = false
+    }
+
+    function getTableIdFromKey(pubkey){
+        const eosioKey = eosjs_ecc.PublicKey.fromString(pubkey)
+        const hex = eosioKey.toHex()
+        const key = hex.substr(0, hex.length - (2*8))
+        const revIdHex = hex.substr(hex.length - (2*8))
+        const idHex = revIdHex.match(/[0-9a-f]{2}/gi).reverse().join('')
+        const id = BigInt('0x' + idHex)
+        return {
+            hex,
+            key,
+            id 
+        }
+    }
+
+    async function getKeyUserAmount(key) {
+        const rowParams = getTableIdFromKey(key)
+
+        const rPur = await savWeb.getTableRows(usedChain, usedContract, 'purchased', usedContract, rowParams.id)
+        if(rPur == undefined){
+            showError('Unable to get the data.')
+            return undefined
+        }
+        if('owner' in rPur && typeof rPur.owner == 'object'){
+            const entry = rPur.owner.find((item)=>{
+                if('key' in item){
+                    if(item.key == rowParams.key){
+                        return true
+                    }
+                }
+                return false
+            })
+            if(entry != undefined && 'amount' in entry){
+                return BigInt(entry.amount)
+            }
+        }
+        return null
+    }
+
+    async function getNameUserAsset(name) {
+        const balances = await savWeb.getBalance(usedChain, tokenContract, name)
+        if(balances == undefined){
+            showError('Unable to get the data.')
+            return
+        }
+        if(balances != null && balances.length > 0){
+            return balances
+        }
+        return null
+    }
+
+    const myPriKey = Vue.ref('')
+    const myPubKey = Vue.ref('')
+
+    function createKeyPair(){
+        eosjs_ecc.randomKey().then(privateKey  => {
+            myPriKey.value = privateKey
+            myPubKey.value = eosjs_ecc.privateToPublic(privateKey)
+        })
+    }
+
+    return { goTo: SavWeb.goTo, createKeyDialog, createKeyConfirmed, createKeyPair, myPriKey, myPubKey, affiPage, checkSaleState, optionOpen, progress1, progressLabel1, paySymbol, estimateToken, estimateExtraToken, saleStatus, getCurrentTimeStamp, saleStart, saleDate, step, done1, done2, done3, done4, check1Loading, check3Loading, sendToFinish, reset, hasacc, wantacc, gtcChecked, wantpurpose, specialpurpose, payAmountPointed, stylemode, usedContract, memo, fund, userkey, username, coupon, checkStep1, checkStep3, checkCoupon, activePayment, toClipboard, openURL: Quasar.openURL, hascoupon, checkUser, checkUserAmount, checkUserAmountLoading, checkedUserAmount, browserLink, tokenContract }
+}
+})
+      app.use(Quasar)
+      app.mount('#q-app')
+</script>
+
+    <style>
+        .payitemname{
+            min-width: 70px;
+        }
+        .affiitemname{
+            min-width: 120px;
+        }
+    </style>
+  </body>
+</html>
