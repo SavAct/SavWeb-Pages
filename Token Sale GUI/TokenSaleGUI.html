@@ -1,47 +1,39 @@
 <!DOCTYPE html>
 <html>
-  <!--
-    WARNING! Make sure that you match all Quasar related
-    tags to the same version! (Below it's "@2.0.4")
-  -->
-
   <head>
     <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet" type="text/css">
     <link href="https://cdn.jsdelivr.net/npm/quasar@2.0.4/dist/quasar.prod.css" rel="stylesheet" type="text/css">
   </head>
-
   <body>
-    <!-- example of injection point where you write your app template -->
     <div id="q-app" class="items-center justify-evenly">
-        <div class="q-px-md">
-
-            <div class="q-py-md row">
-                <q-fab square v-model="optionOpen" color="primary" glossy icon="keyboard_arrow_right" direction="right">
-                    <q-fab-action square external-label label-position="top" color="orange" @click="goTo(affiPage)" icon="groups" label="Affiliate"></q-fab-action>
-                    <q-fab-action square external-label label-position="top" color="secondary" @click="reset" icon="restart_alt" label="Reset"></q-fab-action>
-                    <q-fab-action square external-label label-position="top" :color="stylemode?'white':'black'" :text-color="stylemode?'black':'white'" ic @click="stylemode = !stylemode" icon="brightness_medium" label="Style"></q-fab-action>
-                </q-fab>
-                <q-linear-progress v-show="!optionOpen" class="col q-mx-md" :class="stylemode?'bg-grey-10':'bg-grey-2'" size="55px" :value="progress1" color="cyan-13" :track-color="stylemode?'grey-8':'bg-grey-4'" :buffer="progress1 > 0.8? 1 : 0.9">
-                    <div class="absolute-full flex flex-center">
-                        <q-badge color="white" text-color="blue" :label="progressLabel1"/>
-                    </div>
-                </q-linear-progress>
-                <q-btn v-show="!optionOpen" color="secondary" icon-right="update" @click="checkSaleState(5000)" rounded size="md"/>
-            </div>
-
-            <div class="text-center q-py-md">Fill in the form to participate in the SavAct Tokensale</div>
-
+        <div class="q-pa-md">
             <div v-if="saleStatus">
                 <div v-if="saleStatus.frozen">
                     This sale is paused
                 </div>
-                <div v-else-if="saleStart">
+                <div v-else-if="saleStart" class="text-center">
                     This sale starts in
-                    <div class="text-h4">{{saleStart}}</div>
+                    <div class="text-h2 q-my-md">{{saleStart}}</div>
                     <div class="text-subtitle2">{{saleDate}}</div>
                     <div class="q-mt-md">Make sure to have enough {{paySymbol}} to participate.</div>
                 </div>
                 <div v-else>
+
+                    <div class="row">
+                        <q-fab square v-model="optionOpen" color="primary" glossy icon="keyboard_arrow_right" direction="right">
+                            <q-fab-action square external-label label-position="bottom" color="orange" @click="goTo(affiPage)" icon="groups" label="Affiliate"></q-fab-action>
+                            <q-fab-action square external-label label-position="bottom" color="secondary" @click="reset" icon="restart_alt" label="Reset"></q-fab-action>
+                            <q-fab-action square external-label label-position="bottom" :color="stylemode?'white':'black'" :text-color="stylemode?'black':'white'" ic @click="stylemode = !stylemode" icon="brightness_medium" label="Style"></q-fab-action>
+                        </q-fab>
+                        <q-linear-progress v-show="!optionOpen" class="col q-mx-md" :class="stylemode?'bg-grey-10':'bg-grey-2'" size="55px" :value="progress1" color="cyan-13" :track-color="stylemode?'grey-8':'bg-grey-4'" :buffer="progress1 > 0.8? 1 : 0.9">
+                            <div class="absolute-full flex flex-center">
+                                <q-badge color="white" text-color="blue" :label="progressLabel1"/>
+                            </div>
+                        </q-linear-progress>
+                        <q-btn v-show="!optionOpen" color="secondary" icon-right="update" @click="checkSaleState(5000)" rounded size="md"/>
+                    </div>
+                    <div class="text-center q-py-md">Fill in the form to participate in the SavAct Tokensale</div>
+
                     <q-stepper v-model="step" header-nav ref="stepper" color="primary" animated vertical>
                         <q-step :name="1" title="Select your case" icon="account_circle" :done="done1" :header-nav="step > 1">
                             <div class="q-gutter-lg">
@@ -60,14 +52,14 @@
                                 </div>
                             </div>
                             <div v-show="hasacc === 'true' || wantacc">
-                                <q-input outlined v-model="username" v-if="hasacc == 'true'" :label="`Your ${paySymbol} account name`" >
+                                <q-input outlined v-model="username" v-if="hasacc == 'true'" :label="`Your ${paySymbol} account name`" counter maxlength="12" >
                                     <template v-slot:prepend>
                                         <q-icon name="account_box"></q-icon>
                                     </template>
                                 </q-input>
                                 <div v-else>
                                     <div v-if="wantacc == 'true'" class="row q-gutter-md justify-end q-ml-xs q-mb-md">
-                                        <q-input class="col-12 col-sm" outlined v-model="username" label="Wished account name">
+                                        <q-input class="col-12 col-sm" outlined v-model="username" label="Wished account name" counter maxlength="12">
                                             <template v-slot:prepend>
                                                 <q-icon name="account_box"></q-icon>
                                             </template>
@@ -86,7 +78,7 @@
                             </q-stepper-navigation>
                         </q-step>
 
-                        <q-step :name="2" title="Purpose" icon="lightbulb" :done="done2" :header-nav="step > 2 || done2" >
+                        <q-step :name="2" title="Purpose" icon="lightbulb" :done="done2" :header-nav="step > 2" >
                             <div class="q-gutter-lg">
                                 <div class="q-gutter-sm">
                                     <div>Do you want to support a specific area of SavAct with your payment?</div>
@@ -119,7 +111,7 @@
                             </q-stepper-navigation>
                         </q-step>
                 
-                        <q-step :name="3" title="Amount" icon="monetization_on" :done="done3" :header-nav="step > 3 || done3">
+                        <q-step :name="3" title="Amount" icon="monetization_on" :done="done3" :header-nav="step > 3">
                             <div class="q-gutter-lg">
                                 <q-input outlined v-model.number="payAmountPointed" type="number" label="Amount" :hint="`~${estimateToken}`">
                                     <template v-slot:prepend>
@@ -140,10 +132,11 @@
                             </div>
                             <q-stepper-navigation>
                                 <q-btn @click="checkStep3" color="primary" label="Continue" :disable="payAmountPointed <= 0" :loading="check3Loading"></q-btn>
+                                <q-btn flat @click="step = 2" color="primary" label="Back" class="q-ml-sm"></q-btn>
                             </q-stepper-navigation>
                         </q-step>
 
-                        <q-step :name="4" title="Payment" icon="account_balance" :done="done4" :header-nav="step > 4 || done4">
+                        <q-step :name="4" title="Payment" icon="account_balance" :done="done4" :header-nav="step > 4">
                             <div class="q-gutter-md">
                                 <div class="q-gutter-sm">
                                     <q-btn color="primary" icon="description" label="White Paper" @click="openURL('https://savact.com/wp_en.pdf')"></q-btn>
@@ -193,9 +186,9 @@
             </div>
             <div v-else>
                 <q-spinner v-if="saleStatus != null" size="50px" color="primary"></q-spinner>
-                <div v-else class="text-center">Unable to connect to the sale. <a :href="browserLink + '#' +tokenContract">Click here if you are not using the SavAct App.</a></div>
+                <div v-else class="text-center">Unable to connect to the sale. <a :href="browserLink + '#' + usedContract">Click here if you are not using the SavAct App.</a></div>
             </div>
-            <q-expansion-item expand-separator label="Check your Token amount" expand-icon="info">
+            <q-expansion-item class="q-mt-md" expand-separator label="Check your Token amount" expand-icon="info">
                 <q-card>
                     <q-card-section>
                         <q-input outlined v-model="checkUser" @keydown.enter.prevent="checkUserAmount" label="Enter your used account name or public key">
@@ -306,8 +299,7 @@ class SavWeb {
                         switch(parentMsg.post){
                             case 'get_account':
                                 // console.log('Result in SavWeb page:', parentMsg.result);
-                                // TODO: Wait for the result of a defined name
-                                const result = parentMsg.result // as {account_name: string, } 
+                                const result = parentMsg.result
                                 if(result == undefined){
                                     // Set to undefined
                                     this.setNameValueByMsgId(parentMsg.id, undefined)
@@ -668,7 +660,9 @@ setup () {
     const memo = Vue.computed(() => {
         let m
         if (gtcChecked.value) {
-            if (hasacc.value === 'true' || wantacc.value === 'true') {
+            if (hasacc.value === 'true'){
+                m = username.value
+            } else if(wantacc.value === 'true') {
                 m = username.value
                 if (wantacc.value === 'true') {
                     m += '-' + userkey.value
@@ -688,23 +682,30 @@ setup () {
         return ''
     })
 
-
     async function checkName(username){
-      if(username.trim() == ''){
-        showError('Please enter a name')  
+        let exist = await checkNameExist(username)
+        if(exist === true){
+            return true
+        }
+        if(exist === false){
+            showError(`Can not verify the name "${username}". It might not exist.`)
+        }
         return false
+    }
+
+    async function checkNameExist(username){
+      if(username.trim() == ''){
+        showError('Please enter a name.')  
+        return null
       }
       if (!checkNameChars(username)) {
         showError('Invalid name. Permitted characters are a-z, . and 1-5')
-        return false
+        return null
       }
       // Check name exists
       const hasName = await savWeb.checkName(usedChain, username)
-      if(hasName == undefined){
-        showError(`Can not verify the name "${username}". Check your connection to the network`)
-        return
-      } else if(hasName == false){
-        showError(`The name "${username}" does not exist`)
+      
+      if(hasName == undefined || hasName === false){
         return false
       }
       return true
@@ -727,12 +728,6 @@ setup () {
             runningSaleId++
             progress1.value = 0
 
-            if(Boolean(rStatus.started) === false){
-                // Update remaining time each second until token sale starts
-                saleDate.value = (new Date(rStatus.start * 1000)).toString().substr(4)
-                updateSaleStartTime()
-            }
-
             // Get end price amount, payment symbol and precision
             const endPrice = getAssetFromString(rStatus.endprice)
             payPrecision.value = endPrice.precision
@@ -752,22 +747,29 @@ setup () {
             pP.epA = endPrice.amount                // End price as bigint amount
             pP.p = Number(pP.ct) / Number(pP.tt)    // Percentage of sold token
 
-            // console.log('Status pP', pP);   //- 
             // Show last price
             lastPrice.value = calcLastPrice()
 
-            // Start progressbar
-            if(pP.p < 1){
-                const doOver = pP.p < 0.3
-                if(doOver){
-                    progress1.value = pP.p
-                } else {
-                    progress1.value = (pP.p * 3) / 4 
-                }
-                setTimeout(()=>{ runningSale(runningSaleId, doOver) }, progressDelay)
+            restTime = updateSaleStartTime()        // Update remaining time each second until token sale starts
+            if(restTime !== false){
+                // Show sale date and wait until the start date
+                saleDate.value = (new Date(rStatus.start * 1000)).toString().substr(4)
+                console.log(`Check the sale state again in ${restTime} ms.`);
+                setTimeout(()=>{ checkSaleState(Math.random() * 30000) }, restTime)    // Check the state of the sale and start the progressbar. Wait a random number for the request to reduce the load of a single endpoint 
             } else {
-                progress1.value = 1
-            }            
+                // Start progressbar
+                if(pP.p < 1){
+                    const doOver = pP.p < 0.3
+                    if(doOver){
+                        progress1.value = pP.p
+                    } else {
+                        progress1.value = (pP.p * 3) / 4 
+                    }
+                    setTimeout(()=>{ runningSale(runningSaleId, doOver) }, progressDelay)
+                } else {
+                    progress1.value = 1
+                }     
+            }       
         } else {
             saleStatus.value = null
         }
@@ -837,14 +839,30 @@ setup () {
               return
             }
           } else {
+            userkey.value = userkey.value.trim()
+            if(userkey.value.length > 3 && userkey.value.substr(0, 3) != "EOS"){
+                showError('Only public keys beginning with EOS are accepted.')
+                return
+            }
             if (!eosjs_ecc.isValidPublic(userkey.value)) {
               showError('Invalid public key.')
               return
             }
             if (wantacc.value === 'true') {
-              if(await checkName(username.value) !== true){
-                return
-              }
+                if(username.value.length != 12){
+                    showError(`The name has to be 12 characters long.`)
+                    return
+                } else if(username.value.indexOf('.') > -1){
+                    showError(`Dots are not allowed for new account creation.`)
+                    return
+                }
+                let existName = await checkNameExist(username.value)
+                if(existName === true){
+                    showError(`The name ${username.value} already exists.`)
+                    return
+                } else if(existName === null){
+                    return
+                }
             }
           }
 
@@ -860,7 +878,7 @@ setup () {
         if (coupon.value.length > 0) {
             if (coupon.value.length === 53) {
                 if(hasacc.value === 'false' && coupon.value == userkey.value){
-                    showError('Can not use youreself')
+                    showError('Can not use youreself.')
                     return false
                 }
                 if (eosjs_ecc.isValidPublic(coupon.value)) {
@@ -869,7 +887,7 @@ setup () {
                 }
             } else if (coupon.value.length <= 12) {
                 if((hasacc.value === 'true' || wantacc.value === 'true') && coupon.value == username.value){
-                    showError('Can not use youreself')
+                    showError('Can not use youreself.')
                     return false
                 }
                 if (await checkName(coupon.value) === true) {
@@ -908,11 +926,13 @@ setup () {
         return
       }
       // Check amount
-      if (payAmountPointed.value >= 0.1) {
+      if(hasacc.value == 'false' && wantacc.value == 'true' && payAmountPointed.value < 10){
+        showError('The minimum amount to receive tokens and create a new account at the same time is 10 EOS.')
+      } else if (payAmountPointed.value >= 0.1) {
         done3.value = true
         step.value = 4
       } else {
-        showError('Minimum amount is 0.1 EOS')
+        showError('Minimum amount is 0.1 EOS.')
       }
       check3Loading.value = false
     }
@@ -990,8 +1010,10 @@ setup () {
             const daysStr = `${days} days and`
             saleStart.value = `${days > 0? daysStr:''} ${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
             setTimeout(updateSaleStartTime, 1000)
+            return timespan
         } else {
-            saleStart.value = ''
+            saleStart.value = ''   // Set sale status as started
+            return false
         }
     }
 
@@ -1000,8 +1022,8 @@ setup () {
         if(runningSaleId != id){
             return
         }
-
-        progress1.value += ((Math.random() * (0.02 - 0.001)) + 0.001) * (Math.random() * (0.5 - 0.01))* (Math.random() * (0.8 - 0.2))
+        
+        progress1.value += ((Math.random() * (0.02 - 0.001)) + 0.001) * (Math.random() * (0.5 - 0.01))* (Math.random() * (0.8 - 0.2)) // For animation
         
         if(over){
             if(progress1.value >= 0.3){
@@ -1014,7 +1036,6 @@ setup () {
                 return
             }
         }
-
 
         if(progressInter == 1010){
             progressInter = (Math.random() * (3000 - 1000)) + 1000
@@ -1060,15 +1081,15 @@ setup () {
                     return item.substr(item.length - conSymbol.value.length) == conSymbol.value? true : false 
                 })
                 if(asset == undefined){
-                    showError(`No ${conSymbol.value} token found for ${userStr}`)
+                    showError(`No ${conSymbol.value} token found for ${userStr}.`)
                     checkedUserAmount.value = ''
                 } else {
-                    showCongrat(`${asset}`, `belongs to ${userStr}`)
+                    showCongrat(`${asset}`, `belongs to ${userStr}.`)
                     checkedUserAmount.value = asset
                 }
                 
             } else {
-                showError(`No ${conSymbol.value} token found for ${userStr}`)
+                showError(`No ${conSymbol.value} token found for ${userStr}.`)
                 checkedUserAmount.value = ''
             }
         }
@@ -1139,7 +1160,7 @@ setup () {
         })
     }
 
-    return { goTo: SavWeb.goTo, createKeyDialog, createKeyConfirmed, createKeyPair, myPriKey, myPubKey, affiPage, checkSaleState, optionOpen, progress1, progressLabel1, paySymbol, estimateToken, estimateExtraToken, saleStatus, getCurrentTimeStamp, saleStart, saleDate, step, done1, done2, done3, done4, check1Loading, check3Loading, sendToFinish, reset, hasacc, wantacc, gtcChecked, wantpurpose, specialpurpose, payAmountPointed, stylemode, usedContract, memo, fund, userkey, username, coupon, checkStep1, checkStep3, checkCoupon, activePayment, toClipboard, openURL: Quasar.openURL, hascoupon, checkUser, checkUserAmount, checkUserAmountLoading, checkedUserAmount, browserLink, tokenContract }
+    return { goTo: SavWeb.goTo, createKeyDialog, createKeyConfirmed, createKeyPair, myPriKey, myPubKey, affiPage, checkSaleState, optionOpen, progress1, progressLabel1, paySymbol, estimateToken, estimateExtraToken, saleStatus, getCurrentTimeStamp, saleStart, saleDate, step, done1, done2, done3, done4, check1Loading, check3Loading, sendToFinish, reset, hasacc, wantacc, gtcChecked, wantpurpose, specialpurpose, payAmountPointed, stylemode, usedContract, memo, fund, userkey, username, coupon, checkStep1, checkStep3, checkCoupon, activePayment, toClipboard, openURL: Quasar.openURL, hascoupon, checkUser, checkUserAmount, checkUserAmountLoading, checkedUserAmount, browserLink }
 }
 })
       app.use(Quasar)
