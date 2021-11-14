@@ -563,8 +563,7 @@ const app = Vue.createApp({
 setup () {
     
     // Get coupon from url
-    function getPathAffi(){
-        const fullpath = window.location.href;
+    function getPathAffi(fullpath){
         let path = ''
         if(fullpath.includes('?')){
             path = fullpath.substr(fullpath.lastIndexOf('?') + 1).trim()
@@ -582,7 +581,7 @@ setup () {
         return ''
     }
 
-    const coupon = Vue.ref(getPathAffi())
+    const coupon = Vue.ref('')
 
     const createKeyDialog = Vue.ref(false)
     const createKeyConfirmed = Vue.ref(false)
@@ -619,7 +618,6 @@ setup () {
     const progress1 = Vue.ref(0)
     const lastPrice = Vue.ref(0)
     const progressLabel1 = Vue.computed(()=>{
-        // console.log('lastPrice.value',lastPrice.value); //-
         return `Price: ${assetToString(lastPrice.value, payPrecision.value, paySymbol.value)}`
     })
 
@@ -796,11 +794,6 @@ setup () {
     const estimateAmount = Vue.computed(()=>{
         const p = Number(Number(payAmountPointed.value).toFixed(payPrecision.value)) * Math.pow(10, payPrecision.value)
 		const oldS = Number(pP.ct + pP.s)
-
-        // console.log('pP', pP);      //-
-        // console.log('p', p);        //-
-        // console.log('oldS', oldS);  //-
-        
 		let newSoldTotal = BigInt(Math.floor(Math.sqrt((pP.k * p) + (oldS*oldS)))) - pP.s	
 
         // console.log('newSoldTotal', newSoldTotal);
@@ -949,6 +942,7 @@ setup () {
 
     function showCongrat (text, caption = undefined) {
       Quasar.Notify.create({
+        color: 'positive',
         icon: 'star',
         position: 'top-right',
         message: text,
@@ -975,6 +969,9 @@ setup () {
             stylemode.value = msg.darkstyle
         }
 
+        if(msg.fullPath){
+            coupon.value = getPathAffi(msg.fullPath)
+        }
         checkSaleState(30000)
     }
 
