@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html>
+  <!--
+    WARNING! Make sure that you match all Quasar related
+    tags to the same version! (Below it's "@2.3.4")
+  -->
   <head>
     <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet" type="text/css">
-    <link href="https://cdn.jsdelivr.net/npm/quasar@2.0.4/dist/quasar.prod.css" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/npm/quasar@2.3.4/dist/quasar.prod.css" rel="stylesheet" type="text/css">
   </head>
   <body>
     <div id="q-app" class="items-center justify-evenly">
@@ -32,8 +36,12 @@
                         </q-linear-progress>
                         <q-btn v-show="!optionOpen" color="secondary" icon-right="update" @click="checkSaleState(5000)" rounded size="md"/>
                     </div>
-                    <div class="text-center q-py-md">Fill in the form to participate in the SavAct Tokensale</div>
-
+                    
+                    <div class="q-pt-md q-pb-sm row justify-center items-center text-center">
+                        <div class="q-ma-sm">Fill in the form to participate in the SavAct Tokensale.</div>
+                        <q-btn size="10px" text-color="red" icon="smart_display" label="Tutorial" @click="openURL('https://www.youtube.com/channel/UC13wgATCxJZWAsZc310rzRw')" />
+                    </div>
+                    
                     <q-stepper v-model="step" header-nav ref="stepper" color="primary" animated vertical>
                         <q-step :name="1" title="Select your case" icon="account_circle" :done="done1" :header-nav="step > 1">
                             <div class="q-gutter-lg">
@@ -45,9 +53,9 @@
                                 </div>
                             </div>
                             <div class="q-gutter-sm" v-show="hasacc === 'false'">
-                                <div>Would you also like to create a {{paySymbol}} account?</div>
+                                <div>Would you also like to create an {{paySymbol}} account?</div>
                                 <div class="row">
-                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="wantacc" val="true" label="yes"></q-radio>
+                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1 text-weight-bolder" v-model="wantacc" val="true" label="yes"></q-radio>
                                     <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="wantacc" val="false" label="no"></q-radio>
                                 </div>
                             </div>
@@ -65,7 +73,9 @@
                                             </template>
                                         </q-input>
                                     </div>
-                                    
+                                    <div v-else class="q-ma-sm">
+                                        Use only a public key whose private key you can access in text form.
+                                    </div>
                                     <div class="row q-gutter-md justify-end q-ml-xs">
                                         <q-input class="col-12 col-sm" outlined v-model="userkey"  :label="`Your ${paySymbol} public key`"></q-input>
                                         <q-btn class="col-auto" glossy unelevated icon-right="help_center" label="Need a key pair" @click="createKeyDialog = true"></q-btn>
@@ -143,7 +153,7 @@
                                     <q-btn color="secondary" icon="code" label="Token Sale Contract" @click="openURL('https://github.com/SavAct/TokenSale')"></q-btn>
                                 </div>
                                 <div class="q-gutter-sm">
-                                    <q-checkbox v-model="gtcChecked" label="I have read the SavAct White Paper and its disclaimer. I accept that no compensation can be claimed in case of losses and that the SavAct tokens are issued according to the algorithm of the SavAct Token Sale Contract."></q-checkbox>
+                                    <q-checkbox v-model="gtcChecked" label="I have read the full SavAct White Paper. I accept that no compensation can be claimed in case of losses and that SavAct tokens are issued according to the algorithm of the SavAct Token Sale Contract."></q-checkbox>
                                 </div>
                                 <div v-show="gtcChecked">
                                 <div>
@@ -186,7 +196,7 @@
             </div>
             <div v-else>
                 <q-spinner v-if="saleStatus != null" size="50px" color="primary"></q-spinner>
-                <div v-else class="text-center">Unable to connect to the sale. <a :href="browserLink + '#' + usedContract">Click here if you are not using the SavAct App.</a></div>
+                <div v-else class="text-center">Wait some seconds to connect to the sale. <a :href="browserLink + '#' + usedContract">If you are not using the SavAct App than click here.</a></div>
             </div>
             <q-expansion-item class="q-mt-md" expand-separator label="Check your Token amount" expand-icon="info">
                 <q-card>
@@ -250,13 +260,13 @@
 
     <!-- Has to be at the end of the body tag -->
     <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/quasar@2.0.4/dist/quasar.umd.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quasar@2.3.4/dist/quasar.umd.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/eosjs-ecc@4.0.4/lib/eosjs-ecc.min.js" integrity="sha512-dYFDmK/d9r3/NCp6toLtfkwOjSMRBaEzaGAx1tfRItC0nsI0hVLERk05iNBQR7uDNI7ludYhcBI4vUiFHdjsTQ==" crossorigin="anonymous">/* https://github.com/EOSIO/eosjs-ecc/releases */</script> 
 
 <script>
-    const usedChain = 'eos' // 'kylin' as testnet
-    const usedContract = 'savtestsale1'
-    const tokenContract = 'savtesttoken'
+    const usedChain = 'eos' //- 'kylin' as testnet
+    const usedContract = 'savtestsale1'  //-
+    const tokenContract = 'savtesttoken' //-
     const browserLink = 'https://savact.app'
     // const savWebLink = '#savtestsale1'
     const gotoPageError = '#savactsavact'
@@ -466,6 +476,11 @@ class SavWeb {
                 idToken: this.idToken
             } 
         }, maxWaitMs)
+
+        if(result == undefined){
+            console.log('Cannot get the table from', contract)
+            return undefined
+        }
 
         // Return the result
         if('rows' in result){
@@ -712,11 +727,12 @@ setup () {
     let pP = {
         sp: 0, ct: 0n, a: 0, k:0, s: 0n, tt: 0n, epA: 0n, p: 0
     }
+    let stars = null
    
     let runningSaleId = 0
     async function checkSaleState(progressDelay = 0){
         const rStatus = await savWeb.getTableRows(usedChain, usedContract, 'stat', usedContract, 0)
-        // console.log('---result---', rStatus);
+        // console.log('---result---', rStatus); //-
         if(rStatus == undefined){
             showError('Unable to connect to the sale.')
             return
@@ -744,7 +760,10 @@ setup () {
             pP.tt = totalToken.amount               // Total amount of token
             pP.epA = endPrice.amount                // End price as bigint amount
             pP.p = Number(pP.ct) / Number(pP.tt)    // Percentage of sold token
-
+            
+            // Get the milestones form the stars for the progressbar
+            stars = 'stars' in rStatus? rStatus.stars : null
+            
             // Show last price
             lastPrice.value = calcLastPrice()
 
@@ -757,13 +776,8 @@ setup () {
             } else {
                 // Start progressbar
                 if(pP.p < 1){
-                    const doOver = pP.p < 0.3
-                    if(doOver){
-                        progress1.value = pP.p
-                    } else {
-                        progress1.value = (pP.p * 3) / 4 
-                    }
-                    setTimeout(()=>{ runningSale(runningSaleId, doOver) }, progressDelay)
+                    // setTimeout(()=>{ runningSale(runningSaleId) }, progressDelay)
+                    runningSale(runningSaleId)
                 } else {
                     progress1.value = 1
                 }     
@@ -1014,33 +1028,22 @@ setup () {
         }
     }
 
-    let progressInter = 1000
-    function runningSale(id, over = false){
+    function runningSale(id){
         if(runningSaleId != id){
             return
         }
-        
-        progress1.value += ((Math.random() * (0.02 - 0.001)) + 0.001) * (Math.random() * (0.5 - 0.01))* (Math.random() * (0.8 - 0.2)) // For animation
-        
-        if(over){
-            if(progress1.value >= 0.3){
-                progress1.value = pP.p
+        if(stars != null){
+            let v = null
+            for(let s of stars){
+                let currentGoal = BigInt(s.mark)
+                if((currentGoal * 9n) / 10n > pP.ct){
+                    v = Number(pP.ct) / Number(currentGoal)
+                    console.log(`${v * 100}% of the next step to ${currentGoal} is reached.`)
+                    break
+                }
             }
+            progress1.value = v != null? v : pP.p
         }
-        else {
-            if(progress1.value >= pP.p){
-                progress1.value = pP.p
-                return
-            }
-        }
-
-        if(progressInter == 1010){
-            progressInter = (Math.random() * (3000 - 1000)) + 1000
-        } else if(progressInter == 2010){
-            progressInter = (Math.random() * (3000 - 8000)) + 8000
-        }
-        
-        setTimeout(()=>{ runningSale(id, over) }, progressInter++)
     }
 
     const checkUser = Vue.ref('')
