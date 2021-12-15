@@ -39,7 +39,7 @@
                     
                     <div class="q-pt-md q-pb-sm row justify-center items-center text-center">
                         <div class="q-ma-sm">Fill in the form to participate in the SavAct Tokensale.</div>
-                        <q-btn size="10px" text-color="red" icon="smart_display" label="Tutorial" @click="openURL('https://www.youtube.com/channel/UC13wgATCxJZWAsZc310rzRw')" />
+                        <q-btn size="10px" text-color="red" icon="smart_display" label="Tutorial" @click="openURL('https://www.youtube.com/watch?v=l0mSchE4J90&list=PLlqxjSlFPsipp-mvQubWy0qNJLDUXHVi0&index=2&ab_channel=SavAct')" />
                     </div>
                     
                     <q-stepper v-model="step" header-nav ref="stepper" color="primary" animated vertical>
@@ -91,7 +91,7 @@
                         <q-step :name="2" title="Purpose" icon="lightbulb" :done="done2" :header-nav="step > 2" >
                             <div class="q-gutter-lg">
                                 <div class="q-gutter-sm">
-                                    <div>Do you want to support a specific area of SavAct with your payment?</div>
+                                    <div>Do you want to support a specific area of SavAct with your payment?<br>(Does not effect the tokensale)</div>
                                     <div class="row q-mb-none">
                                         <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="wantpurpose" val="true" label="yes"></q-radio>
                                         <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="wantpurpose" val="false" label="no"></q-radio>
@@ -224,34 +224,34 @@
             <div class="q-pa-md q-gutter-sm">
                 <q-btn label="Click me" color="primary" @click="persistent = true" />
             
-                <q-dialog v-model="createKeyDialog" full-width persistent transition-show="scale" transition-hide="scale">
-                    <q-card class="bg-teal text-white" style="width: 300px">
-                    <q-card-section class="q-pb-none">
-                        <div class="text-h5 text-center">Generate a Key pair</div>
-                    </q-card-section>
-            
-                    <q-card-section class="q-my-none q-py-none">
-                        <div class="text-h6">Attention</div>
-                        <div>Write your private key down and keep it safe! Make sure that no other person has access to the private key. In the event of loss or misspeling your private key all funds are permanently lost and cannot be restored. The same applies to unauthorized access of third parties for example like spyware which monitors and gathers information about your computer.</div>
-                        <q-checkbox v-model="createKeyConfirmed" label="I understand and accept the risk."></q-checkbox>
-                        <div v-if="createKeyConfirmed">
-                            <q-btn class="q-mt-sm" color="primary" @click="createKeyPair" icon="rotate_left" label="New pair" size="sm"></q-btn>
-                            <div class="row">
-                                <div class="payitemname q-ma-sm">Private key</div>
-                                <div class="col-grow q-ma-sm items-center"><q-scroll-area :visible="true" style="height: 35px;">{{myPriKey}}</q-scroll-area></div>
-                                <q-icon class="q-ma-sm cursor-pointer" name="copy_all" @click="toClipboard(myPriKey)"></q-icon>
+                <q-dialog v-model="createKeyDialog" persistent transition-show="scale" transition-hide="scale">
+                    <q-card class="bg-teal text-white" style="max-width: 600px;">
+                        <q-card-section class="q-pb-none">
+                            <div class="text-h5 text-center">Generate a key pair</div>
+                        </q-card-section>
+                
+                        <q-card-section class="q-my-none q-py-none">
+                            <div class="text-h6">Attention</div>
+                            <div>Write your private key down and keep it safe! Make sure that no other person has access to the private key. In the event of loss or misspeling your private key all funds are permanently lost and cannot be restored. The same applies to unauthorized access of third parties for example like spyware which monitors and gathers information about your computer.</div>
+                            <q-checkbox v-model="createKeyConfirmed" label="I understand and accept the risk."></q-checkbox>
+                            <div v-if="createKeyConfirmed">
+                                <q-btn class="q-mt-sm" color="primary" @click="createKeyPair" icon="rotate_left" label="New pair" size="sm"></q-btn>
+                                <div class="row">
+                                    <div class="payitemname q-ma-sm">Private key</div>
+                                    <div class="col-grow q-ma-sm items-center"><q-scroll-area :visible="true" style="height: 35px;">{{myPriKey}}</q-scroll-area></div>
+                                    <q-icon class="q-ma-sm cursor-pointer" name="copy_all" @click="toClipboard(myPriKey)"></q-icon>
+                                </div>
+                                <div class="row">
+                                    <div class="payitemname q-ma-sm">Public key</div>
+                                    <div class="col-grow q-ma-sm items-center"><q-scroll-area :visible="true" style="height: 35px;">{{myPubKey}}</q-scroll-area></div>
+                                    <q-icon class="q-ma-sm cursor-pointer" name="copy_all" @click="toClipboard(myPubKey)"></q-icon>
+                                </div>
                             </div>
-                            <div class="row">
-                                <div class="payitemname q-ma-sm">Public key</div>
-                                <div class="col-grow q-ma-sm items-center"><q-scroll-area :visible="true" style="height: 35px;">{{myPubKey}}</q-scroll-area></div>
-                                <q-icon class="q-ma-sm cursor-pointer" name="copy_all" @click="toClipboard(myPubKey)"></q-icon>
-                            </div>
-                        </div>
-                    </q-card-section>
-                    
-                    <q-card-actions align="right" class="bg-white text-primary">
-                        <q-btn flat :label="createKeyConfirmed? 'I have stored my private key safe' : 'Cancel'" v-close-popup />
-                    </q-card-actions>
+                        </q-card-section>
+                        
+                        <q-card-actions align="right" class="bg-white text-primary">
+                            <q-btn flat :label="createKeyConfirmed? 'I have stored my private key safely' : 'Cancel'" v-close-popup />
+                        </q-card-actions>
                     </q-card>
                 </q-dialog>
             </div>
@@ -264,13 +264,12 @@
     <script src="https://cdn.jsdelivr.net/npm/eosjs-ecc@4.0.4/lib/eosjs-ecc.min.js" integrity="sha512-dYFDmK/d9r3/NCp6toLtfkwOjSMRBaEzaGAx1tfRItC0nsI0hVLERk05iNBQR7uDNI7ludYhcBI4vUiFHdjsTQ==" crossorigin="anonymous">/* https://github.com/EOSIO/eosjs-ecc/releases */</script> 
 
 <script>
-    const usedChain = 'eos' //- 'kylin' as testnet
-    const usedContract = 'savtestsale1'  //-
-    const tokenContract = 'savtesttoken' //-
+    const usedChain = 'eos'
+    const usedContract = 'savact'
+    const tokenContract = 'token.savact'
     const browserLink = 'https://savact.app'
-    // const savWebLink = '#savtestsale1'
     const gotoPageError = '#savactsavact'
-    const affiPage = '#savtestsale1/!affiliate'
+    const affiPage = '#savact/!affiliate'
     const defaultPaySymbol = 'EOS'              // Will be requested at the start automatically
     const defaultTokenSymbol = 'SAVACT'         // Will be requested at the start automatically
 
@@ -732,7 +731,6 @@ setup () {
     let runningSaleId = 0
     async function checkSaleState(progressDelay = 0){
         const rStatus = await savWeb.getTableRows(usedChain, usedContract, 'stat', usedContract, 0)
-        // console.log('---result---', rStatus); //-
         if(rStatus == undefined){
             showError('Unable to connect to the sale.')
             return
@@ -752,14 +750,15 @@ setup () {
             conSymbol.value = totalToken.symbol
 
             // Calculate parameters to descripe the linear chart
-            pP.sp = Number(rStatus.sp) / Math.pow(10, payPrecision.value)                                               // Start price as number
-            pP.a = ((Number(endPrice.amount) / Math.pow(10, payPrecision.value)) - pP.sp)  / Number(totalToken.amount)  // Parameter for integral calculation
-            pP.k = 2.0 / pP.a                       // Parameter for integral calculation
-            pP.s = BigInt(Math.floor(pP.sp / pP.a)) // Parameter for integral calculation
+            pP.sp = BigInt(rStatus.sp)              // Start price as bigint amount
+            sp_Number = Number(pP.sp) / Math.pow(10, payPrecision.value)
+            pP.a = Number(endPrice.amount - pP.sp) / Number(totalToken.amount)  // Gradient of the linear function for integral calculation
+            pP.k = 2.0 / (pP.a / Math.pow(10, payPrecision.value))                 // Parameter for integral calculation
+            pP.s = BigInt(Math.floor(Number(pP.sp) / pP.a)) // Parameter for integral calculation
             pP.ct = BigInt(rStatus.sold)            // Sold token amount
             pP.tt = totalToken.amount               // Total amount of token
             pP.epA = endPrice.amount                // End price as bigint amount
-            pP.p = Number(pP.ct) / Number(pP.tt)    // Percentage of sold token
+            pP.p = Number(pP.ct) / Number(pP.tt)    // Fraction of sold token
             
             // Get the milestones form the stars for the progressbar
             stars = 'stars' in rStatus? rStatus.stars : null
@@ -788,7 +787,7 @@ setup () {
     }
 
     function calcLastPrice(){
-        return BigInt(Math.floor(((pP.a * (Number(pP.ct) / Math.pow(10, payPrecision.value))) + pP.sp) * Math.pow(10, payPrecision.value)))
+        return BigInt(Math.floor(((pP.a * Number(pP.ct)) + Number(pP.sp))))
     }
 
     function getAssetFromString(assetStr){
@@ -809,8 +808,6 @@ setup () {
         const p = Number(Number(payAmountPointed.value).toFixed(payPrecision.value)) * Math.pow(10, payPrecision.value)
 		const oldS = Number(pP.ct + pP.s)
 		let newSoldTotal = BigInt(Math.floor(Math.sqrt((pP.k * p) + (oldS*oldS)))) - pP.s	
-
-        // console.log('newSoldTotal', newSoldTotal);
 
 		return newSoldTotal - pP.ct
     })
