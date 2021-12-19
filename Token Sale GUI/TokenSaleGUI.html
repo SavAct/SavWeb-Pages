@@ -34,7 +34,7 @@
                                 <q-badge color="white" text-color="blue" :label="progressLabel1"/>
                             </div>
                         </q-linear-progress>
-                        <q-btn v-show="!optionOpen" color="secondary" icon-right="update" @click="checkSaleState(5000)" rounded size="md"/>
+                        <q-btn v-show="!optionOpen" color="secondary" icon-right="update" @click="checkSaleState()" rounded size="md"/>
                     </div>
                     
                     <div class="q-pt-md q-pb-sm row justify-center items-center text-center">
@@ -983,7 +983,7 @@ setup () {
         if(msg.fullPath){
             coupon.value = getPathAffi(msg.fullPath)
         }
-        checkSaleState(30000)
+        checkSaleState(5000)
     }
 
     const savWeb = new SavWeb(onIni)

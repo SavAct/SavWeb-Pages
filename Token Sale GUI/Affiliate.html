@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/npm/quasar@2.3.4/dist/quasar.prod.css" rel="stylesheet" type="text/css">
+  </head>
+
+  <body>
+    <!-- example of injection point where you write your app template -->
+    <div id="q-app" class="items-center justify-evenly">
+        <div class="q-pa-md">
+            
+            <div class="q-py-md row">
+                <q-fab square v-model="optionOpen" color="primary" glossy icon="keyboard_arrow_right" direction="right">
+                    <!-- <q-fab-action square external-label label-position="top" color="orange" @click="" icon="groups" label="Affiliate"></q-fab-action> -->
+                    <q-fab-action square external-label label-position="top" color="secondary" @click="reset" icon="restart_alt" label="Reset"></q-fab-action>
+                    <q-fab-action square external-label label-position="top" :color="stylemode?'white':'black'" :text-color="stylemode?'black':'white'" ic @click="stylemode = !stylemode" icon="brightness_medium" label="Style"></q-fab-action>
+                </q-fab>
+            </div>
+
+            <div>
+                <div>
+                    <q-stepper v-model="step" header-nav ref="stepper" color="primary" animated vertical >
+                        <q-step :name="1" title="Select an option to create an affiliate link" icon="account_circle" :done="done1" >
+                            <div class="q-gutter-lg">
+                                <div class="q-gutter-sm">
+                                    <div>What do you want to use? Your</div>
+                                    <div class="row">
+                                        <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="hasacc" val="false" label="Public Key"></q-radio>
+                                        <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="hasacc" val="true" :label="`${paySymbol} Account`"></q-radio>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div v-show="hasacc === 'true'" class="row q-gutter-md justify-end q-ml-sm q-mt-xs">
+                                    <q-input class="col-12 col-sm" outlined v-model="username" :label="`Your ${paySymbol} account name`">                                  
+                                        <template v-slot:prepend><q-icon name="account_box"></q-icon></template>
+                                    </q-input>
+                                    <q-btn class="col-auto" glossy unelevated icon-right="help_center" label="Need an account" @click="openURL('https://eosauthority.com/wallet/create-account')"></q-btn>
+                                </div>
+                                <div v-show="hasacc === 'false'" class="row q-gutter-md justify-end q-ml-sm q-mt-xs">
+                                    <q-input class="col-12 col-sm" outlined v-model="userkey"  :label="`Your ${paySymbol} public key`"></q-input>
+                                    <q-btn class="col-auto" glossy unelevated icon-right="help_center" label="Need a key pair" @click="createKeyDialog = true"></q-btn>
+                                </div>
+                            </div>
+                            
+                            <q-stepper-navigation>
+                                <q-btn @click="checkStep1" color="primary" label="Continue" :disable="hasacc == ''" :loading="check1Loading"></q-btn>
+                            </q-stepper-navigation>
+                        </q-step>
+                    </q-stepper>
+                    
+                    <div v-show="step == 2">
+                        <q-item clickable v-ripple :active="activePayment" active-class="bg-teal-1 text-grey-8" @click="toClipboard(affiLink)">
+                            <q-item-section class="itemname" side>Affiliate link</q-item-section>
+                            <q-item-section class="scroll">{{affiLink}}</q-item-section>
+                            <q-item-section avatar>
+                                <q-icon name="copy_all"></q-icon>
+                            </q-item-section>
+                        </q-item>
+                        <q-item clickable v-ripple :active="activePayment" active-class="bg-teal-1 text-grey-8" @click="toClipboard(coupon)">
+                            <q-item-section class="itemname" side>Coupon</q-item-section>
+                            <q-item-section class="scroll">{{coupon}}</q-item-section>
+                            <q-item-section avatar>
+                                <q-icon name="copy_all"></q-icon>
+                            </q-item-section>
+                        </q-item>
+                    </div>
+                </div>
+            </div>
+            <div v-else>
+                <q-spinner v-if="saleStatus != null" size="50px" color="primary" />
+                <div v-else>Can not connect to the sale</div>
+            </div>
+        </div>
+
+        <template>
+            <div class="q-pa-md q-gutter-sm">
+                <q-btn label="Click me" color="primary" @click="persistent = true" />
+            
+                <q-dialog v-model="createKeyDialog" persistent transition-show="scale" transition-hide="scale">
+                    <q-card class="bg-teal text-white" style="width: 600px">
+                    <q-card-section>
+                        <div class="text-h6">Generate a key pair</div>
+                    </q-card-section>
+            
+                    <q-card-section class="q-pt-none">
+                        <div class="text-h6">Attention</div>
+                        <div>Write your private key down and keep it safe! Make sure that no other person has access to the private key. In the event of loss or misspeling your private key all funds are permanently lost and cannot be restored. The same applies to unauthorized access of third parties for example like spyware which monitors and gathers information about your computer.</div>
+                        <q-checkbox v-model="createKeyConfirmed" label="I understand and accept the risk."></q-checkbox>
+                        <div v-if="createKeyConfirmed">
+                            <q-btn class="q-mt-sm" color="primary" @click="createKeyPair" icon="rotate_left" label="New pair" size="sm"></q-btn>
+
+                            <q-item clickable v-ripple active-class="bg-teal-1" @click="toClipboard(myPriKey)">
+                                <q-item-section class="itemname text-grey-4" side>Private key</q-item-section>
+                                <q-item-section class="scroll">{{myPriKey}}</q-item-section>
+                                <q-item-section avatar>
+                                    <q-icon name="copy_all"></q-icon>
+                                </q-item-section>
+                            </q-item>
+                            <q-item clickable v-ripple active-class="bg-teal-1" @click="toClipboard(myPubKey)">
+                                <q-item-section class="itemname text-grey-4" side>Public key</q-item-section>
+                                <q-item-section class="scroll">{{myPubKey}}</q-item-section>
+                                <q-item-section avatar>
+                                    <q-icon name="copy_all"></q-icon>
+                                </q-item-section>
+                            </q-item>
+                        </div>
+                    </q-card-section>
+                    
+                    <q-card-actions align="right" class="bg-white text-primary">
+                        <q-btn flat :label="createKeyConfirmed? 'I have stored my private key safely' : 'Cancel'" v-close-popup />
+                    </q-card-actions>
+                    </q-card>
+                </q-dialog>
+            </div>
+        </template>        
+    </div>
+
+    <!-- Add the following at the end of your body tag -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quasar@2.3.4/dist/quasar.umd.prod.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/eosjs-ecc@4.0.4/lib/eosjs-ecc.min.js"
+    integrity="sha512-dYFDmK/d9r3/NCp6toLtfkwOjSMRBaEzaGAx1tfRItC0nsI0hVLERk05iNBQR7uDNI7ludYhcBI4vUiFHdjsTQ=="
+    crossorigin="anonymous">/* https://github.com/EOSIO/eosjs-ecc/releases */</script> 
+
+<script>        
+class SavWeb {
+    idToken = ''
+    names /*: { [key: string]: boolean }*/ = {}
+    requestResult = {}
+    requestNumber = 0
+    onIni
+    constructor(onIni){
+        this.onIni = onIni
+    }
+
+    /**
+     * @param event The event of a post message
+     */
+    validatePostMessage(event){
+        if(event == undefined || event.data == undefined){
+            return
+        }
+        if(event.data){
+            const data = event.data // as {SavWeb: {idToken?: string, validToken?: boolean, f: string, post?: string, result?: unknown}}
+            if(data.SavWeb){
+                const parentMsg = data.SavWeb
+                if(parentMsg.idToken != undefined && parentMsg.idToken != ''){
+                    this.idToken = parentMsg.idToken
+                    console.log('SavWeb page got idToken', this.idToken)
+                }
+                if(typeof parentMsg.validToken == 'boolean'){
+                    if(!parentMsg.validToken){
+                        window.parent.postMessage({ SavWeb:{ go: '#savactsavact' } }, '*');
+                    }
+                }
+                switch(parentMsg.f) {
+                    case 'eosioChainApiResult':
+                        switch(parentMsg.post){
+                            case 'get_account':
+                                console.log('Result in SavWeb page:', parentMsg.result);
+                                // TODO: Wait for the result of a defined name
+                                const result = parentMsg.result // as {account_name: string, } 
+                                if(result == undefined){
+                                    // Set to undefined
+                                    this.setNameValueByMsgId(parentMsg.id, undefined)
+                                } else {
+                                    if('account_name' in result && result.account_name != undefined){
+                                        console.log('found account name')
+                                        this.names[result.account_name] = true
+                                    } else {
+                                        // Set to false
+                                        this.setNameValueByMsgId(parentMsg.id, false)
+                                    }
+                                }
+                                break
+                            default: // 'get_table_rows'
+                                console.log('Result in SavWeb page:', parentMsg.result);
+                                const resultTable = parentMsg.result
+                                if(resultTable == undefined){
+                                    // Set to undefined for no result
+                                    this.requestResult[parentMsg.id] = undefined
+                                } else {
+                                    this.requestResult[parentMsg.id] = resultTable
+                                }
+                                break
+                        }
+                        break
+                    case 'ini':
+                        console.log('set style', this.onIni);
+                        console.log('set style', typeof this.onIni);
+                        if(typeof this.onIni == 'function'){
+                            console.log('is function');
+                            this.onIni(parentMsg)
+                        }
+                        break
+                }
+            }
+        }
+    }
+
+    setNameValueByMsgId(id, val){
+        for (const key in this.names) {
+            if(this.names[key] === id){
+                console.log(`${key}: ${this.names[key]}`, val);
+                this.names[key] = false
+                break
+            }
+        }
+    }
+
+    /**
+     * Sleep for a defined amount of time
+     * @param ms Milliseconds to sleep
+     */
+    static sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Check a name if it exists
+     * @param name EOSIO account name
+     * @param maxWaitMs Maximum of milliseconds to wait
+     * @returns true if the name exists otherwise false and undefined if there is no result
+     */
+    async checkName(chain, name, maxWaitMs = 3000){
+        // If it was already tested then return it
+        if(name in this.names && typeof this.names.name == 'boolean'){
+            return this.names.name
+        }
+
+        const requestId = this.requestNumber++
+        // Request for the account
+        window.parent.postMessage({ 
+            SavWeb:{ 
+            f: 'eosioChainApi',
+            id: requestId,
+            chain,
+            post: 'get_account',
+            params: name,
+            idToken: this.idToken
+            } 
+        }, '*');
+        this.names[name] = requestId
+
+        // Wait for the result but only as long as defined by wait
+        let timespan = 0
+        const interval = 100            // Check each 100 ms 
+        while(timespan < maxWaitMs && (name in this.names) && typeof this.names[name] == 'number'){
+            await SavWeb.sleep(interval)
+            timespan += interval
+        }
+
+        // Return the result
+        if(name in this.names && typeof this.names[name] == 'boolean'){
+            return this.names[name]
+        }
+        return undefined
+    }
+
+    /**
+     * Verifiy the given idToken
+     */
+    verifiy(){
+        window.parent.postMessage({ 
+            SavWeb:{ 
+                f: 'verifiyId',
+                idToken: this.idToken
+            } 
+        }, '*');
+    }  
+}
+    </script>
+    <script defer>
+const app = Vue.createApp({
+setup () {    
+    const usedChain = 'eos'
+    const usedSaleSite = 'savact'
+    const appLink = 'https://savact.app/'
+    const paySymbol = 'EOS'
+
+    const createKeyDialog = Vue.ref(false)
+    const createKeyConfirmed = Vue.ref(false)
+
+    const coupon = Vue.computed(()=>{
+        if(hasacc.value === 'true'){
+            return username.value
+        } else if(hasacc.value === 'false'){
+            return userkey.value
+        }
+        return ''
+    })
+
+    const affiLink = Vue.computed(()=>{
+        return `${appLink}#${usedSaleSite}?affi=${coupon.value}`
+    })
+
+    const step = Vue.ref(1)
+    const done1 = Vue.ref(false)
+    const check1Loading = Vue.ref(false)
+    const hasacc = Vue.ref('')
+    const username = Vue.ref('')
+    const userkey = Vue.ref('')
+    const optionOpen = Vue.ref(false)
+
+    function reset () {
+        step.value = 0
+        done1.value = false
+        hasacc.value = ''
+        username.value = ''
+        userkey.value = ''
+    }
+
+    const stylemodeRef = Vue.ref()
+    const stylemode = Vue.computed({
+        set(value){
+            stylemodeRef.value = value
+            Quasar.Dark.set(value)
+        },
+        get(){
+            return stylemodeRef.value
+        }
+    })
+    stylemode.value = true
+
+    async function checkName(username){
+      if(username.trim() == ''){
+        showError('Please enter a name.')
+        return false
+      }
+      if (!checkNameChars(username)) {
+        showError('Invalid name. Allowed characters are a-z, . and 1-5')
+        return false
+      }
+      // Check name exists
+      const hasName = await savWeb.checkName(usedChain, username)
+      if(hasName == undefined){
+        showError(`Can not verify the name "${username}". It might not exist.`)
+        return
+      } else if(hasName == false){
+        showError(`The name "${username}" does not exist.`)
+        return false
+      }
+      return true
+    }
+
+    async function checkStep1 () {
+      check1Loading.value = true
+      await (async ()=>{
+        // Check user
+        if (hasacc.value) {
+          if (hasacc.value === 'true') {
+            if(await checkName(username.value) !== true){
+              return
+            }
+          } else {
+            if (!eosjs_ecc.isValidPublic(userkey.value)) {
+              showError('Invalid public key.')
+              return
+            }
+          }
+
+          done1.value = true
+          step.value = 2
+        }
+      })()
+      check1Loading.value = false
+    }
+
+    function checkNameChars (name) {
+      for (let i = 0; i < name.length; ++i) {
+        if (!'.12345abcdefghijklmnopqrstuvwxyz'.includes(name[i])) {
+          return false
+        }
+      }
+      return true
+    }
+
+    function showError (text) {
+      Quasar.Notify.create({
+        color: 'negative',
+        icon: 'report_problem',
+        position: 'top',
+        message: text
+      })
+    }
+
+    function showCongrat (text) {
+      Quasar.Notify.create({
+        icon: 'star',
+        position: 'top-right',
+        message: text
+      })
+    }
+
+    function toClipboard (text) {
+        Quasar.copyToClipboard(text).then(() => {
+            if (text.length > 0) {
+            Quasar.Notify.create({
+                position: 'top-right',
+                icon: 'copy_all',
+                message: 'Copy to clipboard: ' + text
+            })
+            }
+        }).catch(() => {
+            showError("Can't copy to clipboard.")
+        })
+    }
+
+    function onIni(msg){
+        if(typeof msg.darkstyle == 'boolean'){
+            stylemode.value = msg.darkstyle
+        }
+    }
+
+    const savWeb = new SavWeb(onIni)
+    window.addEventListener('message', (event)=>{
+        savWeb.validatePostMessage(event)
+    }, false)
+
+    const myPriKey = Vue.ref('')
+    const myPubKey = Vue.ref('')
+
+    function createKeyPair(){
+        eosjs_ecc.randomKey().then(privateKey  => {
+            myPriKey.value = privateKey
+            myPubKey.value = eosjs_ecc.privateToPublic(privateKey)
+        })
+    }
+
+    return { createKeyDialog, createKeyConfirmed, createKeyPair, myPriKey, myPubKey, affiLink, step, done1, check1Loading, reset, hasacc, stylemode, userkey, username, coupon, checkStep1, toClipboard, openURL: Quasar.openURL, paySymbol, optionOpen}
+}
+})
+      app.use(Quasar)
+      app.mount('#q-app')
+</script>
+
+    <style>
+        .itemname{
+            min-width: 100px;
+        }
+    </style>
+  </body>
+</html>
