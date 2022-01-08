@@ -13,13 +13,14 @@
         <div class="q-pa-md">
             <div v-if="saleStatus">
                 <div v-if="saleStatus.frozen">
-                    This sale is paused
+                    {{lang=='de'?'Dieser Sale ist pausiert':'This sale is paused'}}
                 </div>
                 <div v-else-if="saleStart" class="text-center">
-                    This sale starts in
+                    {{lang=='de'? 'Dieser Sale startet in':'This sale starts in'}}
                     <div class="text-h2 q-my-md">{{saleStart}}</div>
                     <div class="text-subtitle2">{{saleDate}}</div>
-                    <div class="q-mt-md">Make sure to have enough {{paySymbol}} to participate.</div>
+                    <div class="q-mt-md">{{lang=='de'?`Stellen Sie sicher ausreichend ${paySymbol} für die Teilnahme zu besitzen.`:`Make sure to have enough ${paySymbol} to participate.`}}</div>
+                    <q-btn class="q-mt-md" size="15px" text-color="red" icon="smart_display" label="Tutorial" @click="openURL(lang=='de'?'https://www.youtube.com/watch?v=VpcGB6Rt1jA&list=PLlqxjSlFPsipp-mvQubWy0qNJLDUXHVi0&index=1':'https://www.youtube.com/watch?v=l0mSchE4J90&list=PLlqxjSlFPsipp-mvQubWy0qNJLDUXHVi0&index=2')" />
                 </div>
                 <div v-else>
 
@@ -27,6 +28,7 @@
                         <q-fab square v-model="optionOpen" color="primary" glossy icon="keyboard_arrow_right" direction="right">
                             <q-fab-action square external-label label-position="bottom" color="orange" @click="goTo(affiPage)" icon="groups" label="Affiliate"></q-fab-action>
                             <q-fab-action square external-label label-position="bottom" color="secondary" @click="reset" icon="restart_alt" label="Reset"></q-fab-action>
+                            <q-fab-action square external-label label-position="bottom" color="blue-grey-6" @click="lang = lang=='de'?'en':'de'" icon="translate" :label="lang=='de'?'English':'Deutsch'"></q-fab-action>
                             <q-fab-action square external-label label-position="bottom" :color="stylemode?'white':'black'" :text-color="stylemode?'black':'white'" ic @click="stylemode = !stylemode" icon="brightness_medium" label="Style"></q-fab-action>
                         </q-fab>
                         <q-linear-progress v-show="!optionOpen" class="col q-mx-md" :class="stylemode?'bg-grey-10':'bg-grey-2'" size="55px" :value="progress1" color="cyan-13" :track-color="stylemode?'grey-8':'bg-grey-4'" :buffer="progress1 > 0.8? 1 : 0.9">
@@ -38,92 +40,93 @@
                     </div>
                     
                     <div class="q-pt-md q-pb-sm row justify-center items-center text-center">
-                        <div class="q-ma-sm">Fill in the form to participate in the SavAct Tokensale.</div>
-                        <q-btn size="10px" text-color="red" icon="smart_display" label="Tutorial" @click="openURL('https://www.youtube.com/watch?v=l0mSchE4J90&list=PLlqxjSlFPsipp-mvQubWy0qNJLDUXHVi0&index=2&ab_channel=SavAct')" />
+                        <div class="q-ma-sm">{{lang=='de'? 'Füllen Sie das Formular aus, um am SavAct Tokensale teilzunehmen.':'Fill in the form to participate in the SavAct Tokensale.'}}</div>
+                        <q-btn size="10px" text-color="red" icon="smart_display" label="Tutorial" @click="openURL(lang=='de'?'https://www.youtube.com/watch?v=VpcGB6Rt1jA&list=PLlqxjSlFPsipp-mvQubWy0qNJLDUXHVi0&index=1':'https://www.youtube.com/watch?v=l0mSchE4J90&list=PLlqxjSlFPsipp-mvQubWy0qNJLDUXHVi0&index=2')" />
                     </div>
                     
                     <q-stepper v-model="step" header-nav ref="stepper" color="primary" animated vertical>
                         <q-step :name="1" title="Select your case" icon="account_circle" :done="done1" :header-nav="step > 1">
                             <div class="q-gutter-lg">
                                 <div class="q-gutter-sm">
-                                <div>Do you have an {{paySymbol}} account?</div>
+                                <div>{{lang=='de'?`Besitzten Sie einen ${paySymbol}-Account?`:`Do you have an ${paySymbol} account?`}}</div>
                                 <div class="row">
-                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="hasacc" val="true" label="yes"></q-radio>
-                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="hasacc" val="false" label="no"></q-radio>
+                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="hasacc" val="true" :label="lang=='de'?'Ja':'Yes'"></q-radio>
+                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="hasacc" val="false" :label="lang=='de'?'Nein':'No'"></q-radio>
                                 </div>
                             </div>
                             <div class="q-gutter-sm" v-show="hasacc === 'false'">
-                                <div>Would you also like to create an {{paySymbol}} account?</div>
+                                <div>{{lang=='de'?`Möchten Sie gleichzeitig einen ${paySymbol}-Account erstellen?`:`Would you also like to create an ${paySymbol} account?`}}</div>
                                 <div class="row">
-                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1 text-weight-bolder" v-model="wantacc" val="true" label="yes"></q-radio>
-                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="wantacc" val="false" label="no"></q-radio>
+                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1 text-weight-bolder" v-model="wantacc" val="true" :label="lang=='de'?'Ja':'Yes'"></q-radio>
+                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="wantacc" val="false" :label="lang=='de'?'Nein':'No'"></q-radio>
                                 </div>
                             </div>
                             <div v-show="hasacc === 'true' || wantacc">
-                                <q-input outlined v-model="username" v-if="hasacc == 'true'" :label="`Your ${paySymbol} account name`" counter maxlength="12" >
+                                <q-input outlined v-model="username" v-if="hasacc == 'true'" :label="lang=='de'?`Ihr ${paySymbol}-Account-Name`:`Your ${paySymbol} account name`" counter maxlength="12" >
                                     <template v-slot:prepend>
                                         <q-icon name="account_box"></q-icon>
                                     </template>
                                 </q-input>
                                 <div v-else>
                                     <div v-if="wantacc == 'true'" class="row q-gutter-md justify-end q-ml-xs q-mb-md">
-                                        <q-input class="col-12 col-sm" outlined v-model="username" label="Wished account name" counter maxlength="12">
+                                        <q-input class="col-12 col-sm" outlined v-model="username" :label="lang=='de'?'Gewünschter Account-Name':'Wished account name'" counter maxlength="12">
                                             <template v-slot:prepend>
                                                 <q-icon name="account_box"></q-icon>
                                             </template>
                                         </q-input>
                                     </div>
                                     <div v-else class="q-ma-sm">
-                                        Use only a public key whose private key you can access in text form.
+                                        {{lang=='de'?'Benutzen Sie nur einen Public-Key auf dessen Private-Key Sie in Textform Zugriff haben.':'Use only a public key whose private key you can access in text form.'}}
                                     </div>
                                     <div class="row q-gutter-md justify-end q-ml-xs">
-                                        <q-input class="col-12 col-sm" outlined v-model="userkey"  :label="`Your ${paySymbol} public key`"></q-input>
-                                        <q-btn class="col-auto" glossy unelevated icon-right="help_center" label="Need a key pair" @click="createKeyDialog = true"></q-btn>
+                                        <q-input class="col-12 col-sm" outlined v-model="userkey"  :label="lang=='de'?`Dein ${paySymbol}-Public-Key`:`Your ${paySymbol} public key`"></q-input>
+                                        <q-btn class="col-auto" glossy unelevated icon-right="help_center" :label="lang=='de'?'Ich benötige einen Key':'Need a key pair'" @click="createKeyDialog = true"></q-btn>
                                     </div>
                                 </div>
                             </div>
                             </div>
                             <q-stepper-navigation>
-                                <q-btn @click="checkStep1" color="primary" label="Continue" :disable="hasacc == '' || (hasacc === 'false' && wantacc == '')" :loading="check1Loading"></q-btn>
+                                <q-btn @click="checkStep1" color="primary" :label="lang=='de'?'Weiter':'Continue'" :disable="hasacc == '' || (hasacc === 'false' && wantacc == '')" :loading="check1Loading"></q-btn>
                             </q-stepper-navigation>
                         </q-step>
 
                         <q-step :name="2" title="Purpose" icon="lightbulb" :done="done2" :header-nav="step > 2" >
                             <div class="q-gutter-lg">
                                 <div class="q-gutter-sm">
-                                    <div>Do you want to support a specific area of SavAct with your payment?<br>(Does not effect the tokensale)</div>
+                                    <div>{{lang=='de'?'Möchten Sie mit einer Zahlung einen bestimmten Bereich von SavAct unterstützen?':'Do you want to support a specific area of SavAct with your payment?'}}
+                                        <br>{{lang=='de'?'(Dies beeinflusst nicht die Token-Ausgabe)':'(Does not effect the tokensale)'}}</div>
                                     <div class="row q-mb-none">
-                                        <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="wantpurpose" val="true" label="yes"></q-radio>
-                                        <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="wantpurpose" val="false" label="no"></q-radio>
+                                        <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="wantpurpose" val="true" :label="lang=='de'?'Ja':'Yes'"></q-radio>
+                                        <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="wantpurpose" val="false" :label="lang=='de'?'Nein':'No'"></q-radio>
                                     </div>
                                 </div>
                                 <div class="row justify-between" v-if="wantpurpose == 'true'">
                                     <div class="col-12">
-                                        <q-radio v-model="specialpurpose" val="0" label="Generally for SavAct"></q-radio>
+                                        <q-radio v-model="specialpurpose" val="0" :label="lang=='de'?'Generell für SavAct':'Generally for SavAct'"></q-radio>
                                     </div>
                                     <div class="col-12">
-                                        <q-radio class="q-my-sm" v-model="specialpurpose" val="1" label="SavAct Payments (Independent fraud protection)"></q-radio>
+                                        <q-radio class="q-my-sm" v-model="specialpurpose" val="1" :label="lang=='de'?'SavAct-Zahlungen (Unabhängiger Betrugsschutz)':'SavAct Payments (Independent fraud protection)'"></q-radio>
                                     </div>
                                     <div class="col-12">
-                                        <q-radio class="q-my-sm" v-model="specialpurpose" val="2" label="SavAct Votings (The system to obey voteing results to get funds)"></q-radio>
+                                        <q-radio class="q-my-sm" v-model="specialpurpose" val="2" :label="lang=='de'?'SavAct-Abstimmungen (Das System um sich finanziell an Abstimmungsergebnisse zu binden)':'SavAct Votings (The system to obey voteing results to get funds)'"></q-radio>
                                     </div>
                                     <div class="col-12">
-                                        <q-radio class="q-my-sm" v-model="specialpurpose" val="3" label="SavWeb (Browser for decentralized websites)"></q-radio>
+                                        <q-radio class="q-my-sm" v-model="specialpurpose" val="3" :label="lang=='de'?'SavWeb (Browser für dezentrale Webseiten)':'SavWeb (Browser for decentralized websites)'"></q-radio>
                                     </div>
                                     <div class="col-12">
-                                        <q-radio v-model="specialpurpose" val="4" label="SavAct Wallet App (Ergonomy and further software tools)"></q-radio>
+                                        <q-radio v-model="specialpurpose" val="4" :label="'SavAct Wallet App '+(lang=='de'?'(Ergonomie und weitere Software-Tools)':'(Ergonomy and further software tools)')"></q-radio>
                                     </div>
                                 </div>
                             </div>
                             <q-stepper-navigation>
-                                <q-btn @click="() => { done2 = true; step = 3 }" color="primary" label="Continue" :disable="wantpurpose == ''"></q-btn>
-                                <q-btn flat @click="step = 1" color="primary" label="Back" class="q-ml-sm"></q-btn>
+                                <q-btn @click="() => { done2 = true; step = 3 }" color="primary" :label="lang=='de'?'Weiter':'Continue'" :disable="wantpurpose == ''"></q-btn>
+                                <q-btn flat @click="step = 1" color="primary" :label="lang=='de'?'Zurück':'Back'" class="q-ml-sm"></q-btn>
                             </q-stepper-navigation>
                         </q-step>
                 
                         <q-step :name="3" title="Amount" icon="monetization_on" :done="done3" :header-nav="step > 3">
                             <div class="q-gutter-lg">
-                                <q-input outlined v-model.number="payAmountPointed" type="number" label="Amount" :hint="`~${estimateToken}`">
+                                <q-input outlined v-model.number="payAmountPointed" type="number" :label="lang=='de'?'Betrag':'Amount'" :hint="`~${estimateToken}`">
                                     <template v-slot:prepend>
                                         <q-icon name="monetization_on"></q-icon>
                                     </template>
@@ -131,7 +134,7 @@
                                         <q-avatar>{{paySymbol}}</q-avatar>
                                     </template>
                                 </q-input>
-                                <q-input outlined v-model="coupon" label="Coupon code" :hint="hascoupon && coupon.length > 0? `Added ~${estimateExtraToken}` : ''" >
+                                <q-input outlined v-model="coupon" :label="lang=='de'?'Coupon-Code':'Coupon code'" :hint="hascoupon && coupon.length > 0? `Added ~${estimateExtraToken}` : ''" >
                                     <template v-slot:prepend>
                                         <q-icon name="stars"></q-icon>
                                     </template>
@@ -141,8 +144,8 @@
                                 </q-input>
                             </div>
                             <q-stepper-navigation>
-                                <q-btn @click="checkStep3" color="primary" label="Continue" :disable="payAmountPointed <= 0" :loading="check3Loading"></q-btn>
-                                <q-btn flat @click="step = 2" color="primary" label="Back" class="q-ml-sm"></q-btn>
+                                <q-btn @click="checkStep3" color="primary" :label="lang=='de'?'Weiter':'Continue'" :disable="payAmountPointed <= 0" :loading="check3Loading"></q-btn>
+                                <q-btn flat @click="step = 2" color="primary" :label="lang=='de'?'Zurück':'Back'" class="q-ml-sm"></q-btn>
                             </q-stepper-navigation>
                         </q-step>
 
@@ -153,13 +156,13 @@
                                     <q-btn color="secondary" icon="code" label="Token Sale Contract" @click="openURL('https://github.com/SavAct/TokenSale')"></q-btn>
                                 </div>
                                 <div class="q-gutter-sm">
-                                    <q-checkbox v-model="gtcChecked" label="I have read the full SavAct White Paper. I accept that no compensation can be claimed in case of losses and that SavAct tokens are issued according to the algorithm of the SavAct Token Sale Contract."></q-checkbox>
+                                    <q-checkbox v-model="gtcChecked" :label="lang=='de'?'Ich habe das SavAct-White-Paper vollständig gelesen. Ich akzeptiere, dass im Falle von Verlusten keine Entschädigung verlangt werden kann und dass SavAct-Token nach dem Algorithmus des SavAct-Tokensale-Contracts ausgegeben werden.':'I have read the full SavAct White Paper. I accept that no compensation can be claimed in case of losses and that SavAct tokens are issued according to the algorithm of the SavAct Token Sale Contract.'"></q-checkbox>
                                 </div>
                                 <div v-show="gtcChecked">
                                 <div>
                                 <div class="row">
                                     <div class="col-12 col-md-8">
-                                        Transaction information
+                                        {{lang=='de'?'Überweisungsdaten':'Transaction information'}}
                                         <q-item clickable v-ripple :active="activePayment" active-class="bg-teal-1 text-grey-8" @click="toClipboard(usedContract)">
                                             <q-item-section class="payitemname" side>Account</q-item-section>
                                             <q-item-section>{{usedContract}}</q-item-section>
@@ -187,8 +190,8 @@
                             </div>
                             </div>
                             <q-stepper-navigation>
-                                <q-btn color="primary" @click="sendToFinish" label="Send" :disable="!gtcChecked"></q-btn>
-                                <q-btn flat @click="step = 3" color="primary" label="Back" class="q-ml-sm"></q-btn>
+                                <q-btn color="primary" @click="sendToFinish" :label="lang=='de'?'Senden':'Send'" :disable="!gtcChecked"></q-btn>
+                                <q-btn flat @click="step = 3" color="primary" :label="lang=='de'?'Zurück':'Back'" class="q-ml-sm"></q-btn>
                             </q-stepper-navigation>
                         </q-step>
                     </q-stepper>
@@ -196,12 +199,13 @@
             </div>
             <div v-else>
                 <q-spinner v-if="saleStatus != null" size="50px" color="primary"></q-spinner>
-                <div v-else class="text-center">Wait some seconds to connect to the sale. <a :href="browserLink + '#' + usedContract">If you are not using the SavAct App than click here.</a></div>
+                <div v-else class="text-center">{{lang=='de'?'Warten Sie ein paar Sekunden, damit sich mit dem Sale verbunden werden kann. ':'Wait some seconds to connect to the sale. '}}
+                    <a :href="browserLink + '#' + usedContract">{{lang=='de'?'Wenn Sie gerade nicht die SavAct-App verwendest, dann klicke bitte hier.':'If you are not using the SavAct App than click here.'}}</a></div>
             </div>
-            <q-expansion-item class="q-mt-md" expand-separator label="Check your Token amount" expand-icon="info">
+            <q-expansion-item class="q-mt-md" expand-separator :label="lang=='de'?'Prüfe deine Tokenmenge':'Check your Token amount'" expand-icon="info">
                 <q-card>
                     <q-card-section>
-                        <q-input outlined v-model="checkUser" @keydown.enter.prevent="checkUserAmount" label="Enter your used account name or public key">
+                        <q-input outlined v-model="checkUser" @keydown.enter.prevent="checkUserAmount" :label="lang=='de'?'Geben Sie Ihren verwendeten Account-Namen oder Public-Key ein':'Enter your used account name or public key'">
                             <template v-slot:prepend>
                                 <q-icon name="account_circle"></q-icon>
                             </template>
@@ -222,20 +226,20 @@
         </div>     
         <template>
             <div class="q-pa-md q-gutter-sm">
-                <q-btn label="Click me" color="primary" @click="persistent = true" />
+                <q-btn :label="lang=='de'?'Klick mich':'Click me'" color="primary" @click="persistent = true" />
             
                 <q-dialog v-model="createKeyDialog" persistent transition-show="scale" transition-hide="scale">
                     <q-card class="bg-teal text-white" style="max-width: 600px;">
                         <q-card-section class="q-pb-none">
-                            <div class="text-h5 text-center">Generate a key pair</div>
+                            <div class="text-h5 text-center">{{lang=='de'?'Generiere ein Key-Pair (Schlüsselpaar)':'Generate a key pair'}}</div>
                         </q-card-section>
                 
                         <q-card-section class="q-my-none q-py-none">
-                            <div class="text-h6">Attention</div>
-                            <div>Write your private key down and keep it safe! Make sure that no other person has access to the private key. In the event of loss or misspeling your private key all funds are permanently lost and cannot be restored. The same applies to unauthorized access of third parties for example like spyware which monitors and gathers information about your computer.</div>
-                            <q-checkbox v-model="createKeyConfirmed" label="I understand and accept the risk."></q-checkbox>
+                            <div class="text-h6">{{lang=='de'?'Achtung':'Attention'}}</div>
+                            <div>{{lang=='de'?'Notieren Sie sich Ihren Private-Key (privaten Schlüssel) und verwahren Sie diese Notiz sicher auf! Stellen Sie sicher, dass keine andere Person Zugang zu Ihren Private-Key hat. Bei Verlust oder falscher Schreibweise Ihres Private-Keys sind alle damit verbunden Mittel, somit auch Ihre Token, dauerhaft verloren und können nicht wiederhergestellt werden. Das Gleiche gilt für den unbefugten Zugriff Dritter, wie beispielsweise durch Spionagesoftware auf ihrem Computer.':'Write your private key down and keep it safe! Make sure that no other person has access to the private key. In the event of loss or misspelling your private key all funds are permanently lost and cannot be restored. The same applies to unauthorized access of third parties for example like spyware which monitors and gathers information about your computer.'}}</div>
+                            <q-checkbox v-model="createKeyConfirmed" :label="lang=='de'?'Ich akzeptiere und verstehe das Risiko.':'I understand and accept the risk.'"></q-checkbox>
                             <div v-if="createKeyConfirmed">
-                                <q-btn class="q-mt-sm" color="primary" @click="createKeyPair" icon="rotate_left" label="New pair" size="sm"></q-btn>
+                                <q-btn class="q-mt-sm" color="primary" @click="createKeyPair" icon="rotate_left" :label="lang=='de'?'Generiere neues Key-Pair':'Generate new key pair'" size="sm"></q-btn>
                                 <div class="row">
                                     <div class="payitemname q-ma-sm">Private key</div>
                                     <div class="col-grow q-ma-sm items-center"><q-scroll-area :visible="true" style="height: 35px;">{{myPriKey}}</q-scroll-area></div>
@@ -250,7 +254,7 @@
                         </q-card-section>
                         
                         <q-card-actions align="right" class="bg-white text-primary">
-                            <q-btn flat :label="createKeyConfirmed? 'I have stored my private key safely' : 'Cancel'" v-close-popup />
+                            <q-btn flat :label="createKeyConfirmed? (lang=='de'?'Ich habe meinen Private-Key sicher hinterlegt':'I have stored my private key safely') : (lang=='de'?'Zurück':'Cancel')" v-close-popup />
                         </q-card-actions>
                     </q-card>
                 </q-dialog>
@@ -335,8 +339,6 @@ class SavWeb {
                         }
                         break
                     case 'ini':
-                        // console.log('set style', this.onIni);
-                        // console.log('set style', typeof this.onIni);
                         if(typeof this.onIni == 'function'){
                             // console.log('is function');
                             this.onIni(parentMsg)
@@ -635,6 +637,13 @@ setup () {
         return `Price: ${assetToString(lastPrice.value, payPrecision.value, paySymbol.value)}`
     })
 
+    // Get browser language
+    let userLang = navigator.language || navigator.userLanguage
+    if(userLang.length > 2){
+        userLang = userLang.substr(0, 2)
+    }
+    const lang = Vue.ref(userLang)
+
     function reset () {
         step.value = 1
         done1.value = false
@@ -700,18 +709,18 @@ setup () {
             return true
         }
         if(exist === false){
-            showError(`Can not verify the name "${username}". It might not exist.`)
+            showError(lang.value=='de'?`Der Name "${username}" kann nicht betsätigt werden. Er ist möglicherweise nicht vergeben.`:`Can not verify the name "${username}". It might not exist.`)
         }
         return false
     }
 
     async function checkNameExist(username){
       if(username.trim() == ''){
-        showError('Please enter a name.')  
+        showError(lang.value=='de'?'Bitte geben Sie einen Namen ein.':'Please enter a name.')  
         return null
       }
       if (!checkNameChars(username)) {
-        showError('Invalid name. Permitted characters are a-z, . and 1-5')
+        showError(lang.value=='de'? 'Ungültiger Name. Erlaubte Zeichen sind a-z, . und 1-5':'Invalid name. Permitted characters are a-z, . and 1-5')
         return null
       }
       // Check name exists
@@ -732,7 +741,7 @@ setup () {
     async function checkSaleState(progressDelay = 0){
         const rStatus = await savWeb.getTableRows(usedChain, usedContract, 'stat', usedContract, 0)
         if(rStatus == undefined){
-            showError('Unable to connect to the sale.')
+            showError(lang.value=='de'? 'Die Verbindung zum Sale konnte nicht hergestellt werden.':'Unable to connect to the sale.')
             return
         }
         if('frozen' in rStatus && 'sold' in rStatus && 'start' in rStatus && 'total' in rStatus && 'endprice' in rStatus && 'sp' in rStatus){
@@ -845,24 +854,24 @@ setup () {
           } else {
             userkey.value = userkey.value.trim()
             if(userkey.value.length > 3 && userkey.value.substr(0, 3) != "EOS"){
-                showError('Only public keys beginning with EOS are accepted.')
+                showError(lang.value=='de'?'Nur Public-Keys die mit EOS anfangen sind erlaubt.':'Only public keys beginning with EOS are accepted.')
                 return
             }
             if (!eosjs_ecc.isValidPublic(userkey.value)) {
-              showError('Invalid public key.')
+              showError(lang.value=='de'?'Ungültiger Public-Key.':'Invalid public key.')
               return
             }
             if (wantacc.value === 'true') {
                 if(username.value.length != 12){
-                    showError(`The name has to be 12 characters long.`)
+                    showError(lang.value=='de'?'Der Name muss genau 12 Zeichen lang sein.':'The name has to be 12 characters long.')
                     return
                 } else if(username.value.indexOf('.') > -1){
-                    showError(`Dots are not allowed for new account creation.`)
+                    showError(lang.value=='de'?'Punkte sind bei der Erstellung eines neuen Accounts nicht erlaubt.':'Dots are not allowed for new account creation.')
                     return
                 }
                 let existName = await checkNameExist(username.value)
                 if(existName === true){
-                    showError(`The name ${username.value} already exists.`)
+                    showError(lang.value=='de'? `Der Name ${username.value} ist bereits vergeben.`:`The name ${username.value} already exists.`)
                     return
                 } else if(existName === null){
                     return
@@ -882,25 +891,25 @@ setup () {
         if (coupon.value.length > 0) {
             if (coupon.value.length === 53) {
                 if(hasacc.value === 'false' && coupon.value == userkey.value){
-                    showError('Can not use youreself.')
+                    showError(lang.value=='de'?'Hier kann nicht die eigene Adresse verwendet werden.':'Can not use youreself.')
                     return false
                 }
                 if (eosjs_ecc.isValidPublic(coupon.value)) {
-                    showCongrat('Congratulation, you get +5% more!')
+                    showCongrat(lang.value=='de'?'Glückwunsch, Sie erhalten +5% mehr Token!':'Congratulation, you get +5% more tokens!')
                     return true
                 }
             } else if (coupon.value.length <= 12) {
                 if((hasacc.value === 'true' || wantacc.value === 'true') && coupon.value == username.value){
-                    showError('Can not use youreself.')
+                    showError(lang.value=='de'?'Hier können Sie nicht den eigenen Accout-Namen verwenden.':'Can not use youreself.')
                     return false
                 }
                 if (await checkName(coupon.value) === true) {
-                    showCongrat('Congratulation, you get +5% more!')
+                    showCongrat(lang.value=='de'?'Glückwunsch, Sie erhalten +5% mehr Token!':'Congratulation, you get +5% more tokens!')
                     return true
                 }
                     return false
                 }
-            showError('Invalid coupon code.')
+            showError(lang.value=='de'?'Ungültiger Coupon-Code.':'Invalid coupon code.')
             coupon.value = ''
             return false
         }
@@ -931,12 +940,12 @@ setup () {
       }
       // Check amount
       if(hasacc.value == 'false' && wantacc.value == 'true' && payAmountPointed.value < 10){
-        showError('The minimum amount to receive tokens and create a new account at the same time is 10 EOS.')
+        showError(lang.value=='de'? 'Der Mindestbetrag, um Token zu erhalten und gleichzeitig ein neues Konto zu erstellen, beträgt 10 EOS.':'The minimum amount to receive tokens and create a new account at the same time is 10 EOS.')
       } else if (payAmountPointed.value >= 0.1) {
         done3.value = true
         step.value = 4
       } else {
-        showError('Minimum amount is 0.1 EOS.')
+        showError(lang.value=='de'?'Die Mindestmenge beträgt 0.1 EOS.':'Minimum amount is 0.1 EOS.')
       }
       check3Loading.value = false
     }
@@ -967,11 +976,11 @@ setup () {
             Quasar.Notify.create({
                 position: 'top-right',
                 icon: 'copy_all',
-                message: 'Copy to clipboard: ' + text
+                message: (lang.value=='de'? "In die Zwischenablage kopiert: ":'Copy to clipboard: ') + text
             })
             }
         }).catch(() => {
-            showError("Can't copy to clipboard.")
+            showError(lang.value=='de'?'Das Kopieren in die Zwischenablage ist fehlgeschlagen.':"Can't copy to clipboard.")
         })
     }
 
@@ -982,7 +991,8 @@ setup () {
 
         if(msg.fullPath){
             coupon.value = getPathAffi(msg.fullPath)
-        }
+        }        
+
         checkSaleState(5000)
     }
 
@@ -1015,8 +1025,9 @@ setup () {
 
             const seconds = Math.floor(diff);
             
-            const daysStr = `${days} days and`
+            const daysStr = `${days} ${lang.value=='de'?'Tagen und':'days and'}`
             saleStart.value = `${days > 0? daysStr:''} ${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+
             setTimeout(updateSaleStartTime, 1000)
             return timespan
         } else {
@@ -1078,15 +1089,18 @@ setup () {
                     return item.substr(item.length - conSymbol.value.length) == conSymbol.value? true : false 
                 })
                 if(asset == undefined){
-                    showError(`No ${conSymbol.value} token found for ${userStr}.`)
+                    let msg = lang.value=='de'?`Es wurden keine ${conSymbol.value}-Token unter der Adresse ${userStr} gefunden.`:`No ${conSymbol.value} token found for ${userStr}.`
+                    showError(msg)
                     checkedUserAmount.value = ''
                 } else {
-                    showCongrat(`${asset}`, `belongs to ${userStr}.`)
+                    let msg = lang.value=='de'?`gehörden der Adresse ${userStr}.`: `belongs to ${userStr}.`
+                    showCongrat(`${asset}`, msg)
                     checkedUserAmount.value = asset
                 }
                 
             } else {
-                showError(`No ${conSymbol.value} token found for ${userStr}.`)
+                let msg = lang.value=='de'?`Es wurden keine ${conSymbol.value}-Token unter der Adresse ${userStr} gefunden.`:`No ${conSymbol.value} token found for ${userStr}.`
+                showError(msg)
                 checkedUserAmount.value = ''
             }
         }
@@ -1116,7 +1130,7 @@ setup () {
 
         const rPur = await savWeb.getTableRows(usedChain, usedContract, 'purchased', usedContract, rowParams.id)
         if(rPur == undefined){
-            showError('Unable to get the data.')
+            showError(lang.value=='de'?'Die Daten konnten nicht abgerufen werden.':'Unable to get the data.')
             return undefined
         }
         if('owner' in rPur && typeof rPur.owner == 'object'){
@@ -1138,7 +1152,7 @@ setup () {
     async function getNameUserAsset(name) {
         const balances = await savWeb.getBalance(usedChain, tokenContract, name)
         if(balances == undefined){
-            showError('Unable to get the data.')
+            showError(lang.value=='de'?'Die Daten konnten nicht abgerufen werden.':'Unable to get the data.')
             return
         }
         if(balances != null && balances.length > 0){
@@ -1157,7 +1171,7 @@ setup () {
         })
     }
 
-    return { goTo: SavWeb.goTo, createKeyDialog, createKeyConfirmed, createKeyPair, myPriKey, myPubKey, affiPage, checkSaleState, optionOpen, progress1, progressLabel1, paySymbol, estimateToken, estimateExtraToken, saleStatus, getCurrentTimeStamp, saleStart, saleDate, step, done1, done2, done3, done4, check1Loading, check3Loading, sendToFinish, reset, hasacc, wantacc, gtcChecked, wantpurpose, specialpurpose, payAmountPointed, stylemode, usedContract, memo, fund, userkey, username, coupon, checkStep1, checkStep3, checkCoupon, activePayment, toClipboard, openURL: Quasar.openURL, hascoupon, checkUser, checkUserAmount, checkUserAmountLoading, checkedUserAmount, browserLink }
+    return { goTo: SavWeb.goTo, createKeyDialog, createKeyConfirmed, createKeyPair, myPriKey, myPubKey, affiPage, checkSaleState, optionOpen, progress1, progressLabel1, paySymbol, estimateToken, estimateExtraToken, saleStatus, getCurrentTimeStamp, saleStart, saleDate, step, done1, done2, done3, done4, check1Loading, check3Loading, sendToFinish, reset, hasacc, wantacc, gtcChecked, wantpurpose, specialpurpose, payAmountPointed, stylemode, usedContract, memo, fund, userkey, username, coupon, checkStep1, checkStep3, checkCoupon, activePayment, toClipboard, openURL: Quasar.openURL, hascoupon, checkUser, checkUserAmount, checkUserAmountLoading, checkedUserAmount, browserLink, lang }
 }
 })
       app.use(Quasar)
