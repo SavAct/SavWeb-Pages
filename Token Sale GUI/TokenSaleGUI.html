@@ -20,7 +20,7 @@
                     <div class="text-h2 q-my-md">{{saleStart}}</div>
                     <div class="text-subtitle2">{{saleDate}}</div>
                     <div class="q-mt-md">{{lang=='de'?`Stellen Sie sicher ausreichend ${paySymbol} für die Teilnahme zu besitzen.`:`Make sure to have enough ${paySymbol} to participate.`}}</div>
-                    <q-btn class="q-mt-md" size="15px" text-color="red" icon="smart_display" label="Tutorial" @click="openURL(lang=='de'?'https://www.youtube.com/watch?v=VpcGB6Rt1jA&list=PLlqxjSlFPsipp-mvQubWy0qNJLDUXHVi0&index=1':'https://www.youtube.com/watch?v=l0mSchE4J90&list=PLlqxjSlFPsipp-mvQubWy0qNJLDUXHVi0&index=2')" />
+                    <q-btn class="q-mt-md" size="15px" text-color="red" icon="smart_display" :label="'Video' + (lang=='de'?'-Anleitung':' Tutorial')" @click="openURL(lang=='de'?'https://www.youtube.com/watch?v=VpcGB6Rt1jA&list=PLlqxjSlFPsipp-mvQubWy0qNJLDUXHVi0&index=1':'https://www.youtube.com/watch?v=l0mSchE4J90&list=PLlqxjSlFPsipp-mvQubWy0qNJLDUXHVi0&index=2')" />
                 </div>
                 <div v-else>
 
@@ -41,11 +41,11 @@
                     
                     <div class="q-pt-md q-pb-sm row justify-center items-center text-center">
                         <div class="q-ma-sm">{{lang=='de'? 'Füllen Sie das Formular aus, um am SavAct Tokensale teilzunehmen.':'Fill in the form to participate in the SavAct Tokensale.'}}</div>
-                        <q-btn size="10px" text-color="red" icon="smart_display" label="Tutorial" @click="openURL(lang=='de'?'https://www.youtube.com/watch?v=VpcGB6Rt1jA&list=PLlqxjSlFPsipp-mvQubWy0qNJLDUXHVi0&index=1':'https://www.youtube.com/watch?v=l0mSchE4J90&list=PLlqxjSlFPsipp-mvQubWy0qNJLDUXHVi0&index=2')" />
+                        <q-btn class="q-mx-lg q-px-lg" size="13px" text-color="red" :color="stylemode?'blue-grey-9':'blue-grey-1'" icon="smart_display" :label="'Video' + (lang=='de'?'-Anleitung':' Tutorial')" @click="openURL(lang=='de'?'https://www.youtube.com/watch?v=VpcGB6Rt1jA&list=PLlqxjSlFPsipp-mvQubWy0qNJLDUXHVi0&index=1':'https://www.youtube.com/watch?v=l0mSchE4J90&list=PLlqxjSlFPsipp-mvQubWy0qNJLDUXHVi0&index=2')" />
                     </div>
                     
                     <q-stepper v-model="step" header-nav ref="stepper" color="primary" animated vertical>
-                        <q-step :name="1" title="Select your case" icon="account_circle" :done="done1" :header-nav="step > 1">
+                        <q-step :name="1" :title="lang=='de'?'Wählen Sie Ihren Fall aus':'Select your case'" icon="account_circle" :done="done1" :header-nav="step > 1">
                             <div class="q-gutter-lg">
                                 <div class="q-gutter-sm">
                                 <div>{{lang=='de'?`Besitzten Sie einen ${paySymbol}-Account?`:`Do you have an ${paySymbol} account?`}}</div>
@@ -90,10 +90,10 @@
                             </q-stepper-navigation>
                         </q-step>
 
-                        <q-step :name="2" title="Purpose" icon="lightbulb" :done="done2" :header-nav="step > 2" >
+                        <q-step :name="2" :title="lang=='de'?'Zweck':'Purpose'" icon="lightbulb" :done="done2" :header-nav="step > 2" >
                             <div class="q-gutter-lg">
                                 <div class="q-gutter-sm">
-                                    <div>{{lang=='de'?'Möchten Sie mit einer Zahlung einen bestimmten Bereich von SavAct unterstützen?':'Do you want to support a specific area of SavAct with your payment?'}}
+                                    <div>{{lang=='de'?'Möchten Sie mit der Zahlung einen bestimmten Bereich von SavAct unterstützen?':'Do you want to support a specific area of SavAct with your payment?'}}
                                         <br>{{lang=='de'?'(Dies beeinflusst nicht die Token-Ausgabe)':'(Does not effect the tokensale)'}}</div>
                                     <div class="row q-mb-none">
                                         <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="wantpurpose" val="true" :label="lang=='de'?'Ja':'Yes'"></q-radio>
@@ -124,7 +124,7 @@
                             </q-stepper-navigation>
                         </q-step>
                 
-                        <q-step :name="3" title="Amount" icon="monetization_on" :done="done3" :header-nav="step > 3">
+                        <q-step :name="3" :title="lang=='de'?'Menge':'Amount'" icon="monetization_on" :done="done3" :header-nav="step > 3">
                             <div class="q-gutter-lg">
                                 <q-input outlined v-model.number="payAmountPointed" type="number" :label="lang=='de'?'Betrag':'Amount'" :hint="`~${estimateToken}`">
                                     <template v-slot:prepend>
@@ -149,7 +149,7 @@
                             </q-stepper-navigation>
                         </q-step>
 
-                        <q-step :name="4" title="Payment" icon="account_balance" :done="done4" :header-nav="step > 4">
+                        <q-step :name="4" :title="lang=='de'?'Zahlung':'Payment'" icon="account_balance" :done="done4" :header-nav="step > 4">
                             <div class="q-gutter-md">
                                 <div class="q-gutter-sm">
                                     <q-btn color="primary" icon="description" label="White Paper" @click="openURL('https://savact.com/wp_en.pdf')"></q-btn>
