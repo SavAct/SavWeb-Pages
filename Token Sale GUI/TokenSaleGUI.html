@@ -69,7 +69,7 @@
                                 </q-input>
                                 <div v-else>
                                     <div v-if="wantacc == 'true'" class="row q-gutter-md justify-end q-ml-xs q-mb-md">
-                                        <q-input class="col-12 col-sm" outlined v-model="username" :label="lang=='de'?'Gewünschter Account-Name':'Wished account name'" counter maxlength="12">
+                                        <q-input class="col-12 col-sm" outlined v-model="username" :label="lang=='de'?'Gewünschter Account-Name':'Desired account name'" counter maxlength="12">
                                             <template v-slot:prepend>
                                                 <q-icon name="account_box"></q-icon>
                                             </template>
@@ -79,8 +79,8 @@
                                         {{lang=='de'?'Benutzen Sie nur einen Public-Key auf dessen Private-Key Sie in Textform Zugriff haben.':'Use only a public key whose private key you can access in text form.'}}
                                     </div>
                                     <div class="row q-gutter-md justify-end q-ml-xs">
-                                        <q-input class="col-12 col-sm" outlined v-model="userkey"  :label="lang=='de'?`Dein ${paySymbol}-Public-Key`:`Your ${paySymbol} public key`"></q-input>
-                                        <q-btn class="col-auto" glossy unelevated icon-right="help_center" :label="lang=='de'?'Ich benötige einen Key':'Need a key pair'" @click="createKeyDialog = true"></q-btn>
+                                        <q-input class="col-12 col-sm" outlined v-model="userkey"  :label="lang=='de'?`Ihr ${paySymbol}-Public-Key`:`Your ${paySymbol} public key`"></q-input>
+                                        <q-btn class="col-auto" outline unelevated icon-right="help_center" :label="lang=='de'?'Ich benötige einen Key':'Need a key pair'" @click="createKeyDialog = true"></q-btn>
                                     </div>
                                 </div>
                             </div>
@@ -162,10 +162,10 @@
                                 <div>
                                 <div class="row">
                                     <div class="col-12 col-md-8">
-                                        {{lang=='de'?'Überweisungsdaten':'Transaction information'}}
-                                        <q-item clickable v-ripple :active="activePayment" active-class="bg-teal-1 text-grey-8" @click="toClipboard(usedContract)">
+                                        <div class="q-mt-sm">{{lang=='de'?'Verwenden Sie die folgenden Überweisungsdaten, wenn Sie über eine Tauschbörse teilnehmen möchten:':'Use the following transfer information if you wish to participate through an exchange:'}}</div>
+                                        <q-item clickable v-ripple :active="activePayment" active-class="bg-teal-1 text-grey-8" @click="toClipboard(usedExchangeContract)">
                                             <q-item-section class="payitemname" side>Account</q-item-section>
-                                            <q-item-section>{{usedContract}}</q-item-section>
+                                            <q-item-section>{{usedExchangeContract}}</q-item-section>
                                             <q-item-section avatar>
                                                 <q-icon name="copy_all"></q-icon>
                                             </q-item-section>
@@ -190,8 +190,8 @@
                             </div>
                             </div>
                             <q-stepper-navigation>
-                                <q-btn color="primary" @click="sendToFinish" :label="lang=='de'?'Senden':'Send'" :disable="!gtcChecked"></q-btn>
-                                <q-btn flat @click="step = 3" color="primary" :label="lang=='de'?'Zurück':'Back'" class="q-ml-sm"></q-btn>
+                                <q-btn class="q-mt-sm" no-caps color="primary" @click="sendToFinish" :label="lang=='de'?'Die Zahlung alternativ mit einer Wallet absenden':'Send the payment alternatively with a wallet'" :disable="!gtcChecked"></q-btn>
+                                <q-btn class="q-ml-sm q-mt-sm" flat @click="step = 3" color="primary" :label="lang=='de'?'Zurück':'Back'"></q-btn>
                             </q-stepper-navigation>
                         </q-step>
                     </q-stepper>
@@ -202,27 +202,29 @@
                 <div v-else class="text-center">{{lang=='de'?'Warten Sie ein paar Sekunden, damit sich mit dem Sale verbunden werden kann. ':'Wait some seconds to connect to the sale. '}}
                     <a :href="browserLink + '#' + usedContract">{{lang=='de'?'Wenn Sie gerade nicht die SavAct-App verwendest, dann klicke bitte hier.':'If you are not using the SavAct App than click here.'}}</a></div>
             </div>
-            <q-expansion-item class="q-mt-md" expand-separator :label="lang=='de'?'Prüfe deine Tokenmenge':'Check your Token amount'" expand-icon="info">
-                <q-card>
-                    <q-card-section>
-                        <q-input outlined v-model="checkUser" @keydown.enter.prevent="checkUserAmount" :label="lang=='de'?'Geben Sie Ihren verwendeten Account-Namen oder Public-Key ein':'Enter your used account name or public key'">
-                            <template v-slot:prepend>
-                                <q-icon name="account_circle"></q-icon>
-                            </template>
-                            <template v-slot:after>
-                                <q-btn round dense flat icon="send" @click="checkUserAmount" :loading="checkUserAmountLoading"></q-btn>
-                            </template>
-                        </q-input>
-                        <div>
-                           
-                        </div>
-                        <div class="q-mt-md q-mx-lg row">
-                            <div class="col"></div>
-                            <div class="text-h6 text-green-13">{{checkedUserAmount}}</div>
-                        </div>
-                    </q-card-section>
-                </q-card>
-            </q-expansion-item>
+            <q-list bordered class="q-mt-md">
+                <q-expansion-item expand-separator :label="lang=='de'?'Prüfe Sie Ihre Tokenmenge':'Check your Token amount'" expand-icon="info">
+                    <q-card>
+                        <q-card-section>
+                            <q-input outlined v-model="checkUser" @keydown.enter.prevent="checkUserAmount" :label="lang=='de'?'Geben Sie Ihren verwendeten Account-Namen oder Public-Key ein':'Enter your used account name or public key'">
+                                <template v-slot:prepend>
+                                    <q-icon name="account_circle"></q-icon>
+                                </template>
+                                <template v-slot:after>
+                                    <q-btn round dense flat icon="send" @click="checkUserAmount" :loading="checkUserAmountLoading"></q-btn>
+                                </template>
+                            </q-input>
+                            <div>
+                            
+                            </div>
+                            <div class="q-mt-md q-mx-lg row">
+                                <div class="col"></div>
+                                <div class="text-h6 text-green-13">{{checkedUserAmount}}</div>
+                            </div>
+                        </q-card-section>
+                    </q-card>
+                </q-expansion-item>
+            </q-list>
         </div>     
         <template>
             <div class="q-pa-md q-gutter-sm">
@@ -270,6 +272,7 @@
 <script>
     const usedChain = 'eos'
     const usedContract = 'savact'
+    const usedExchangeContract = 'directsavact'
     const tokenContract = 'token.savact'
     const browserLink = 'https://savact.app'
     const gotoPageError = '#savactsavact'
@@ -720,7 +723,7 @@ setup () {
         return null
       }
       if (!checkNameChars(username)) {
-        showError(lang.value=='de'? 'Ungültiger Name. Erlaubte Zeichen sind a-z, . und 1-5':'Invalid name. Permitted characters are a-z, . and 1-5')
+        showError(lang.value=='de'? 'Ungültiger Name. Erlaubte Zeichen sind die Kleinbuchstaben a-z, . und 1-5':'Invalid name. Permitted characters are the lowercase letters a-z, . and 1-5')
         return null
       }
       // Check name exists
@@ -1171,7 +1174,7 @@ setup () {
         })
     }
 
-    return { goTo: SavWeb.goTo, createKeyDialog, createKeyConfirmed, createKeyPair, myPriKey, myPubKey, affiPage, checkSaleState, optionOpen, progress1, progressLabel1, paySymbol, estimateToken, estimateExtraToken, saleStatus, getCurrentTimeStamp, saleStart, saleDate, step, done1, done2, done3, done4, check1Loading, check3Loading, sendToFinish, reset, hasacc, wantacc, gtcChecked, wantpurpose, specialpurpose, payAmountPointed, stylemode, usedContract, memo, fund, userkey, username, coupon, checkStep1, checkStep3, checkCoupon, activePayment, toClipboard, openURL: Quasar.openURL, hascoupon, checkUser, checkUserAmount, checkUserAmountLoading, checkedUserAmount, browserLink, lang }
+    return { goTo: SavWeb.goTo, createKeyDialog, createKeyConfirmed, createKeyPair, myPriKey, myPubKey, affiPage, checkSaleState, optionOpen, progress1, progressLabel1, paySymbol, estimateToken, estimateExtraToken, saleStatus, getCurrentTimeStamp, saleStart, saleDate, step, done1, done2, done3, done4, check1Loading, check3Loading, sendToFinish, reset, hasacc, wantacc, gtcChecked, wantpurpose, specialpurpose, payAmountPointed, stylemode, usedContract, usedExchangeContract, memo, fund, userkey, username, coupon, checkStep1, checkStep3, checkCoupon, activePayment, toClipboard, openURL: Quasar.openURL, hascoupon, checkUser, checkUserAmount, checkUserAmountLoading, checkedUserAmount, browserLink, lang }
 }
 })
       app.use(Quasar)
