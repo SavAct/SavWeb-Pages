@@ -134,7 +134,7 @@
                                         <q-avatar>{{paySymbol}}</q-avatar>
                                     </template>
                                 </q-input>
-                                <q-input outlined v-model="coupon" :label="lang=='de'?'Coupon-Code':'Coupon code'" :hint="hascoupon && coupon.length > 0? `Added ~${estimateExtraToken}` : ''" >
+                                <q-input outlined v-model="coupon" :label="lang=='de'?'Coupon-Code':'Coupon code'" :hint="hascoupon && coupon.length > 0? `${lang=='de'?'Zusätzliche':'Added'} ~${estimateExtraToken}` : ''" >
                                     <template v-slot:prepend>
                                         <q-icon name="stars"></q-icon>
                                     </template>
