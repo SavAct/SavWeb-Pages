@@ -26,7 +26,8 @@
 
                     <div class="row">
                         <q-fab square v-model="optionOpen" color="primary" glossy icon="keyboard_arrow_right" direction="right">
-                            <q-fab-action square external-label label-position="bottom" color="orange" @click="goTo(affiPage)" icon="groups" label="Affiliate"></q-fab-action>
+                            <q-fab-action square external-label label-position="bottom" color="orange" @click="ledgerDialog=true" icon="usb" label="Ledger"></q-fab-action>
+                            <q-fab-action square external-label label-position="bottom" color="deep-purple-5" @click="goTo(affiPage)" icon="groups" label="Affiliate"></q-fab-action>
                             <q-fab-action square external-label label-position="bottom" color="secondary" @click="reset" icon="restart_alt" label="Reset"></q-fab-action>
                             <q-fab-action square external-label label-position="bottom" color="blue-grey-6" @click="lang = lang=='de'?'en':'de'" icon="translate" :label="lang=='de'?'English':'Deutsch'"></q-fab-action>
                             <q-fab-action square external-label label-position="bottom" :color="stylemode?'white':'black'" :text-color="stylemode?'black':'white'" ic @click="stylemode = !stylemode" icon="brightness_medium" label="Style"></q-fab-action>
@@ -48,42 +49,50 @@
                         <q-step :name="1" :title="lang=='de'?'Wählen Sie Ihren Fall aus':'Select your case'" icon="account_circle" :done="done1" :header-nav="step > 1">
                             <div class="q-gutter-lg">
                                 <div class="q-gutter-sm">
-                                <div>{{lang=='de'?`Besitzten Sie einen ${paySymbol}-Account?`:`Do you have an ${paySymbol} account?`}}</div>
-                                <div class="row">
-                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="hasacc" val="true" :label="lang=='de'?'Ja':'Yes'"></q-radio>
-                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="hasacc" val="false" :label="lang=='de'?'Nein':'No'"></q-radio>
-                                </div>
-                            </div>
-                            <div class="q-gutter-sm" v-show="hasacc === 'false'">
-                                <div>{{lang=='de'?`Möchten Sie gleichzeitig einen ${paySymbol}-Account erstellen?`:`Would you also like to create an ${paySymbol} account?`}}</div>
-                                <div class="row">
-                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1 text-weight-bolder" v-model="wantacc" val="true" :label="lang=='de'?'Ja':'Yes'"></q-radio>
-                                    <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="wantacc" val="false" :label="lang=='de'?'Nein':'No'"></q-radio>
-                                </div>
-                            </div>
-                            <div v-show="hasacc === 'true' || wantacc">
-                                <q-input outlined v-model="username" v-if="hasacc == 'true'" :label="lang=='de'?`Ihr ${paySymbol}-Account-Name`:`Your ${paySymbol} account name`" counter maxlength="12" >
-                                    <template v-slot:prepend>
-                                        <q-icon name="account_box"></q-icon>
-                                    </template>
-                                </q-input>
-                                <div v-else>
-                                    <div v-if="wantacc == 'true'" class="row q-gutter-md justify-end q-ml-xs q-mb-md">
-                                        <q-input class="col-12 col-sm" outlined v-model="username" :label="lang=='de'?'Gewünschter Account-Name':'Desired account name'" counter maxlength="12">
-                                            <template v-slot:prepend>
-                                                <q-icon name="account_box"></q-icon>
-                                            </template>
-                                        </q-input>
-                                    </div>
-                                    <div v-else class="q-ma-sm">
-                                        {{lang=='de'?'Benutzen Sie nur einen Public-Key auf dessen Private-Key Sie in Textform Zugriff haben.':'Use only a public key whose private key you can access in text form.'}}
-                                    </div>
-                                    <div class="row q-gutter-md justify-end q-ml-xs">
-                                        <q-input class="col-12 col-sm" outlined v-model="userkey"  :label="lang=='de'?`Ihr ${paySymbol}-Public-Key`:`Your ${paySymbol} public key`"></q-input>
-                                        <q-btn class="col-auto" outline unelevated icon-right="help_center" :label="lang=='de'?'Ich benötige einen Key':'Need a key pair'" @click="createKeyDialog = true"></q-btn>
+                                    <div>{{lang=='de'?`Besitzten Sie einen ${paySymbol}-Account?`:`Do you have an ${paySymbol} account?`}}</div>
+                                    <div class="row">
+                                        <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="hasacc" val="true" :label="lang=='de'?'Ja':'Yes'"></q-radio>
+                                        <q-radio class="col-6 col-sm-3 col-md-2 col-lg-1" v-model="hasacc" val="false" :label="lang=='de'?'Nein':'No'"></q-radio>
                                     </div>
                                 </div>
-                            </div>
+                                <div class="q-gutter-sm" v-show="hasacc === 'false'">
+                                    <div>{{lang=='de'?`Möchten Sie gleichzeitig einen ${paySymbol}-Account erstellen?`:`Would you also like to create an ${paySymbol} account?`}}</div>
+                                    <div class="row">
+                                        <div class="col-6 col-sm-3 col-md-2 col-lg-1 ">
+                                            <q-badge outline :color="wantacc=='true'?'blue':'blue-10'" class="text-white q-pr-md q-py-none">
+                                                <q-radio color="blue" :class="`text-${stylemode?'white':'black'}`" v-model="wantacc" val="true" :label="lang=='de'?'Ja':'Yes'"></q-radio>
+                                                <q-tooltip>{{lang=='de'?'Empfohlen':'Recommended'}}</q-tooltip>
+                                            </q-badge>
+                                        </div>
+                                        <div class="col-6 col-sm-3 col-md-2 col-lg-1">
+                                            <q-radio v-model="wantacc" val="false" :label="lang=='de'?'Nein':'No'"></q-radio>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-show="hasacc === 'true' || wantacc">
+                                    <q-input outlined v-model="username" v-if="hasacc == 'true'" :label="lang=='de'?`Ihr ${paySymbol}-Account-Name`:`Your ${paySymbol} account name`" counter maxlength="12" >
+                                        <template v-slot:prepend>
+                                            <q-icon name="account_box"></q-icon>
+                                        </template>
+                                    </q-input>
+                                    <div v-else>
+                                        <div v-if="wantacc == 'true'" class="row q-gutter-md justify-end q-ml-none q-mb-md">
+                                            <q-input class="col-12 col-sm" outlined v-model="username" :label="lang=='de'?'Gewünschter Account-Name':'Desired account name'" counter maxlength="12">
+                                                <template v-slot:prepend>
+                                                    <q-icon name="account_box"></q-icon>
+                                                </template>
+                                            </q-input>
+                                        </div>
+                                        <div v-else class="q-ml-md q-mt-none q-mb-md row items-center q-pa-sm">
+                                            <q-icon name="warning" color="orange-10" class="col-auto" size="md"></q-icon>
+                                            <span class="col q-pl-sm">{{lang=='de'?'Benutzen Sie für diese Option nur einen Public-Key auf dessen Private-Key Sie in Textform Zugriff haben. Verwenden Sie hier keinen Public-Key eines Ledger.':'Use only a public key for this option whose private key you can access in text form. Therefore, do not use a public key of a Ledger here.'}}</span>
+                                        </div>
+                                        <div class="row q-gutter-md justify-end q-ml-none">
+                                            <q-input class="col-12 col-sm" outlined v-model="userkey"  :label="lang=='de'?`Ihr ${paySymbol}-Public-Key`:`Your ${paySymbol} public key`"></q-input>
+                                            <q-btn class="col-auto" outline unelevated icon-right="help_center" :label="lang=='de'?'Ich benötige einen Key':'Need a key pair'" @click="createKeyDialog = true"></q-btn>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <q-stepper-navigation>
                                 <q-btn @click="checkStep1" color="primary" :label="lang=='de'?'Weiter':'Continue'" :disable="hasacc == '' || (hasacc === 'false' && wantacc == '')" :loading="check1Loading"></q-btn>
@@ -228,8 +237,6 @@
         </div>     
         <template>
             <div class="q-pa-md q-gutter-sm">
-                <q-btn :label="lang=='de'?'Klick mich':'Click me'" color="primary" @click="persistent = true" />
-            
                 <q-dialog v-model="createKeyDialog" persistent transition-show="scale" transition-hide="scale">
                     <q-card class="bg-teal text-white" style="max-width: 600px;">
                         <q-card-section class="q-pb-none">
@@ -262,6 +269,33 @@
                 </q-dialog>
             </div>
         </template>          
+
+        <template>
+            <div class="q-pa-md q-gutter-sm">
+                <q-dialog v-model="ledgerDialog" transition-show="scale" transition-hide="scale">
+                    <q-card class="bg-orange text-white" style="max-width: 600px;">
+                        <q-card-section class="q-pb-none">
+                            <div class="text-h5 text-center">{{lang=='de'?'Verwendung eines Ledgers':'Use of a Ledger'}}</div>
+                        </q-card-section>
+                
+                        <q-card-section class="q-mt-md q-mb-none q-py-none">
+                            <div class="text-center">
+                                <div>{{lang=='de'?'Befolgen Sie diese Anleitung zur Einrichtung des Ledgers für die EOS-Blockchain: ':'Follow these instructions to set up the Ledger for the EOS Blockchain: '}}</div>
+                                <a href="https://samveku.medium.com/how-to-add-eos-account-to-your-ledger-nano-x-s-using-anchor-wallet-79ae9917cf53" target="_blank" rel="noopener">How to add EOS account to your Ledger Nano X/S using Anchor wallet</a>
+                            </div>
+                            <div v-else class="row items-center q-pa-sm q-my-md">
+                                <q-icon name="warning" color="orange-10" class="col-auto" size="md"></q-icon>
+                                <span class="col q-pl-sm">{{lang=='de'?'Benutzen Sie den Public-Key des Ledgers nicht um vollkommen ohne Account teilzunehmen. Die Account-Erstellung können Sie allerdings gleichzeitig mittels diesem Teilnahme-Formular durchführen.':'Do not use the public key of a Ledger to participate completely without an EOS account. However, you can create the account at the same time using this participation form.'}}</span>
+                            </div>
+                        </q-card-section>
+                        
+                        <q-card-actions align="right" class="bg-white text-primary">
+                            <q-btn flat :label="lang=='de'?'Zurück':'Cancel'" v-close-popup />
+                        </q-card-actions>
+                    </q-card>
+                </q-dialog>
+            </div>
+        </template>     
     </div>
 
     <!-- Has to be at the end of the body tag -->
@@ -601,7 +635,8 @@ setup () {
     }
 
     const coupon = Vue.ref('')
-
+    
+    const ledgerDialog = Vue.ref(false)
     const createKeyDialog = Vue.ref(false)
     const createKeyConfirmed = Vue.ref(false)
 
@@ -1174,7 +1209,7 @@ setup () {
         })
     }
 
-    return { goTo: SavWeb.goTo, createKeyDialog, createKeyConfirmed, createKeyPair, myPriKey, myPubKey, affiPage, checkSaleState, optionOpen, progress1, progressLabel1, paySymbol, estimateToken, estimateExtraToken, saleStatus, getCurrentTimeStamp, saleStart, saleDate, step, done1, done2, done3, done4, check1Loading, check3Loading, sendToFinish, reset, hasacc, wantacc, gtcChecked, wantpurpose, specialpurpose, payAmountPointed, stylemode, usedContract, usedExchangeContract, memo, fund, userkey, username, coupon, checkStep1, checkStep3, checkCoupon, activePayment, toClipboard, openURL: Quasar.openURL, hascoupon, checkUser, checkUserAmount, checkUserAmountLoading, checkedUserAmount, browserLink, lang }
+    return { goTo: SavWeb.goTo, createKeyDialog, ledgerDialog, createKeyConfirmed, createKeyPair, myPriKey, myPubKey, affiPage, checkSaleState, optionOpen, progress1, progressLabel1, paySymbol, estimateToken, estimateExtraToken, saleStatus, getCurrentTimeStamp, saleStart, saleDate, step, done1, done2, done3, done4, check1Loading, check3Loading, sendToFinish, reset, hasacc, wantacc, gtcChecked, wantpurpose, specialpurpose, payAmountPointed, stylemode, usedContract, usedExchangeContract, memo, fund, userkey, username, coupon, checkStep1, checkStep3, checkCoupon, activePayment, toClipboard, openURL: Quasar.openURL, hascoupon, checkUser, checkUserAmount, checkUserAmountLoading, checkedUserAmount, browserLink, lang }
 }
 })
       app.use(Quasar)
