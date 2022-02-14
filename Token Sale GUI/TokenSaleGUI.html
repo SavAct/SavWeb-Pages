@@ -84,7 +84,7 @@
                                             </q-input>
                                         </div>
                                         <div v-else class="q-ml-md q-mt-none q-mb-md row items-center q-pa-sm">
-                                            <q-icon name="warning" color="orange-10" class="col-auto" size="md"></q-icon>
+                                            <q-icon name="warning" color="orange-10" class="col-auto" size="sm"></q-icon>
                                             <span class="col q-pl-sm">{{lang=='de'?'Benutzen Sie für diese Option nur einen Public-Key auf dessen Private-Key Sie in Textform Zugriff haben. Verwenden Sie hier keinen Public-Key eines Ledger.':'Use only a public key for this option whose private key you can access in text form. Therefore, do not use a public key of a Ledger here.'}}</span>
                                         </div>
                                         <div class="row q-gutter-md justify-end q-ml-none">
@@ -273,7 +273,7 @@
         <template>
             <div class="q-pa-md q-gutter-sm">
                 <q-dialog v-model="ledgerDialog" transition-show="scale" transition-hide="scale">
-                    <q-card class="bg-orange text-white" style="max-width: 600px;">
+                    <q-card class="bg-orange-8 text-white" style="max-width: 600px;">
                         <q-card-section class="q-pb-none">
                             <div class="text-h5 text-center">{{lang=='de'?'Verwendung eines Ledgers':'Use of a Ledger'}}</div>
                         </q-card-section>
@@ -284,7 +284,7 @@
                                 <a href="https://samveku.medium.com/how-to-add-eos-account-to-your-ledger-nano-x-s-using-anchor-wallet-79ae9917cf53" target="_blank" rel="noopener">How to add EOS account to your Ledger Nano X/S using Anchor wallet</a>
                             </div>
                             <div v-else class="row items-center q-pa-sm q-my-md">
-                                <q-icon name="warning" color="orange-10" class="col-auto" size="md"></q-icon>
+                                <q-icon name="warning" color="red-10" class="col-auto" size="md"></q-icon>
                                 <span class="col q-pl-sm">{{lang=='de'?'Benutzen Sie den Public-Key des Ledgers nicht um vollkommen ohne Account teilzunehmen. Die Account-Erstellung können Sie allerdings gleichzeitig mittels diesem Teilnahme-Formular durchführen.':'Do not use the public key of a Ledger to participate completely without an EOS account. However, you can create the account at the same time using this participation form.'}}</span>
                             </div>
                         </q-card-section>
