@@ -27,7 +27,7 @@ An html file that uses JavaScript with Quasar and Vue 3.
 
 # Template
 
-Use this [Template](./.Template/README.md) to create a single file application with a minimum file size by using Quasar, Vue 3, Vite and TypeScript.
+Use this [Template](./.Template/) to create a single file application with a minimum file size by using Quasar, Vue 3, Vite and TypeScript.
 
 # Licence
 

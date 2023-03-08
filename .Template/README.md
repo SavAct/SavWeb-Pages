@@ -48,4 +48,4 @@ See here for more information: https://quasar.dev/start/umd
 
 ## Downside
 
-If the publicly hosted libraries are down, the application will also not be shown as desired. In that case the frontend must be updated. Another option may be that these libraries will be provided by the SavWeb Browser itself in the future. But for now, on it is not expected that these libraries will be taken offline in the lifetime of a website, because they are necessary for thousands of centralized websites on the clear web.
+If the publicly hosted libraries are down, the application will also not be shown as desired. In that case the frontend must be updated. Another option may be that these libraries will be provided by the SavWeb Browser itself in the future. But for now, it is not expected that these libraries will be taken offline in the lifetime of a website, because they are necessary for thousands of centralized websites on the clear web.
