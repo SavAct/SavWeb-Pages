@@ -35,11 +35,7 @@ yarn build
 
 ## Highlight Vue templates
 
-Install VS Code extention `es6-string-html` and write `/*html*/` before the string
-
-```javascript
-template = /*html*/ `<div>{{counter}}</div>`;
-```
+Install the VS Code extention [Vue Inline Template](https://marketplace.visualstudio.com/items?itemName=faisalhakim47.vue-inline-template) to highlight the string templates.
 
 ## Load other icon libraries
 
