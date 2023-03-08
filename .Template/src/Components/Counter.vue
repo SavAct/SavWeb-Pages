@@ -1,5 +1,4 @@
-export default Vue.defineComponent({
-  template: `
+<template>
   <div class="row q-mt-lg justify-center">
     <q-btn
       class="col-sm-3 col-md-2 col-12"
@@ -13,7 +12,9 @@ export default Vue.defineComponent({
       </div>
     </div>
   </div>
-`,
+</template>
+<script lang="ts">
+export default Vue.defineComponent({
   name: "counter",
   setup() {
     function btnClick() {
@@ -25,3 +26,4 @@ export default Vue.defineComponent({
     return { counter, btnClick };
   },
 });
+</script>

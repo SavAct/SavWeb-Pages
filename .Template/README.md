@@ -7,9 +7,9 @@ The resulting file size is reduced by using the publicly hosted libraries of Qus
 
 ## Purpose
 
-If you have created your appliation, you can upload it with the SavAct App, see [https://savact.app/#/_fileupload_](https://savact.app/#/_fileupload_)
+If you have created your appliation, you can upload it with the SavAct App, see [https://savact.app/#/\_fileupload\_](https://savact.app/#/_fileupload_)
 
-You can open the application with the SavAct browser, see [https://savact.app/#/_browser_](https://savact.app/#/_browser_)
+You can open the application with the SavAct browser, see [https://savact.app/#/\_browser\_](https://savact.app/#/_browser_)
 
 To see your application in preview, just drag and drop your `html-file` of your application into the address bar of the SavAct browser.
 

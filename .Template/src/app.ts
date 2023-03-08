@@ -1,6 +1,6 @@
-import indexPage from "./pages/index";
+import MeinLayout from "./layouts/MainLayout";
 
-const app = Vue.createApp(indexPage);
+const app = Vue.createApp(MeinLayout);
 
 app.use(Quasar, {
   config: {
