@@ -1,4 +1,18 @@
 import { Plugin } from "vite";
+import ts from "typescript";
+
+const configFileName = ts.findConfigFile(
+  "./",
+  ts.sys.fileExists,
+  "tsconfig.json"
+); // Automatisches Auffinden der tsconfig.json-Datei
+
+// Lesen der tsconfig.json-Datei
+const configFile = ts.readConfigFile(configFileName, ts.sys.readFile);
+const configJson = configFile.config;
+
+// Parsen der Compiler-Optionen aus der tsconfig.json
+const parsedConfig = ts.parseJsonConfigFileContent(configJson, ts.sys, "./");
 
 function getMainTags(file: string) {
   let script: string = undefined;
@@ -135,9 +149,13 @@ const inlineVuePlugin = (): Plugin => {
     async transform(code, id) {
       if (id.endsWith(".vue")) {
         const transformedCode = VueFileToTs(code);
-        console.log("Transformed code", VueFileToTs(code));
-        // TODO: Transform TypeScript to JavaScript or use this plugin bevor Typescript transpiler starts
-        return transformedCode;
+        const transpiled = ts.transpileModule(transformedCode, {
+          compilerOptions: parsedConfig.options,
+        });
+        return {
+          code: transpiled.outputText,
+          map: transpiled.sourceMapText,
+        };
       }
     },
   };

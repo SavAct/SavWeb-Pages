@@ -1,4 +1,4 @@
-import Counter from "../Components/Counter";
+import Counter from "../Components/Counter.vue";
 
 export default Vue.defineComponent({
   name: "indexPage",
