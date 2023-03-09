@@ -8,7 +8,11 @@ import { ViteMinifyPlugin } from "vite-plugin-minify";
 export default defineConfig({
   plugins: [
     ViteMinifyPlugin({ collapseWhitespace: true }), // Config from https://www.npmjs.com/package/html-minifier-terser
-    MinifyVue({ collapseWhitespace: true }),
+    MinifyVue({
+      collapseWhitespace: true,
+      removeAttributeQuotes: false,
+      keepClosingSlash: true,
+    }),
     InlineVue(),
     viteSingleFile({ removeViteModuleLoader: true }),
   ],

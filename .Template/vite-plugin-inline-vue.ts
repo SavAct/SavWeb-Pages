@@ -78,7 +78,7 @@ function getMainTags(file: string) {
     if (e1_template == 0) {
       throw "Error on template tag";
     }
-    const s2_template = no_style_script.indexOf("</template", e1_template);
+    const s2_template = no_style_script.lastIndexOf("</template");
     if (s2_template == -1) {
       throw "Error no closing tag of template";
     }

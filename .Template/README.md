@@ -38,6 +38,20 @@ yarn build
 Add other icon libraries in the header of index.html.
 See here for more information: https://quasar.dev/start/umd
 
+## Note to keep the file size small
+
+Do not use anything from Vue or Quasar via `import` exept of type definitions. Because all their methods are already defined in the global objects `Vue` and `Quasar`.
+
+### Quasar plugins
+
+The Quasar plugins do not need to be installed.
+
+Example to display a Quasar notify:
+
+```Typescript
+Quasar.Notify.create({ type: "positive", message: "Hello World", position: "top"});
+```
+
 ## Downside
 
 If the publicly hosted libraries are down, the application will also not be shown as desired. In that case the frontend must be updated. Another option may be that these libraries will be provided by the SavWeb Browser itself in the future. But for now, it is not expected that these libraries will be taken offline in the lifetime of a website, because they are necessary for thousands of centralized websites on the clear web.
