@@ -1,11 +1,15 @@
 import { defineConfig } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
-import inlineVuePlugin from "./inline-vue-plugin";
+import InlineVue from "./vite-plugin-inline-vue";
+import MinifyVue from "./vite-plugin-vue-minify";
+import { ViteMinifyPlugin } from "vite-plugin-minify";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    inlineVuePlugin(),
+    ViteMinifyPlugin({}), // Config from https://www.npmjs.com/package/html-minifier-terser
+    MinifyVue(),
+    InlineVue(),
     viteSingleFile({ removeViteModuleLoader: true }),
   ],
 });

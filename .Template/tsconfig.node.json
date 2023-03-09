@@ -5,5 +5,9 @@
     "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true
   },
-  "include": ["vite.config.ts", "inline-vue-plugin.ts"]
+  "include": [
+    "vite.config.ts",
+    "vite-plugin-inline-vue.ts",
+    "vite-plugin-vue-minify.ts"
+  ]
 }

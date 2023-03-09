@@ -1,6 +1,12 @@
 import { Plugin } from "vite";
 import ts from "typescript";
 
+/* This PlugIn converts a Vue file with TypeScript to a pure JavaScript file.
+ * Note: The plugin just search for the needed tags and a Vue component in the script part.
+ *       The code will not analyzie all tags nor the whole scipt and may be a fast solution.
+ *       But therefore, double definition of tags and Vue components in the same vue file can result in transpiling errors.
+ */
+
 const configFileName = ts.findConfigFile(
   "./",
   ts.sys.fileExists,
@@ -94,13 +100,22 @@ function VueFileToTs(file: string) {
 
   let s = -1;
   if (script !== undefined) {
-    s = script.indexOf("Vue.defineComponent");
-    if (s >= 0) {
-      s = script.indexOf("(", s + "Vue.defineComponent".length);
+    // Search for vue.***Component***(***{
+    let l: number = -1;
+    do {
+      s = script.indexOf("Vue.");
+      l = s;
       if (s >= 0) {
-        s = script.indexOf("{", s + 1);
+        s = script.indexOf("Component", s + 4);
+        l = s - l;
+        if (s >= 0) {
+          s = script.indexOf("(", s + 9);
+          if (s >= 0) {
+            s = script.indexOf("{", s + 1);
+          }
+        }
       }
-    }
+    } while (l > 14);
 
     if (s > -1) {
       if (template !== undefined) {
@@ -143,7 +158,7 @@ function VueFileToTs(file: string) {
   }
 }
 
-const inlineVuePlugin = (): Plugin => {
+const InlineVue = (): Plugin => {
   return {
     name: "vue",
     async transform(code, id) {
@@ -152,6 +167,7 @@ const inlineVuePlugin = (): Plugin => {
         const transpiled = ts.transpileModule(transformedCode, {
           compilerOptions: parsedConfig.options,
         });
+
         return {
           code: transpiled.outputText,
           map: transpiled.sourceMapText,
@@ -161,4 +177,4 @@ const inlineVuePlugin = (): Plugin => {
   };
 };
 
-export default inlineVuePlugin;
+export default InlineVue;
