@@ -1,4 +1,4 @@
-import MeinLayout from "./layouts/MainLayout";
+import MeinLayout from "./layouts/MainLayout.vue";
 
 const app = Vue.createApp(MeinLayout);
 

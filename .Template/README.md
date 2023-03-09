@@ -33,10 +33,6 @@ Transpile the code to a single html file
 yarn build
 ```
 
-## Highlight Vue templates
-
-Install the VS Code extention [Vue Inline Template](https://marketplace.visualstudio.com/items?itemName=faisalhakim47.vue-inline-template) to highlight the string templates.
-
 ## Load other icon libraries
 
 Add other icon libraries in the header of index.html.
