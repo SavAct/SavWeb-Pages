@@ -1,11 +1,8 @@
 import { Plugin } from "vite";
 import ts from "typescript";
+import { parse } from "@vue/compiler-sfc";
 
-/* This PlugIn converts a Vue file with TypeScript to a pure JavaScript file.
- * Note: The plugin just search for the needed tags and a Vue component in the script part.
- *       The code will not analyzie all tags nor the whole scipt and may be a fast solution.
- *       But therefore, double definition of tags and Vue components in the same vue file can result in transpiling errors.
- */
+/* This PlugIn converts a Vue file with TypeScript to a pure JavaScript file. */
 
 const configFileName = ts.findConfigFile(
   "./",
@@ -20,83 +17,19 @@ const configJson = configFile.config;
 // Parsen der Compiler-Optionen aus der tsconfig.json
 const parsedConfig = ts.parseJsonConfigFileContent(configJson, ts.sys, "./");
 
-function getMainTags(file: string) {
-  let script: string = undefined;
-  let style: string = undefined;
-  let template: string = undefined;
-  let no_script: string;
-  let no_style_script: string;
-
-  // Get script
-  let s1_script = file.indexOf("<script");
-  if (s1_script >= 0) {
-    const e1_script = file.indexOf(">", s1_script) + 1;
-    if (e1_script == 0) {
-      throw "Error on style tag";
-    }
-    const s2_script = file.lastIndexOf("</script");
-    if (s2_script == -1) {
-      throw "Error no closing tag of script";
-    }
-    const e2_script = file.indexOf(">", s2_script) + 1;
-    if (e2_script == 0) {
-      throw "Error on closing tag of script";
-    }
-    script = file.substring(e1_script, s2_script);
-    no_script = file.substring(0, s1_script) + file.substring(e2_script);
-  } else {
-    no_script = file;
-  }
-
-  // Get style
-  const s1_style = no_script.lastIndexOf("<style");
-
-  if (s1_style >= 0) {
-    const e1_style = no_script.indexOf(">", s1_style) + 1;
-    if (e1_style == 0) {
-      throw "Error on style tag";
-    }
-    const s2_style = no_script.indexOf("</style", e1_style);
-    if (s2_style == -1) {
-      throw "Error no closing tag of style";
-    }
-    const e2_style = no_script.indexOf(">", s2_style) + 1;
-    if (e2_style == 0) {
-      throw "Error on closing tag of style";
-    }
-
-    style = no_script.substring(e1_style, s2_style);
-    no_style_script =
-      no_script.substring(0, s1_style) + no_script.substring(e2_style);
-  } else {
-    no_style_script = no_script;
-  }
-
-  // Get template
-  const s1_template = no_style_script.indexOf("<template");
-  if (s1_template >= 0) {
-    const e1_template = no_style_script.indexOf(">", s1_template) + 1;
-    if (e1_template == 0) {
-      throw "Error on template tag";
-    }
-    const s2_template = no_style_script.lastIndexOf("</template");
-    if (s2_template == -1) {
-      throw "Error no closing tag of template";
-    }
-    const e2_template = no_style_script.indexOf(">", s2_template) + 1;
-    if (e2_template == 0) {
-      throw "Error on closing tag of template";
-    }
-    template = no_style_script.substring(e1_template, s2_template);
-  }
-
-  return { template, script, style };
+function getVueParts(file: string) {
+  const a = parse(file);
+  return {
+    template: a.descriptor.template.content,
+    script: a.descriptor.script.content,
+    style: a.descriptor.styles,
+  };
 }
 
 function VueFileToTs(file: string) {
-  const { template, script, style } = getMainTags(file);
+  const { template, script, style } = getVueParts(file);
 
-  if (style !== undefined) {
+  if (style !== undefined && style.length > 0) {
     throw "This version does not work with style tag in .vue-files";
   }
 
