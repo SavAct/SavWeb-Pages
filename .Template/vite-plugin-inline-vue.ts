@@ -50,6 +50,7 @@ function getMainTags(file: string) {
 
   // Get style
   const s1_style = no_script.lastIndexOf("<style");
+
   if (s1_style >= 0) {
     const e1_style = no_script.indexOf(">", s1_style) + 1;
     if (e1_style == 0) {
@@ -65,7 +66,7 @@ function getMainTags(file: string) {
     }
 
     style = no_script.substring(e1_style, s2_style);
-    const no_style_script =
+    no_style_script =
       no_script.substring(0, s1_style) + no_script.substring(e2_style);
   } else {
     no_style_script = no_script;
@@ -94,6 +95,7 @@ function getMainTags(file: string) {
 
 function VueFileToTs(file: string) {
   const { template, script, style } = getMainTags(file);
+
   if (style !== undefined) {
     throw "This version does not work with style tag in .vue-files";
   }
