@@ -14,14 +14,17 @@
   </div>
 </template>
 <script lang="ts">
+import { state } from "../store/globals";
+
 export default Vue.defineComponent({
   name: "counter",
   setup() {
+    const counter = Vue.ref<number>(0);
+
     function btnClick() {
       counter.value++;
+      state.progress.value = counter.value;
     }
-
-    const counter = Vue.ref<number>(0);
 
     return { counter, btnClick };
   },

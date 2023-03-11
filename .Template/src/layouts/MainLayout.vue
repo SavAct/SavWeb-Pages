@@ -77,6 +77,7 @@
 import IndexPage from "../pages/IndexPage.vue";
 import CountPage from "../pages/CountPage.vue";
 import UserPage from "../pages/UserPage.vue";
+import { state } from "../store/globals";
 
 export default Vue.defineComponent({
   name: "MainLayout",
@@ -85,15 +86,9 @@ export default Vue.defineComponent({
     const route = Vue.ref<{ name: string }>({ name: "home" });
     const hasParent = Vue.ref<boolean>(true);
     const leftDrawerOpen = Vue.ref<boolean>(false);
-    const darkStyle = Vue.computed({
-      get: () => {
-        return Quasar.Dark.isActive;
-      },
-      set: (value) => {
-        Quasar.Dark.set(value);
-      },
-    });
-    Quasar.Dark.set(true);
+
+    const darkStyle = state.darkStyle;
+    darkStyle.value = true;
 
     const indicatorColor = Vue.computed(() => {
       switch (route.value.name) {
