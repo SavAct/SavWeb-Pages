@@ -20,6 +20,16 @@
           aria-label="Back"
           @click="goBack"
         />
+        <q-btn
+          v-if="hasParent"
+          flat
+          round
+          dense
+          class="q-ml-sm"
+          icon="arrow_forward_ios"
+          aria-label="Forward"
+          @click="goForward"
+        />
         <q-toolbar-title :class="{ 'text-subtitle1': $q.screen.lt.sm }">
           <span>SavAct Template</span>
         </q-toolbar-title>
@@ -30,41 +40,32 @@
         ></q-btn>
       </q-toolbar>
     </q-header>
-    <q-page-container v-show="route.name == 'home'">
-      <index-page />
-    </q-page-container>
-    <q-page-container v-show="route.name == 'count'">
-      <count-page />
-    </q-page-container>
-    <q-page-container v-show="route.name == 'user'">
-      <user-page />
-    </q-page-container>
+    <page-container></page-container>
     <q-footer
       elevated
       :class="darkStyle ? 'bg-dark' : 'bg-indigo-10'"
       class="text-white"
     >
       <q-tabs
-        v-model="route.name"
         class="fit text-white"
         :indicator-color="indicatorColor"
         :active-color="indicatorColor"
         switch-indicator
       >
         <q-route-tab
-          @click="route.name = 'home'"
+          @click="to('home')"
           name="home"
           icon="home"
           class="col-2"
         />
         <q-route-tab
-          @click="route.name = 'count'"
+          @click="to('count')"
           name="count"
           icon="functions"
           class="col-2"
         />
         <q-route-tab
-          @click="route.name = 'user'"
+          @click="to('user')"
           name="user"
           icon="person"
           class="col-2"
@@ -74,16 +75,14 @@
   </q-layout>
 </template>
 <script lang="ts">
-import IndexPage from "../pages/IndexPage.vue";
-import CountPage from "../pages/CountPage.vue";
-import UserPage from "../pages/UserPage.vue";
+import PageContainer from "../router/PageContainer.vue";
 import { state } from "../store/globals";
+import { route, router } from "../router/simpleRouter";
 
 export default Vue.defineComponent({
   name: "MainLayout",
-  components: { IndexPage, CountPage, UserPage },
+  components: { PageContainer },
   setup() {
-    const route = Vue.ref<{ name: string }>({ name: "home" });
     const hasParent = Vue.ref<boolean>(true);
     const leftDrawerOpen = Vue.ref<boolean>(false);
 
@@ -91,7 +90,7 @@ export default Vue.defineComponent({
     darkStyle.value = true;
 
     const indicatorColor = Vue.computed(() => {
-      switch (route.value.name) {
+      switch (route.name) {
         case "home":
           return "teal-12";
         case "count":
@@ -104,11 +103,23 @@ export default Vue.defineComponent({
     });
 
     function goBack() {
-      Quasar.Notify.create({
-        type: "negative",
-        message: "Go back click",
-        position: "top",
-      });
+      if (!router.back()) {
+        Quasar.Notify.create({
+          type: "negative",
+          message: "You are already at the first visited page",
+          position: "top",
+        });
+      }
+    }
+
+    function goForward() {
+      if (!router.forward()) {
+        Quasar.Notify.create({
+          type: "negative",
+          message: "You are already at the last visited page",
+          position: "top",
+        });
+      }
     }
 
     return {
@@ -117,7 +128,9 @@ export default Vue.defineComponent({
       route,
       darkStyle,
       goBack,
+      goForward,
       indicatorColor,
+      to: router.push,
     };
   },
 });
