@@ -75,7 +75,7 @@
   </q-layout>
 </template>
 <script lang="ts">
-import PageContainer from "../router/PageContainer.vue";
+import PageContainer from "../router/PageContainer";
 import { state } from "../store/globals";
 import { route, router } from "../router/simpleRouter";
 
