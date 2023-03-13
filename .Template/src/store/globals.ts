@@ -1,3 +1,6 @@
+import { PageIni, SavWeb } from "../Components/SavWeb";
+
+// Dark style
 const darkStyle = Vue.computed({
   get: () => {
     return Quasar.Dark.isActive;
@@ -7,6 +10,7 @@ const darkStyle = Vue.computed({
   },
 });
 
+// Counter clicks transformation in progress which is shown on the home page
 const _progress = Vue.ref<number>(0);
 const progress = Vue.computed({
   get: () => {
@@ -18,4 +22,14 @@ const progress = Vue.computed({
   },
 });
 
-export const state = { darkStyle, progress };
+// SavWeb interface
+const savConnected = Vue.ref<boolean>(false);
+function onIni(msg: PageIni) {
+  if (typeof msg.darkstyle == "boolean") {
+    darkStyle.value = msg.darkstyle;
+    savConnected.value = true;
+  }
+}
+const savWeb = new SavWeb(onIni);
+
+export const state = { darkStyle, progress, savWeb, savConnected };

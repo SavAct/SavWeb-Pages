@@ -31,7 +31,7 @@
           @click="goForward"
         />
         <q-toolbar-title :class="{ 'text-subtitle1': $q.screen.lt.sm }">
-          <span>SavAct Template</span>
+          <span>{{ route.title }}</span>
         </q-toolbar-title>
         <q-btn
           :icon="darkStyle ? 'dark_mode' : 'wb_sunny'"
@@ -48,9 +48,10 @@
     >
       <q-tabs
         class="fit text-white"
-        :indicator-color="indicatorColor"
-        :active-color="indicatorColor"
+        :indicator-color="route.color"
+        :active-color="route.color"
         switch-indicator
+        :model-value="route.name"
       >
         <q-route-tab
           @click="to('home')"
@@ -89,19 +90,6 @@ export default Vue.defineComponent({
     const darkStyle = state.darkStyle;
     darkStyle.value = true;
 
-    const indicatorColor = Vue.computed(() => {
-      switch (route.name) {
-        case "home":
-          return "teal-12";
-        case "count":
-          return "light-green-13";
-        case "user":
-          return "cyan-12";
-        default:
-          return "white";
-      }
-    });
-
     function goBack() {
       if (!router.back()) {
         Quasar.Notify.create({
@@ -129,7 +117,6 @@ export default Vue.defineComponent({
       darkStyle,
       goBack,
       goForward,
-      indicatorColor,
       to: router.push,
     };
   },

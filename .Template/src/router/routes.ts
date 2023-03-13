@@ -6,8 +6,23 @@ import user from "../pages/UserPage.vue";
 /**
  * Here you can add more pages
  */
-export const routes: Array<{ name: string; component: Component }> = [
-  { name: "home", component: home },
-  { name: "count", component: count },
-  { name: "user", component: user },
+export const routes: Array<{
+  name: string;
+  component: Component;
+  title?: string;
+  color?: string;
+}> = [
+  { name: "home", component: home, title: "SavAct Template", color: "teal-12" },
+  {
+    name: "count",
+    component: count,
+    title: "Global Counter",
+    color: "light-green-13",
+  },
+  {
+    name: "user",
+    component: user,
+    title: "Check Account",
+    color: "cyan-12",
+  },
 ];

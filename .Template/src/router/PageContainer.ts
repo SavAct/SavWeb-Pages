@@ -24,8 +24,7 @@ function getComponentSwitch() {
 export default Vue.defineComponent({
   name: "page-container",
   components,
-  // template: `<div style="background-color:green">{{name}} slahjahdjhas</div>`,
-  template: `<q-page-container>${getComponentSwitch()}<div>{{name}}</div></q-page-container>`,
+  template: `<q-page-container>${getComponentSwitch()}</q-page-container>`,
   setup() {
     const name = Vue.computed(() => {
       return route.name;
@@ -33,9 +32,6 @@ export default Vue.defineComponent({
     if (router.currentRoute() === undefined) {
       router.push({ name: "home" }); // Initial page
     }
-    console.log(`<q-page-container>${getComponentSwitch()}</q-page-container>`);
-    console.log("roue", name.value);
-
     return { name };
   },
 });

@@ -149,13 +149,44 @@ export interface FullRpcError extends RpcError {
 
 export class SavWeb {
   idToken = "";
-  names: { [key: string]: boolean | number | undefined } = {};
   requestResult: { [key: string]: unknown | null | undefined } = {};
   requestNumber = 0;
+  connected: boolean = false;
+
   constructor(
-    private onIni: (msg: string) => void,
-    public gotoPageError = "https://savact.app/#/_404_"
-  ) {}
+    private onIni: (msg: PageIni) => void,
+    public gotoPageError = "https://savact.app/#/_404_",
+    public onMessageEvent?: (msg: any) => void
+  ) {
+    // It must be executed before the browser assigns the idToken.
+    this.connect();
+  }
+
+  resolveEvent(event: any) {
+    this.validatePostMessage(event);
+
+    if (typeof this.onMessageEvent == "function") {
+      this.onMessageEvent(event);
+    }
+  }
+  connect() {
+    if (!this.connected) {
+      window.addEventListener(
+        "message",
+        (event) => {
+          this.resolveEvent(event);
+        },
+        false
+      );
+    }
+    this.connected = true;
+  }
+  disconnect() {
+    window.removeEventListener("message", (event) => {
+      this.resolveEvent(event);
+    });
+    this.connected = false;
+  }
 
   /**
    * @param event The event of a post message
@@ -170,7 +201,7 @@ export class SavWeb {
         const parentMsg = data.SavWeb;
         if (parentMsg.idToken != undefined && parentMsg.idToken != "") {
           this.idToken = parentMsg.idToken;
-          // console.log('SavWeb page got idToken', this.idToken)
+          console.log("SavWeb page got idToken", this.idToken);
         }
         if (typeof parentMsg.validToken == "boolean") {
           if (!parentMsg.validToken) {
@@ -188,17 +219,15 @@ export class SavWeb {
                 const result = parentMsg.result;
                 if (result == undefined) {
                   // Set to undefined
-                  this.setNameValueByMsgId(parentMsg.id, undefined);
+                  this.requestResult[parentMsg.id] = undefined;
                 } else {
                   if (
                     "account_name" in result &&
                     result.account_name != undefined
                   ) {
-                    // console.log('found account name')
-                    this.names[result.account_name] = true;
+                    this.requestResult[parentMsg.id] = true;
                   } else {
-                    // Set to false
-                    this.setNameValueByMsgId(parentMsg.id, false);
+                    this.requestResult[parentMsg.id] = false;
                   }
                 }
                 break;
@@ -225,16 +254,6 @@ export class SavWeb {
     }
   }
 
-  setNameValueByMsgId(id: string, val: boolean | undefined) {
-    for (const key in this.names) {
-      if (key === id) {
-        // console.log(`${key}: ${this.names[key]}`, val);
-        this.names[key] = val;
-        break;
-      }
-    }
-  }
-
   /**
    * Sleep for a defined amount of time
    * @param ms Milliseconds to sleep
@@ -247,51 +266,28 @@ export class SavWeb {
    * Check a name if it exists
    * @param name EOSIO account name
    * @param maxWaitMs Maximum of milliseconds to wait
-   * @returns true if the name exists otherwise false and undefined if there is no result
+   * @returns true if the name exists, false if it does not exist and undefined on errors
    */
-  async checkName(chain: string, name: string, maxWaitMs: number = 5000) {
-    // If it was already tested then return it
-    if (name in this.names && typeof this.names.name == "boolean") {
-      return this.names.name;
-    }
-
-    const requestId = this.requestNumber++;
-    // Request for the account
-    window.parent.postMessage(
+  async checkName(chain: string, name: string, maxWaitMs: number = 10000) {
+    // Send request
+    const result = (await this.request(
       {
         SavWeb: {
           f: "eosioChainApi",
-          id: requestId,
+          id: null,
           chain,
           post: "get_account",
           params: name,
           idToken: this.idToken,
         },
       },
-      "*"
-    );
-    this.names[name] = requestId;
+      maxWaitMs
+    )) as true | false | undefined | FullRpcError;
 
-    // Wait for the result but only as long as defined by wait
-    let timespan = 0;
-    const interval = 100; // Check each 100 ms
-    while (
-      timespan < maxWaitMs &&
-      name in this.names &&
-      typeof this.names[name] == "number"
-    ) {
-      await SavWeb.sleep(interval);
-      timespan += interval;
-    }
-
-    // Return the result
-    if (name in this.names && typeof this.names[name] == "boolean") {
-      return this.names[name];
-    }
-    return undefined;
+    return result;
   }
 
-  async request(message: PageAction_idNull, maxWaitMs = 5000) {
+  async request(message: PageAction_idNull, maxWaitMs = 10000) {
     const requestId = this.requestNumber++; // Get new request id
 
     // Set request id if defined
@@ -349,7 +345,7 @@ export class SavWeb {
     table: string,
     scope: string,
     entry: number | string | Array<number | string>,
-    maxWaitMs = 5000
+    maxWaitMs = 10000
   ) {
     let lower_bound;
     let upper_bound;
@@ -383,7 +379,7 @@ export class SavWeb {
     )) as GetTableRowsResult | FullRpcError | undefined;
 
     if (result == undefined) {
-      console.log("Cannot get the table from", contract);
+      console.error("Cannot get the table from", contract);
       return undefined;
     }
 
@@ -404,7 +400,7 @@ export class SavWeb {
     contract: string,
     account: string,
     symbol: string,
-    maxWaitMs: number = 5000
+    maxWaitMs: number = 10000
   ) {
     // Send request
     const result = (await this.request(

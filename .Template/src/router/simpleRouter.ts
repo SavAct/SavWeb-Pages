@@ -1,5 +1,9 @@
+import { routes } from "./routes";
+
 export interface RouteLocation {
   name: string;
+  title?: string;
+  color?: string;
 }
 
 export declare interface NavigationHook {
@@ -17,6 +21,16 @@ export const route = Vue.reactive({
     return recordIndex.value >= 0 && record.length > 0
       ? record[recordIndex.value].name
       : "";
+  }),
+  title: Vue.computed(() => {
+    return recordIndex.value >= 0 && record.length > 0
+      ? record[recordIndex.value].title
+      : undefined;
+  }),
+  color: Vue.computed(() => {
+    return recordIndex.value >= 0 && record.length > 0
+      ? record[recordIndex.value].color
+      : undefined;
   }),
 });
 
@@ -45,12 +59,16 @@ const recordIndex = Vue.computed({
 const record = new Array<RouteLocation>();
 
 const normalizeRoute = (to: RouteLocation | string) => {
+  let norm: RouteLocation | undefined = undefined;
   if (typeof to == "string") {
-    return { name: to };
+    norm = routes.find((v) => to == v.name);
   } else {
     if ("name" in to) {
-      return { name: to.name };
+      norm = routes.find((v) => to.name == v.name);
     }
+  }
+  if (norm) {
+    return { name: norm.name, title: norm.title, color: norm.color };
   }
   return undefined;
 };
