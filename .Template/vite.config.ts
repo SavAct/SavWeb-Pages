@@ -6,6 +6,7 @@ import { ViteMinifyPlugin } from "vite-plugin-minify";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  server: { open: true },
   plugins: [
     ViteMinifyPlugin({ collapseWhitespace: true }), // Config from https://www.npmjs.com/package/html-minifier-terser
     MinifyVue({

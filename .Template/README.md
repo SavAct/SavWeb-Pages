@@ -33,6 +33,12 @@ Transpile the code to a single html file
 yarn build
 ```
 
+Transpile the code to a single html file and show it in the savact browser
+
+```bash
+yarn show
+```
+
 ## Load other icon libraries
 
 Add other icon libraries in the header of index.html.
