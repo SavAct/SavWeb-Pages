@@ -25,9 +25,11 @@ See the free speech page in action at https://savact.app/#savactsavact.
 
 An html file that uses JavaScript with Quasar and Vue 3.
 
-# Template
+# Development Environment
 
-Use this [Template](./.Template/) to create a single file application with a minimum file size by using Quasar, Vue 3, Vite and TypeScript.
+Use this [Template](https://github.com/SavAct/SavWeb/tree/main/Dev%20Page) to create a single file application with a minimum file size by using <span style="color: #5ea3ef;" class="chip">Quasar</span> +
+<span style="color: #64b586;" class="chip">Vue 3</span> + <span style="color: #3478c6;" class="chip">TypeScript</span> +
+<span style="color: #ab40f6;" class="chip">Vite</span>.
 
 # Licence
 
