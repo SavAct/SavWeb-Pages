@@ -11,7 +11,7 @@
           @click="leftDrawerOpen = !leftDrawerOpen"
         />
         <q-btn
-          v-if="hasParent"
+          :disable="!canBack"
           flat
           round
           dense
@@ -21,7 +21,7 @@
           @click="goBack"
         />
         <q-btn
-          v-if="hasParent"
+          :disable="!canForward"
           flat
           round
           dense
@@ -78,7 +78,6 @@ export default Vue.defineComponent({
   name: "MainLayout",
   components: { PageContainer },
   setup() {
-    const hasParent = Vue.ref<boolean>(true);
     const leftDrawerOpen = Vue.ref<boolean>(false);
 
     const darkStyle = state.darkStyle;
@@ -105,7 +104,8 @@ export default Vue.defineComponent({
     }
 
     return {
-      hasParent,
+      canBack: router.canBack,
+      canForward: router.canForward,
       leftDrawerOpen,
       route,
       darkStyle,

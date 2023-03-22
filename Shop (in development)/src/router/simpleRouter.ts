@@ -128,4 +128,10 @@ export const router = {
       ? record[recordIndex.value]
       : undefined;
   },
+  canBack: Vue.computed(() => {
+    return recordIndex.value > 0 && record.length > 0;
+  }),
+  canForward: Vue.computed(() => {
+    return recordIndex.value < record.length - 1;
+  }),
 };

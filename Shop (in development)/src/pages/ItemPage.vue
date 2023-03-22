@@ -1,10 +1,39 @@
 <template>
   <q-page class="column">
     <div class="col q-pa-md text-center">
-      <div class="q-my-md">Item page</div>
-      <div class="q-mt-lg">Presented by SavAct.</div>
+      <div class="q-my-md text-h5">{{ entry?.title }}</div>
+      <div class="row">
+        <gallery class="col-12 col-md-6" height="300px" :srcs="imgs"></gallery>
+        <div
+          class="text-left q-px-md"
+          :class="$q.screen.lt.md ? 'q-pt-md' : ''"
+          v-if="entry"
+        >
+          <div>Price: {{ entry.price }} USD</div>
+          <div>Units per order: {{ entry.units }}</div>
+          <div>Price per unit: {{ entry.price / entry.units }}</div>
+
+          <div>From {{ getRegion(entry.from_region) }}</div>
+          <div>
+            To
+            <span class="text-italic">{{ getRegions(entry.to_regions) }}</span
+            >. But especially not to
+            <span class="text-italic">{{
+              getRegions(entry.exclude_regions)
+            }}</span>
+          </div>
+          <div>
+            <div>Accept payments of</div>
+            <div v-for="(token, index) in entry.accept" :key="index">
+              {{ token.symbol }} of {{ token.contract }} on {{ token.chain }}
+            </div>
+          </div>
+          <div>Sellers note: "{{ entry.note }}"</div>
+          <q-btn v-if="seller" :disable="!seller.available" label="Buy"></q-btn>
+        </div>
+      </div>
     </div>
-    <div class="col-auto">
+    <!-- <div class="col-auto">
       <q-linear-progress
         size="50px"
         :value="progress"
@@ -19,16 +48,61 @@
           />
         </div>
       </q-linear-progress>
-    </div>
+    </div> -->
   </q-page>
 </template>
 <script lang="ts">
+import Gallery from "../Components/Gallery.vue";
+import { Entry } from "../Components/Items";
 import { state } from "../store/globals";
 
 export default Vue.defineComponent({
+  components: { Gallery },
   name: "itemPage",
   setup() {
-    return { progress: state.progress, darkStyle: state.darkStyle };
+    // TODO: Show item by query
+    const id = 0;
+    const regionName = new Intl.DisplayNames(["en"], { type: "region" });
+
+    const entry = Vue.ref<Entry>();
+    entry.value = state.itemsList.find((item) => item.id == id);
+
+    function getRegion(code: string) {
+      const c = regionName.of(code);
+      if (c !== undefined) {
+        return c;
+      } else {
+        switch (code) {
+          case "ww":
+            return "World Wide";
+        }
+      }
+      return undefined;
+    }
+
+    function getRegions(r: string) {
+      return r !== undefined
+        ? r
+            .split(" ")
+            .map((v) => getRegion(v))
+            .join(", ")
+        : undefined;
+    }
+
+    const imgs = Vue.computed(() => entry.value?.imgs);
+    const seller = entry.value
+      ? state.sellerList[entry.value.seller]
+      : undefined;
+
+    return {
+      progress: state.progress,
+      darkStyle: state.darkStyle,
+      entry,
+      imgs,
+      getRegion,
+      getRegions,
+      seller,
+    };
   },
 });
 </script>
