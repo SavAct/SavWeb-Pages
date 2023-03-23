@@ -24,12 +24,12 @@ export const routes: Array<{
     name: "ads",
     component: ads,
     title: "Buy Ads",
-    color: "light-green-13",
+    color: "orange-13",
   },
   {
     name: "user",
     component: user,
-    title: "Check Account",
+    title: "Account",
     color: "cyan-12",
   },
 ];

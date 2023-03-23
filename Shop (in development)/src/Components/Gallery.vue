@@ -7,6 +7,7 @@
     :arrows="!imgFullscreen"
     v-model:fullscreen="imgFullscreen"
     @keydown="imgKeyDown"
+    @dblclick="imgFullscreen = !imgFullscreen"
     tabindex="0"
     padding
     id="imgCarousel"

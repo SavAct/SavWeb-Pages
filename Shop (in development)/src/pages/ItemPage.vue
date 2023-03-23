@@ -16,17 +16,26 @@
           <div>From {{ getRegion(entry.from_region) }}</div>
           <div>
             To
-            <span class="text-italic">{{ getRegions(entry.to_regions) }}</span
-            >. But especially not to
-            <span class="text-italic">{{
-              getRegions(entry.exclude_regions)
-            }}</span>
+            <span class="text-italic text-green">{{
+              getRegions(entry.to_regions)
+            }}</span
+            ><span v-if="entry.exclude_regions"
+              >, but especially not to
+              <span class="text-italic text-red">{{
+                getRegions(entry.exclude_regions)
+              }}</span>
+            </span>
           </div>
           <div>
             <div>Accept payments of</div>
-            <div v-for="(token, index) in entry.accept" :key="index">
-              {{ token.symbol }} of {{ token.contract }} on {{ token.chain }}
-            </div>
+
+            <token-symbol
+              v-for="(token, index) in entry.accept"
+              :key="index"
+              :symbol="StringToSymbol(token.symbol)"
+              :contract="token.contract"
+              :chain="token.chain"
+            ></token-symbol>
           </div>
           <div>Sellers note: "{{ entry.note }}"</div>
           <q-btn v-if="seller" :disable="!seller.available" label="Buy"></q-btn>
@@ -53,11 +62,13 @@
 </template>
 <script lang="ts">
 import Gallery from "../Components/Gallery.vue";
+import TokenSymbol from "../Components/TokenSymbol.vue";
 import { Entry } from "../Components/Items";
 import { state } from "../store/globals";
+import { StringToSymbol } from "../Components/AntelopeHelpers";
 
 export default Vue.defineComponent({
-  components: { Gallery },
+  components: { Gallery, TokenSymbol },
   name: "itemPage",
   setup() {
     // TODO: Show item by query
@@ -102,6 +113,7 @@ export default Vue.defineComponent({
       getRegion,
       getRegions,
       seller,
+      StringToSymbol,
     };
   },
 });

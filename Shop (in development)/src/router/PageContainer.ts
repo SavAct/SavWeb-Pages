@@ -30,7 +30,8 @@ export default Vue.defineComponent({
       return route.name;
     });
     if (router.currentRoute() === undefined) {
-      router.push({ name: "item" }); // Initial page
+      // Initial page
+      router.push({ name: "user" });
     }
     return { name };
   },
