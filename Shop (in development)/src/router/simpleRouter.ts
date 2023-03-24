@@ -2,6 +2,7 @@ import { routes } from "./routes";
 
 export interface RouteLocation {
   name: string;
+  query?: Object;
   title?: string;
   color?: string;
 }
@@ -21,6 +22,11 @@ export const route = Vue.reactive({
     return recordIndex.value >= 0 && record.length > 0
       ? record[recordIndex.value].name
       : "";
+  }),
+  query: Vue.computed(() => {
+    return recordIndex.value >= 0 && record.length > 0
+      ? record[recordIndex.value].query
+      : undefined;
   }),
   title: Vue.computed(() => {
     return recordIndex.value >= 0 && record.length > 0
@@ -58,17 +64,73 @@ const recordIndex = Vue.computed({
 
 const record = new Array<RouteLocation>();
 
+function getQueryFromString(query_str: string): { [key: string]: any } {
+  // TODO: parse query and hash
+  const sq = query_str.split("&");
+  const query: { [key: string]: any } = {};
+  for (let q of sq) {
+    const q2 = q.split("=");
+    if (q2.length == 2) {
+      let v: any;
+      switch (q2[1]) {
+        case "true":
+          v = true;
+          break;
+        case "false":
+          v = false;
+          break;
+        default:
+          v = isNaN(Number(q2[1])) ? q2[1] : Number(q2[1]);
+          break;
+      }
+      query[q2[0]] = q2[1];
+    } else {
+      query[q2[0]] = true;
+    }
+  }
+  return query;
+}
+
 const normalizeRoute = (to: RouteLocation | string) => {
   let norm: RouteLocation | undefined = undefined;
+  let query: { [key: string]: any } | undefined = {};
   if (typeof to == "string") {
+    // just a string as input
+    const sf = to.indexOf("?");
+    const sh = to.indexOf("#");
+    let path: string;
+    let s: number;
+    if (sf > 0 && sh > 0) {
+      s = Math.min(sf, sh);
+      path = to.substring(0, s);
+      const query_str = to.substring(s + 1);
+      query = getQueryFromString(query_str);
+    } else {
+      s = -1;
+      path = to;
+    }
     norm = routes.find((v) => to == v.name);
   } else {
+    // object as input
     if ("name" in to) {
       norm = routes.find((v) => to.name == v.name);
     }
+    if (norm !== undefined) {
+      if ("query" in to) {
+        norm.query = to.query;
+      } else {
+        norm.query = {};
+      }
+    }
   }
+
   if (norm) {
-    return { name: norm.name, title: norm.title, color: norm.color };
+    return {
+      name: norm.name,
+      title: norm.title,
+      color: norm.color,
+      query: typeof norm.query === "object" ? norm.query : {},
+    };
   }
   return undefined;
 };

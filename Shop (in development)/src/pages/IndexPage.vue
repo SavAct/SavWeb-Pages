@@ -78,17 +78,22 @@
         </template> -->
         <template v-slot:body="props">
           <q-tr :props="props" class="cursor-pointer">
-            <!-- <trx-tool-tip :trx="props.row"></trx-tool-tip> -->
-
-            <q-td key="imgs" :props="props">
+            <q-td
+              key="imgs"
+              :props="props"
+              clickable
+              @click="openItem(props.row)"
+            >
               <q-img
                 v-if="props.row.imgs.length > 0"
                 :src="props.row.imgs[0]"
               ></q-img>
             </q-td>
-            <q-td key="title" colspan="3" :props="props">{{
-              props.row.title
-            }}</q-td>
+            <q-td key="title" colspan="3" :props="props"
+              ><div clickable @click="openItem(props.row)">
+                {{ props.row.title }}
+              </div></q-td
+            >
             <q-td key="price" :props="props">{{ props.row.price }} USD</q-td>
             <q-td key="seller" :props="props">
               #{{ props.row.id }} {{ props.row.seller }}
@@ -113,6 +118,8 @@
 </template>
 <script lang="ts">
 import { QTableProps } from "quasar";
+import { Entry } from "../Components/Items";
+import { router } from "../router/simpleRouter";
 import { state } from "../store/globals";
 
 export default Vue.defineComponent({
@@ -171,6 +178,11 @@ export default Vue.defineComponent({
       return state.itemsList;
     });
 
+    function openItem(item: Entry) {
+      console.log("item click", item);
+      router.push({ name: "item", query: { id: item.id } });
+    }
+
     return {
       progress: state.progress,
       darkStyle: state.darkStyle,
@@ -181,6 +193,7 @@ export default Vue.defineComponent({
       loading,
       itemRows,
       itemColumns,
+      openItem,
     };
   },
 });

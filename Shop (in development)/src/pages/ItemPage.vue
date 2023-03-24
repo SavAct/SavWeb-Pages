@@ -117,13 +117,18 @@ import {
   Token,
 } from "../Components/AntelopeHelpers";
 import { getCurrentTokenPrice } from "../Components/ConvertPrices";
+import { route } from "../router/simpleRouter";
 
 export default Vue.defineComponent({
   components: { Gallery, TokenSymbol },
   name: "itemPage",
   setup() {
     // TODO: Show item by query
-    const id = 0;
+    const id =
+      route.query && "id" in route.query && typeof route.query.id == "number"
+        ? route.query.id
+        : -1;
+
     const regionName = new Intl.DisplayNames(["en"], { type: "region" });
 
     const entry = Vue.ref<Entry>();

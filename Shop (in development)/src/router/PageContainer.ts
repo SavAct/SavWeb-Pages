@@ -31,7 +31,7 @@ export default Vue.defineComponent({
     });
     if (router.currentRoute() === undefined) {
       // Initial page
-      router.push({ name: "item" });
+      router.push({ name: "buy" });
     }
     return { name };
   },

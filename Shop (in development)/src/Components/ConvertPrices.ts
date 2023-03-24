@@ -4,7 +4,7 @@ export async function getCurrentTokenPrice(
   totalUSD: number,
   token: Token
 ): Promise<Asset | undefined> {
-  // Get from coingecko.com
+  // Get price from coingecko.com
   let symApiName: string | undefined = undefined;
   if (token.chain == "eos") {
     switch (token.symbol.name) {
@@ -56,8 +56,6 @@ export async function getCurrentTokenPrice(
     const tp = (totalUSD / price) * 10 ** token.symbol.precision;
 
     console.log(totalUSD, price, tp);
-    console.log("Math.round(tp)", Math.round(tp));
-    console.log("symbol: token.symbol,", token.symbol);
 
     return {
       amount: BigInt(Math.round(tp)),

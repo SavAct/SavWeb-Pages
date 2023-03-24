@@ -27,7 +27,7 @@
           push
           round
           dense
-          text-color="white"
+          :text-color="darkStyle ? 'white' : 'black'"
           :icon="imgFullscreen ? 'fullscreen_exit' : 'fullscreen'"
           @click="clickFullScreen"
         />
@@ -54,6 +54,7 @@
   </q-carousel>
 </template>
 <script lang="ts">
+import { state } from "../store/globals";
 export default Vue.defineComponent({
   props: {
     srcs: {
@@ -89,7 +90,15 @@ export default Vue.defineComponent({
       setTimeout(() => document.getElementById("imgCarousel")?.focus(), 100);
     }
 
-    return { selectedImg, imgFullscreen, imgKeyDown, clickFullScreen };
+    const darkStyle = Vue.computed(() => state.darkStyle.value);
+
+    return {
+      selectedImg,
+      imgFullscreen,
+      imgKeyDown,
+      clickFullScreen,
+      darkStyle,
+    };
   },
 });
 </script>
