@@ -8,6 +8,12 @@ export interface Asset {
   symbol: AssetSymbol;
 }
 
+export interface Token {
+  symbol: AssetSymbol;
+  contract: string;
+  chain: string;
+}
+
 export function StringToSymbol(symbol_str: string): AssetSymbol {
   const [precision_str, name] = symbol_str.split(",");
   return { precision: parseInt(precision_str), name };

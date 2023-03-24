@@ -1,5 +1,5 @@
 <template>
-  <q-chip color="blue" text-color="white">
+  <q-chip square>
     <span class="text-bold text-h5" v-if="symbol">{{ symbol.name }}</span>
     <div class="text-caption q-ml-sm" style="line-height: 100%">
       <div>

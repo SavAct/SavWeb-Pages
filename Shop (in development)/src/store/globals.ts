@@ -47,12 +47,13 @@ const itemsList: Array<Entry> = [
     units: 3,
     seller: "yearofthesav",
     editDate: 1679155279,
-    shipSpan: 3600 * 24,
-    to_regions: "EU",
+    maxTd: 3600 * 24 * 14,
+    to: [{ region: "EU", sp: 5.35, sd: 3600 * 24 * 14 }],
     exclude_regions: "DE",
     from_region: "NL",
     accept: [{ symbol: "4,EOS", contract: "eosio.token", chain: "eos" }],
     available: true,
+    description: "This is a very good telescope",
     note: "Write me before you send the token!",
   },
   {
@@ -61,16 +62,20 @@ const itemsList: Array<Entry> = [
     imgs: [
       "https://savact.com/wp-content/uploads/2021/12/002-space-station2.png",
     ],
-    price: 2.5,
+    price: 2.55,
     units: 1,
     seller: "savact",
     editDate: 1679150279,
-    shipSpan: 3600 * 24 * 14,
-    to_regions: "us eu",
+    maxTd: 3600 * 24 * 7,
+    to: [
+      { region: "DE", sp: 2.1, sd: 3600 * 24 },
+      { region: "AT", sp: 4.23, sd: 3600 * 24 * 2 },
+    ],
     exclude_regions: "nl",
     from_region: "eu",
     accept: [{ symbol: "4,EOS", contract: "eosio.token", chain: "eos" }],
     available: true,
+    description: "This is a very good\nsatellite<br>with solar pannel",
     note: "This item is realy rare",
   },
 ];
@@ -85,6 +90,11 @@ const sellerList: { [key: string]: Seller } = {
     available: true,
     contact: ["test2@test2.com", "t.me/test2"],
     pgp: "PGP KEY-------test2--------PGP END",
+  },
+  yearofthesav: {
+    available: true,
+    contact: ["test3@test3.com", "t.me/test3"],
+    pgp: "PGP KEY-------test3--------PGP END",
   },
 };
 

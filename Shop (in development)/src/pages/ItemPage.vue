@@ -9,21 +9,39 @@
           :class="$q.screen.lt.md ? 'q-pt-md' : ''"
           v-if="entry"
         >
-          <div>Price: {{ entry.price }} USD</div>
-          <div>Units per order: {{ entry.units }}</div>
-          <div>Price per unit: {{ entry.price / entry.units }}</div>
-
-          <div>From {{ getRegion(entry.from_region) }}</div>
           <div>
-            To
-            <span class="text-italic text-green">{{
-              getRegions(entry.to_regions)
-            }}</span
-            ><span v-if="entry.exclude_regions"
-              >, but especially not to
-              <span class="text-italic text-red">{{
-                getRegions(entry.exclude_regions)
-              }}</span>
+            Price:
+            <q-chip icon="attach_money" :label="entry.price + ' USD'"></q-chip>
+            Units per order:
+            <q-chip :label="entry.units"></q-chip>
+            Price per unit:
+            <q-chip
+              :label="(entry.price / entry.units).toString() + ' USD'"
+            ></q-chip>
+          </div>
+
+          <div>
+            <span v-if="entry.from_region.length > 0"
+              >From<q-chip :label="getRegion(entry.from_region)"></q-chip
+              >to</span
+            ><span v-else>To</span>
+            <q-chip
+              v-for="(to, index) in entry.to"
+              :key="index"
+              :label="getRegion(to.region)"
+              text-color="green"
+              clickable
+              @click="regionClick(index)"
+            ></q-chip>
+            <span v-if="entry.exclude_regions">
+              but especially not to
+              <q-chip
+                v-for="(ex, index) in entry.exclude_regions.split(' ')"
+                :key="index"
+                text-color="red"
+                :label="getRegion(ex)"
+                icon="do_not_disturb"
+              ></q-chip>
             </span>
           </div>
           <div>
@@ -35,29 +53,56 @@
               :symbol="StringToSymbol(token.symbol)"
               :contract="token.contract"
               :chain="token.chain"
+              size="18px"
+              clickable
+              @click="tokenClick(index)"
             ></token-symbol>
           </div>
           <div>Sellers note: "{{ entry.note }}"</div>
-          <q-btn v-if="seller" :disable="!seller.available" label="Buy"></q-btn>
+
+          <div>
+            <q-select
+              outlined
+              v-model="sRegion"
+              :options="availableTo"
+              label="Select your region"
+              dense
+              color="green"
+              class="q-mt-sm"
+            ></q-select>
+
+            <q-select
+              outlined
+              v-model="sToken"
+              :options="acceptToken"
+              label="Token you want to pay with"
+              dense
+              color="green"
+              class="q-mt-sm"
+            ></q-select>
+
+            <div v-if="totalPrice">
+              Total price:
+              <q-chip
+                v-if="sRegion && sToken"
+                :label="totalPrice?.toString() + ' USD'"
+              ></q-chip>
+
+              <q-chip v-if="sRegion && sToken" :label="totalTokenStr"> </q-chip>
+            </div>
+
+            <q-btn
+              v-if="seller"
+              :disable="!seller.available"
+              class="q-mt-md bg-green"
+              label="Buy"
+              color="white"
+              outline
+            ></q-btn>
+          </div>
         </div>
       </div>
     </div>
-    <!-- <div class="col-auto">
-      <q-linear-progress
-        size="50px"
-        :value="progress"
-        class="q-mt-sm"
-        :color="darkStyle ? 'blue-13' : 'blue-2'"
-      >
-        <div class="absolute-full flex flex-center">
-          <q-badge
-            color="transparent"
-            :text-color="darkStyle ? 'white' : 'black'"
-            label="Click state on counter page"
-          />
-        </div>
-      </q-linear-progress>
-    </div> -->
   </q-page>
 </template>
 <script lang="ts">
@@ -65,7 +110,13 @@ import Gallery from "../Components/Gallery.vue";
 import TokenSymbol from "../Components/TokenSymbol.vue";
 import { Entry } from "../Components/Items";
 import { state } from "../store/globals";
-import { StringToSymbol } from "../Components/AntelopeHelpers";
+import {
+  Asset,
+  AssetToString,
+  StringToSymbol,
+  Token,
+} from "../Components/AntelopeHelpers";
+import { getCurrentTokenPrice } from "../Components/ConvertPrices";
 
 export default Vue.defineComponent({
   components: { Gallery, TokenSymbol },
@@ -91,19 +142,90 @@ export default Vue.defineComponent({
       return undefined;
     }
 
-    function getRegions(r: string) {
-      return r !== undefined
-        ? r
-            .split(" ")
-            .map((v) => getRegion(v))
-            .join(", ")
-        : undefined;
-    }
-
     const imgs = Vue.computed(() => entry.value?.imgs);
     const seller = entry.value
       ? state.sellerList[entry.value.seller]
       : undefined;
+
+    const sRegion = Vue.ref<{ value: string; label: string | undefined }>();
+    const availableTo = Vue.computed(() => {
+      if (entry.value !== undefined) {
+        const en = entry.value;
+        return en.to
+          .filter((a) => {
+            return !en.exclude_regions.split(" ").includes(a.region);
+          })
+          .map((rto) => {
+            return { value: rto.region, label: getRegion(rto.region) };
+          });
+      }
+      return undefined;
+    });
+
+    const sToken = Vue.ref<{
+      value: Token;
+      label: string;
+    }>();
+
+    const acceptToken = Vue.computed(() => {
+      if (entry.value !== undefined) {
+        return entry.value.accept.map((token) => {
+          const sym = StringToSymbol(token.symbol);
+          return {
+            value: {
+              symbol: StringToSymbol(token.symbol),
+              contract: token.contract,
+              chain: token.chain,
+            },
+            label: `${sym.name} (${token.contract} on ${token.chain})`,
+          };
+        });
+      }
+      return undefined;
+    });
+
+    const totalPrice = Vue.computed(() => {
+      if (entry.value && sRegion.value) {
+        const to = entry.value.to.find((a) => a.region == sRegion.value?.value);
+        if (to !== undefined) {
+          const p = to.sp + entry.value.price;
+          setTotalToken(p);
+          return p;
+        }
+      }
+      totalToken.value = undefined;
+      return undefined;
+    });
+
+    const totalToken = Vue.ref<Asset | undefined>();
+    async function setTotalToken(price: number) {
+      if (price !== undefined && sToken.value !== undefined) {
+        totalToken.value = await getCurrentTokenPrice(
+          price,
+          sToken.value.value
+        );
+      } else {
+        totalToken.value = undefined;
+      }
+    }
+
+    const totalTokenStr = Vue.computed(() => {
+      if (totalToken.value) {
+        return AssetToString(totalToken.value);
+      }
+      return undefined;
+    });
+
+    function tokenClick(index: number) {
+      if (acceptToken.value) {
+        sToken.value = acceptToken.value[index];
+      }
+    }
+    function regionClick(index: number) {
+      if (availableTo.value) {
+        sRegion.value = availableTo.value[index];
+      }
+    }
 
     return {
       progress: state.progress,
@@ -111,9 +233,16 @@ export default Vue.defineComponent({
       entry,
       imgs,
       getRegion,
-      getRegions,
       seller,
       StringToSymbol,
+      sRegion,
+      availableTo,
+      sToken,
+      acceptToken,
+      totalPrice,
+      totalTokenStr,
+      tokenClick,
+      regionClick,
     };
   },
 });
