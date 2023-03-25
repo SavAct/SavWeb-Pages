@@ -83,7 +83,7 @@ function getQueryFromString(query_str: string): { [key: string]: any } {
           v = isNaN(Number(q2[1])) ? q2[1] : Number(q2[1]);
           break;
       }
-      query[q2[0]] = q2[1];
+      query[q2[0]] = v;
     } else {
       query[q2[0]] = true;
     }
@@ -93,11 +93,11 @@ function getQueryFromString(query_str: string): { [key: string]: any } {
 
 const normalizeRoute = (to: RouteLocation | string) => {
   let norm: RouteLocation | undefined = undefined;
-  let query: { [key: string]: any } | undefined = {};
   if (typeof to == "string") {
     // just a string as input
     const sf = to.indexOf("?");
     const sh = to.indexOf("#");
+    let query: { [key: string]: any } | undefined = {};
     let path: string;
     let s: number;
     if (sf > 0 && sh > 0) {
@@ -109,7 +109,8 @@ const normalizeRoute = (to: RouteLocation | string) => {
       s = -1;
       path = to;
     }
-    norm = routes.find((v) => to == v.name);
+    norm = routes.find((v) => path == v.name);
+    if (norm) norm.query = query;
   } else {
     // object as input
     if ("name" in to) {

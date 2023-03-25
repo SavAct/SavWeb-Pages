@@ -1,106 +1,138 @@
 <template>
   <q-page class="column">
-    <div class="col q-pa-md text-center">
-      <div class="q-my-md text-h5">{{ entry?.title }}</div>
-      <div class="row">
-        <gallery class="col-12 col-md-6" height="300px" :srcs="imgs"></gallery>
+    <div class="col q-pa-md">
+      <div class="text-h5">{{ entry?.title }}</div>
+      <div class="q-mt-md row">
+        <gallery class="col-12 col-md-6" height="400px" :srcs="imgs"></gallery>
         <div
-          class="text-left q-px-md"
+          class="col-12 col-md-6"
           :class="$q.screen.lt.md ? 'q-pt-md' : ''"
           v-if="entry"
         >
-          <div>
-            Price:
-            <q-chip icon="attach_money" :label="entry.price + ' USD'"></q-chip>
-            Units per order:
-            <q-chip :label="entry.units"></q-chip>
-            Price per unit:
-            <q-chip
-              :label="(entry.price / entry.units).toString() + ' USD'"
-            ></q-chip>
-          </div>
-
-          <div>
-            <span v-if="entry.from_region.length > 0"
-              >From<q-chip :label="getRegion(entry.from_region)"></q-chip
-              >to</span
-            ><span v-else>To</span>
-            <q-chip
-              v-for="(to, index) in entry.to"
-              :key="index"
-              :label="getRegion(to.region)"
-              text-color="green"
-              clickable
-              @click="regionClick(index)"
-            ></q-chip>
-            <span v-if="entry.exclude_regions">
-              but especially not to
+          <div class="q-px-md">
+            <div>
+              Price:
               <q-chip
-                v-for="(ex, index) in entry.exclude_regions.split(' ')"
-                :key="index"
-                text-color="red"
-                :label="getRegion(ex)"
-                icon="do_not_disturb"
+                icon="attach_money"
+                :label="entry.price + ' USD'"
               ></q-chip>
-            </span>
-          </div>
-          <div>
-            <div>Accept payments of</div>
-
-            <token-symbol
-              v-for="(token, index) in entry.accept"
-              :key="index"
-              :symbol="StringToSymbol(token.symbol)"
-              :contract="token.contract"
-              :chain="token.chain"
-              size="18px"
-              clickable
-              @click="tokenClick(index)"
-            ></token-symbol>
-          </div>
-          <div>Sellers note: "{{ entry.note }}"</div>
-
-          <div>
-            <q-select
-              outlined
-              v-model="sRegion"
-              :options="availableTo"
-              label="Select your region"
-              dense
-              color="green"
-              class="q-mt-sm"
-            ></q-select>
-
-            <q-select
-              outlined
-              v-model="sToken"
-              :options="acceptToken"
-              label="Token you want to pay with"
-              dense
-              color="green"
-              class="q-mt-sm"
-            ></q-select>
-
-            <div v-if="totalPrice">
-              Total price:
+              Units per order:
+              <q-chip :label="entry.units"></q-chip>
+              Price per unit:
               <q-chip
-                v-if="sRegion && sToken"
-                :label="totalPrice?.toString() + ' USD'"
+                :label="(entry.price / entry.units).toString() + ' USD'"
               ></q-chip>
-
-              <q-chip v-if="sRegion && sToken" :label="totalTokenStr"> </q-chip>
             </div>
 
-            <q-btn
-              v-if="seller"
-              :disable="!seller.available"
-              class="q-mt-md bg-green"
-              label="Buy"
-              color="white"
-              outline
-            ></q-btn>
+            <div class="q-my-sm">
+              <span v-if="entry.from_region.length > 0"
+                >From<q-chip :label="getRegion(entry.from_region)"></q-chip
+                >to</span
+              ><span v-else>To</span>
+              <q-chip
+                v-for="(to, index) in entry.to"
+                :key="index"
+                :label="getRegion(to.region)"
+                text-color="green"
+                clickable
+                @click="regionClick(index)"
+              ></q-chip>
+              <span v-if="entry.exclude_regions">
+                but especially not to
+                <q-chip
+                  v-for="(ex, index) in entry.exclude_regions.split(' ')"
+                  :key="index"
+                  text-color="red"
+                  :label="getRegion(ex)"
+                  icon="do_not_disturb"
+                ></q-chip>
+              </span>
+            </div>
+            <div>
+              <div>Accept payments of</div>
+
+              <token-symbol
+                v-for="(token, index) in entry.accept"
+                :key="index"
+                :symbol="StringToSymbol(token.symbol)"
+                :contract="token.contract"
+                :chain="token.chain"
+                size="18px"
+                clickable
+                @click="tokenClick(index)"
+              ></token-symbol>
+            </div>
+          </div>
+          <div :class="{ 'q-mx-md': $q.screen.gt.sm }">
+            <q-separator class="q-my-md" />
+            <div v-if="entry.note">
+              <div>
+                <div class="text-h5">Sellers note</div>
+                <div>{{ entry.note }}</div>
+              </div>
+              <q-separator class="q-my-md" />
+            </div>
+            <div>
+              <q-select
+                outlined
+                v-model="sRegion"
+                :options="availableTo"
+                label="Select your region"
+                dense
+                color="green"
+                class="q-mt-sm"
+              ></q-select>
+
+              <q-select
+                outlined
+                v-model="sToken"
+                :options="acceptToken"
+                label="Token you want to pay with"
+                dense
+                color="green"
+                class="q-my-sm"
+              ></q-select>
+
+              <div v-if="totalPrice" class="col-12">
+                Total price:
+                <q-chip :label="totalPrice?.toString() + ' USD'"></q-chip>
+                <q-chip v-if="sRegion && sToken" :label="totalTokenStr">
+                </q-chip>
+              </div>
+
+              <div v-if="seller" class="row">
+                <div v-if="!seller.available" class="text-red text-h5 q-mt-sm">
+                  The seller is&nbsp;<span
+                    v-if="seller.toDate < Date.now() / 1000"
+                    >not available.</span
+                  ><span v-else
+                    >not available until&nbsp;<span class="text-bold">{{
+                      new Date(seller.toDate * 1000).toUTCString().substring(5)
+                    }}</span></span
+                  >
+                </div>
+                <q-btn
+                  v-else
+                  :disable="
+                    !seller.available ||
+                    typeof totalPrice != 'number' ||
+                    !sToken?.value
+                  "
+                  class="bg-green col-12"
+                  label="Buy"
+                  color="white"
+                  outline
+                  @click="buyClick"
+                ></q-btn>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+      <q-separator class="q-my-md" />
+      <div v-if="entry && entry?.description.length > 0">
+        <div class="text-h5">Description</div>
+        <div>{{ entry?.description }}</div>
       </div>
     </div>
   </q-page>
@@ -117,13 +149,12 @@ import {
   Token,
 } from "../Components/AntelopeHelpers";
 import { getCurrentTokenPrice } from "../Components/ConvertPrices";
-import { route } from "../router/simpleRouter";
+import { route, router } from "../router/simpleRouter";
 
 export default Vue.defineComponent({
   components: { Gallery, TokenSymbol },
   name: "itemPage",
   setup() {
-    // TODO: Show item by query
     const id =
       route.query && "id" in route.query && typeof route.query.id == "number"
         ? route.query.id
@@ -232,6 +263,19 @@ export default Vue.defineComponent({
       }
     }
 
+    function buyClick() {
+      if (entry.value && sRegion.value && sToken.value) {
+        router.push({
+          name: "buy",
+          query: {
+            id: entry.value.id,
+            region: sRegion.value.value,
+            token: sToken.value.value,
+          },
+        });
+      }
+    }
+
     return {
       progress: state.progress,
       darkStyle: state.darkStyle,
@@ -248,6 +292,7 @@ export default Vue.defineComponent({
       totalTokenStr,
       tokenClick,
       regionClick,
+      buyClick,
     };
   },
 });

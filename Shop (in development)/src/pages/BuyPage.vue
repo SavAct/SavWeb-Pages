@@ -9,7 +9,11 @@
         active-icon="mail"
       >
         [Product and seller details lable]<br />
-        [Enter your name]<br />
+        <user-input
+          label="Enter your user name"
+          v-model="buyerName"
+        ></user-input>
+        <set-pgp v-model="buyerName"></set-pgp>
         [Enter your key if not online else expandable key lable]<br />
         [Enter your address data]
       </q-step>
@@ -81,15 +85,20 @@
   </q-page>
 </template>
 <script lang="ts">
+import SetPgp from "../Components/SetPgp.vue";
+import UserInput from "../Components/UserInput.vue";
 import { Entry } from "../Components/Items";
 import { state } from "../store/globals";
+import { route } from "../router/simpleRouter";
 
 export default Vue.defineComponent({
-  components: {},
+  components: { SetPgp, UserInput },
   name: "buyPage",
   setup() {
-    // TODO: Buy item by query
-    const id = 1;
+    const id =
+      route.query && "id" in route.query && typeof route.query.id == "number"
+        ? route.query.id
+        : -1;
     const regionName = new Intl.DisplayNames(["en"], { type: "region" });
     const entry = Vue.ref<Entry>();
     entry.value = state.itemsList.find((item) => item.id == id);
@@ -128,6 +137,8 @@ export default Vue.defineComponent({
         : undefined;
     }
 
+    const buyerName = Vue.ref<string>("");
+
     return {
       progress: state.progress,
       darkStyle: state.darkStyle,
@@ -137,6 +148,7 @@ export default Vue.defineComponent({
       nextStep,
       backStep,
       pieces,
+      buyerName,
     };
   },
 });
