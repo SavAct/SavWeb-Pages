@@ -12,7 +12,7 @@
     <q-btn
       class="q-mt-sm"
       :disable="!(validModel && pgpKey.length > 0)"
-      :label="(editPGP ? 'Update' : 'Upload') + ' PGP key'"
+      :label="(editPGP ? 'Update' : 'Store') + ' PGP key on chain'"
       @click="setPgpOnChain"
     ></q-btn>
   </div>

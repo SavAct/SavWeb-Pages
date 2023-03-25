@@ -55,8 +55,6 @@ export async function getCurrentTokenPrice(
     if (typeof price !== "number") throw new Error("Price is not a number");
     const tp = (totalUSD / price) * 10 ** token.symbol.precision;
 
-    console.log(totalUSD, price, tp);
-
     return {
       amount: BigInt(Math.round(tp)),
       symbol: token.symbol,

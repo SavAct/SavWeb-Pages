@@ -1,32 +1,56 @@
 <template>
   <div>
     <div class="row">
-      <q-input class="col-4" label="First Name" v-model="firstName"></q-input>
       <q-input
-        class="col-4"
+        class="col-4 q-px-sm"
+        label="First Name"
+        v-model="firstName"
+      ></q-input>
+      <q-input
+        class="col-4 q-px-sm"
         label="Middle Names"
         v-model="middleNames"
       ></q-input>
-      <q-input class="col-4" label="Last Name" v-model="lastName"></q-input>
+      <q-input
+        class="col-4 q-px-sm"
+        label="Last Name"
+        v-model="lastName"
+      ></q-input>
     </div>
 
-    <q-input label="Address Line 1" v-model="addressL1"></q-input>
-    <q-input label="Address Line 2" v-model="addressL2"></q-input>
+    <q-input
+      class="q-px-sm q-pt-sm"
+      label="Address Line 1"
+      v-model="addressL1"
+    ></q-input>
+    <q-input
+      class="q-px-sm"
+      label="Address Line 2 (Optional)"
+      v-model="addressL2"
+    ></q-input>
     <div class="row">
-      <q-input class="col-6" label="City" v-model="city"></q-input>
+      <q-input class="col-6 q-px-sm" label="City" v-model="city"></q-input>
       <q-input
-        class="col-6"
+        class="col-6 q-px-sm"
         label="State / Province / Region"
         v-model="state"
       ></q-input>
-      <q-input class="col-6" label="Postal Code" v-model="postal"></q-input>
-      <q-input class="col-6" label="Country" v-model="country"></q-input>
+      <q-input
+        class="col-6 q-px-sm"
+        label="Postal Code"
+        v-model="postal"
+      ></q-input>
+      <q-input
+        class="col-6 q-px-sm"
+        label="Country"
+        v-model="country"
+      ></q-input>
     </div>
   </div>
 </template>
 <script lang="ts">
 export default Vue.defineComponent({
-  name: "address",
+  name: "addressInput",
   setup() {
     const firstName = Vue.ref<string>();
     const middleNames = Vue.ref<string>();

@@ -61,9 +61,9 @@
           <q-tr class="cursor-pointer">
             <q-td>
               <div class="text-italic text-orange">This is an Ads</div>
-              <q-img
+              <pro-img
                 src="https://savact.com/wp-content/uploads/2021/12/002-space-station2.png"
-              ></q-img>
+              ></pro-img>
               <div class="text-italic text-orange">--------------</div>
             </q-td>
             <q-td colspan="2">Super satellite payed Item</q-td>
@@ -84,10 +84,10 @@
               clickable
               @click="openItem(props.row)"
             >
-              <q-img
+              <pro-img
                 v-if="props.row.imgs.length > 0"
                 :src="props.row.imgs[0]"
-              ></q-img>
+              ></pro-img>
             </q-td>
             <q-td key="title" colspan="3" :props="props"
               ><div clickable @click="openItem(props.row)">
@@ -117,6 +117,7 @@
   </q-page>
 </template>
 <script lang="ts">
+import ProImg from "../Components/ProImg.vue";
 import { QTableProps } from "quasar";
 import { Entry } from "../Components/Items";
 import { router } from "../router/simpleRouter";
@@ -124,6 +125,9 @@ import { state } from "../store/globals";
 
 export default Vue.defineComponent({
   name: "indexPage",
+  components: {
+    ProImg,
+  },
   setup() {
     const search = Vue.ref<any>(true);
 
@@ -179,9 +183,10 @@ export default Vue.defineComponent({
     });
 
     function openItem(item: Entry) {
-      console.log("item click", item);
       router.push({ name: "item", query: { id: item.id } });
     }
+
+    // Beispielaufruf mit einer Datei-URL und einem Limit von 10 MB
 
     return {
       progress: state.progress,

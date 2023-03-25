@@ -25,8 +25,12 @@
             </div>
 
             <div class="q-my-sm">
+              <span>
+                From
+                <user-link class="col-auto" :user="entry.seller"></user-link>
+              </span>
               <span v-if="entry.from_region.length > 0"
-                >From<q-chip :label="getRegion(entry.from_region)"></q-chip
+                >in<q-chip :label="getRegion(entry.from_region)"></q-chip
                 >to</span
               ><span v-else>To</span>
               <q-chip
@@ -140,6 +144,7 @@
 <script lang="ts">
 import Gallery from "../Components/Gallery.vue";
 import TokenSymbol from "../Components/TokenSymbol.vue";
+import UserLink from "../Components/UserLink.vue";
 import { Entry } from "../Components/Items";
 import { state } from "../store/globals";
 import {
@@ -152,7 +157,7 @@ import { getCurrentTokenPrice } from "../Components/ConvertPrices";
 import { route, router } from "../router/simpleRouter";
 
 export default Vue.defineComponent({
-  components: { Gallery, TokenSymbol },
+  components: { Gallery, TokenSymbol, UserLink },
   name: "itemPage",
   setup() {
     const id =

@@ -1,5 +1,4 @@
 <template>
-  <div class="q-mb-sm">{{ label }}</div>
   <q-input
     rounded
     outlined
@@ -11,11 +10,13 @@
   >
     <template v-slot:before>
       <q-select
+        :disable="fixChain.length > 0"
         style="width: 90px"
         outlined
         dense
         v-model="chain"
         :options="chainOptions"
+        :hide-dropdown-icon="fixChain.length > 0"
       />
     </template>
     <template v-slot:after>
@@ -44,7 +45,7 @@ export default Vue.defineComponent({
       requier: true,
       default: "",
     },
-    label: {
+    fixChain: {
       type: String,
       requier: false,
       default: "",
@@ -100,16 +101,19 @@ export default Vue.defineComponent({
       context.emit("update:model-value", "");
     }
 
-    const chainOptions: Array<{ label: string; value: string }> = [
-      {
-        label: "EOS",
-        value: "eos",
-      },
-      {
-        label: "WAX",
-        value: "wax",
-      },
-    ];
+    const chainOptions: Array<{ label: string; value: string }> =
+      props.fixChain.length > 0
+        ? [{ label: props.fixChain.toUpperCase(), value: props.fixChain }]
+        : [
+            {
+              label: "EOS",
+              value: "eos",
+            },
+            {
+              label: "WAX",
+              value: "wax",
+            },
+          ];
     const chain = Vue.ref<{ label: string; value: string }>(chainOptions[0]);
     return {
       userName,
