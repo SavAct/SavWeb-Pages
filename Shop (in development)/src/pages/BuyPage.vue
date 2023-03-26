@@ -22,10 +22,10 @@
         ></user-input>
         <div class="q-my-sm">
           <div class="text-h6">Enter your public PGP key</div>
-          <set-pgp v-model="buyerName"></set-pgp>
+          <set-pgp v-model="buyerPupPgp" :account="buyerName"></set-pgp>
         </div>
         <div class="text-h6">Enter your address</div>
-        <address-input></address-input>
+        <address-input @address="setAddress"></address-input>
         <div class="text-h6 q-mt-md">Send the seller your encrypted data</div>
         <q-input
           type="textarea"
@@ -162,11 +162,21 @@ import SetPgp from "../Components/SetPgp.vue";
 import UserInput from "../Components/UserInput.vue";
 import UserLink from "../Components/UserLink.vue";
 import TokenSymbol from "../Components/TokenSymbol.vue";
-import AddressInput from "../Components/AddressInput.vue";
+import AddressInput, { Address } from "../Components/AddressInput.vue";
 import { Entry } from "../Components/Items";
 import { state } from "../store/globals";
 import { route } from "../router/simpleRouter";
 import { Token } from "../Components/AntelopeHelpers";
+
+export interface UserData extends Address {
+  buyer: string;
+  pubPgp: string;
+  item: number;
+  pieces: number;
+  token: Token;
+  seller: string;
+  sigDate: number;
+}
 
 export default Vue.defineComponent({
   components: { SetPgp, UserInput, UserLink, TokenSymbol, AddressInput },
@@ -238,10 +248,7 @@ export default Vue.defineComponent({
       return false;
     });
 
-    const buyerData = Vue.computed(() => {
-      //TODO: encrypt all data
-      return "";
-    });
+    const buyerData = Vue.ref<string>("");
 
     const sellerConfirms = Vue.ref<boolean>(false);
     const _sellerResponse = Vue.ref<string>("");
@@ -250,6 +257,7 @@ export default Vue.defineComponent({
         return _sellerResponse.value;
       },
       set(v) {
+        // TODO: Defined by response of the seller deadline.minTime and deadline.maxTime
         if (v.trim().toLocaleLowerCase().startsWith("yes")) {
           sellerConfirms.value = true;
         } else {
@@ -259,6 +267,58 @@ export default Vue.defineComponent({
         _sellerResponse.value = v;
       },
     });
+
+    const address = Vue.ref<Address>();
+    function setAddress(event: Address) {
+      address.value = event;
+      encrypt();
+    }
+
+    const buyerPupPgp = Vue.ref<string>("");
+    const sellerPupPgp = Vue.ref<string>("");
+
+    const jsonData = Vue.computed(() => {
+      if (
+        !token ||
+        !entry.value ||
+        buyerName.value.length == 0 ||
+        buyerPupPgp.value.length == 0
+      )
+        return;
+      const userData = address.value as UserData;
+      userData.buyer = buyerName.value;
+      userData.item = id;
+      userData.pieces = pieces.value;
+      userData.token = token;
+      userData.seller = entry.value.seller;
+      userData.sigDate = Date.now();
+      userData.pubPgp = buyerPupPgp.value;
+
+      return JSON.stringify(userData);
+    });
+
+    async function encrypt() {
+      // https://github.com/openpgpjs/openpgpjs
+      if (jsonData.value === undefined) return;
+      console.log("sign", jsonData.value);
+
+      try {
+        const message = await openpgp.createMessage({ text: jsonData.value });
+        const publicKey = await openpgp.readKey({
+          armoredKey: buyerPupPgp.value,
+        });
+
+        buyerData.value = (
+          await openpgp.encrypt({
+            message,
+            encryptionKeys: new Array(publicKey),
+          })
+        ).toString();
+      } catch (e) {
+        console.error("Error on signing", e);
+        buyerData.value = "";
+      }
+    }
 
     return {
       progress: state.progress,
@@ -278,6 +338,10 @@ export default Vue.defineComponent({
       sellerResponse,
       sellerConfirms,
       buyerData,
+      setAddress,
+      buyerPupPgp,
+      sellerPupPgp,
+      jsonData,
     };
   },
 });

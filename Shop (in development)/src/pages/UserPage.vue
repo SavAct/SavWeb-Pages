@@ -11,7 +11,7 @@
     </div>
 
     <user-input label="Enter your user name" v-model="userName"></user-input>
-    <set-pgp v-model="userName"></set-pgp>
+    <set-pgp :account="userName"></set-pgp>
   </q-page>
 </template>
 <script lang="ts">

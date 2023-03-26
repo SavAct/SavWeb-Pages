@@ -11,7 +11,9 @@
     ></q-input>
     <q-btn
       class="q-mt-sm"
-      :disable="!(validModel && pgpKey.length > 0)"
+      :disable="
+        !(validModel && modelValue !== undefined && modelValue.length > 0)
+      "
       :label="(editPGP ? 'Update' : 'Store') + ' PGP key on chain'"
       @click="setPgpOnChain"
     ></q-btn>
@@ -28,13 +30,21 @@ export default Vue.defineComponent({
       type: String,
       requier: true,
     },
+    account: {
+      type: String,
+      requier: false,
+      default: "",
+    },
   },
-  setup(props) {
-    const pgpKey = Vue.ref<string>("");
+  setup(props, context) {
+    const pgpKey = Vue.computed({
+      get: () => props.modelValue,
+      set: (v) => context.emit("update:model-value", v),
+    });
     const hasPGP = Vue.ref<boolean>(false);
     const editPGP = Vue.ref<boolean>(false);
     const validModel = Vue.computed(() => {
-      return typeof props.modelValue == "string" && props.modelValue.length > 0;
+      return typeof props.account == "string" && props.account.length > 0;
     });
 
     function setPgpOnChain() {

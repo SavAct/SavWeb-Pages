@@ -92,8 +92,22 @@ export default Vue.defineComponent({
 
     function generate() {
       // TODO: Generate PGP key https://github.com/openpgpjs/openpgpjs
-      privatePGP.value = "Private-PGP----Templalate-----";
-      publicPGP.value = "Public-PGP----Templalate-----";
+      openpgp
+        .generateKey({ userIDs: { name: "" }, passphrase: "", type: "ecc" })
+        .then((key) => {
+          console.log(key);
+
+          privatePGP.value = key.privateKey;
+          publicPGP.value = key.publicKey;
+        })
+        .catch((err) => {
+          console.log("Error on key generation", err);
+          Quasar.Notify.create({
+            type: "negative",
+            message: "Cannot generate PGP key",
+            position: "top",
+          });
+        });
     }
     generate();
 
@@ -107,8 +121,7 @@ export default Vue.defineComponent({
         .then(() => {
           Quasar.Notify.create({
             type: "positive",
-            message: "Copy to clipboard",
-            caption: text,
+            message: "Copy private PGP key to clipboard",
             position: "top",
           });
         })
