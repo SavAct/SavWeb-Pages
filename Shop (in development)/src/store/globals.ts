@@ -37,9 +37,9 @@ const savWeb = new SavWeb(onIni);
 const itemsList: Array<Entry> = [
   {
     id: 0,
-    title: "A white telescope",
+    title: "Cheap planet with great landscapes",
     imgs: [
-      "https://savact.com/wp-content/uploads/2021/12/003-observatory2.png",
+      "https://cdn.quasar.dev/img/mountains.jpg",
       "https://cdn.quasar.dev/img/parallax1.jpg",
       "https://cdn.quasar.dev/img/parallax2.jpg",
     ],
@@ -52,15 +52,13 @@ const itemsList: Array<Entry> = [
     from_region: "NL",
     accept: [{ symbol: "4,EOS", contract: "eosio.token", chain: "eos" }],
     available: true,
-    description: "This is a very good telescope",
+    description: "This is a very good planet",
     note: "Write me before you send the token!",
   },
   {
     id: 1,
-    title: "Satellite with solar pannel",
-    imgs: [
-      "https://savact.com/wp-content/uploads/2021/12/002-space-station2.png",
-    ],
+    title: "Quasar with ionic beams",
+    imgs: ["https://cdn.quasar.dev/img/quasar.jpg"],
     price: 2.55,
     units: 1,
     seller: "savact",
@@ -76,8 +74,36 @@ const itemsList: Array<Entry> = [
       { symbol: "8,WAX", contract: "eosio.token", chain: "wax" },
     ],
     available: true,
-    description: "This is a very good\nsatellite<br>with solar pannel",
-    note: "This item is realy rare",
+    description: "This is a very good\nQuasar<br>with long ionic beams",
+    note: "",
+  },
+  {
+    id: 2,
+    title: "Cute cat or pinguin for half price",
+    imgs: [
+      "https://cdn.quasar.dev/img/linux-avatar.png",
+      "https://cdn.quasar.dev/img/cat.jpg", // Too big to load
+      "https://cdn.quasar.dev/empty/not-found.png", // 404
+      "https://savact.com/wp-content/uploads/2021/12/003-observatory2.png", // Blocked by server to load via script
+    ],
+    price: 2.55,
+    units: 1,
+    seller: "savactsavact",
+    maxTd: 3600 * 24 * 7,
+    to: [
+      { region: "DE", sp: 2.1, sd: 3600 * 24 },
+      { region: "US", sp: 4.23, sd: 3600 * 24 * 2 },
+    ],
+    exclude_regions: "CN",
+    from_region: "EU",
+    accept: [
+      { symbol: "4,EOS", contract: "eosio.token", chain: "eos" },
+      { symbol: "8,WAX", contract: "eosio.token", chain: "wax" },
+    ],
+    available: true,
+    description:
+      "This animals are very cute. The price is infinite, half of it is still infinite. But I can send you a picture for a payable amount.",
+    note: "I do not send pictures to zoophilia dogs",
   },
 ];
 

@@ -3,7 +3,12 @@
     <div class="col q-pa-md">
       <div class="text-h5">{{ entry?.title }}</div>
       <div class="q-mt-md row">
-        <gallery class="col-12 col-md-6" height="400px" :srcs="imgs"></gallery>
+        <gallery
+          class="col-12 col-md-6"
+          height="400px"
+          :srcs="imgs"
+          :file-size="2117632"
+        ></gallery>
         <div
           class="col-12 col-md-6"
           :class="$q.screen.lt.md ? 'q-pt-md' : ''"
@@ -160,11 +165,12 @@ export default Vue.defineComponent({
   components: { Gallery, TokenSymbol, UserLink },
   name: "itemPage",
   setup() {
+    console.log("item page query: ", route.query);
+
     const id =
       route.query && "id" in route.query && typeof route.query.id == "number"
         ? route.query.id
         : -1;
-
     const regionName = new Intl.DisplayNames(["en"], { type: "region" });
 
     const entry = Vue.ref<Entry>();

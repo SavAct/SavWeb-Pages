@@ -52,7 +52,9 @@ const recordIndex = Vue.computed({
       typeof beforeEachRouteChange !== "function" ||
       beforeEachRouteChange(to, from) !== false
     ) {
-      _recordIndex.value = value;
+      // At first remove the current page and then load it, to force a reaload if the page name keeps the same
+      _recordIndex.value = -1;
+      setTimeout(() => (_recordIndex.value = value));
     }
     async () => {
       if (typeof afterEachRouteChange == "function") {
@@ -157,6 +159,8 @@ export const router = {
   },
   back: () => {
     if (recordIndex.value > 0 && record.length > 0) {
+      console.log("back", recordIndex.value, recordIndex.value - 1, record);
+
       recordIndex.value--;
       return true;
     }
@@ -164,6 +168,7 @@ export const router = {
   },
   forward: () => {
     if (recordIndex.value < record.length - 1) {
+      console.log("forward", recordIndex.value, recordIndex.value + 1, record);
       recordIndex.value++;
       return true;
     }

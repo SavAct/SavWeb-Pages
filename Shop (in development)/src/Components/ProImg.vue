@@ -20,8 +20,6 @@ export default Vue.defineComponent({
     const protSrc = Vue.ref<string>("");
     Vue.onMounted(async () => {
       if (props.src.length > 0) {
-        console.log("check", props.src, props.fileSize);
-
         protSrc.value = await GetUrlFile(props.src, props.fileSize);
       }
     });

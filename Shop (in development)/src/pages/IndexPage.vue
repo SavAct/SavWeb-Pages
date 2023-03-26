@@ -179,6 +179,7 @@ export default Vue.defineComponent({
 
     const itemRows = Vue.computed(() => {
       // TODO: Use filters
+      // TODO: Filter for currency
       return state.itemsList;
     });
 
@@ -186,7 +187,7 @@ export default Vue.defineComponent({
       router.push({ name: "item", query: { id: item.id } });
     }
 
-    // Beispielaufruf mit einer Datei-URL und einem Limit von 10 MB
+    // TODO: Sort option for lowest total price for users country
 
     return {
       progress: state.progress,

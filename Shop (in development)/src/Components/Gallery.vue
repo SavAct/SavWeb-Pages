@@ -14,7 +14,7 @@
     class="q-pb-lg"
   >
     <q-carousel-slide
-      v-for="(img, index) in srcs"
+      v-for="(img, index) in proSrcs"
       :key="index"
       :name="index"
       class="full-width"
@@ -38,12 +38,12 @@
       v-if="$q.screen.gt.xs"
     >
       <q-img
-        v-if="srcs"
+        v-if="proSrcs"
         style="border-radius: 5%; border: 1px solid white"
         class="bg-grey q-mx-sm"
         :height="active ? '60px' : '50px'"
         :width="active ? '90px' : '80px'"
-        :src="srcs[index]"
+        :src="proSrcs[index]"
         flat
         round
         dense
@@ -55,11 +55,16 @@
 </template>
 <script lang="ts">
 import { state } from "../store/globals";
+import { GetUrlFile } from "../store/dlFiles";
 export default Vue.defineComponent({
   props: {
     srcs: {
       type: Array<string>,
       requier: true,
+    },
+    fileSize: {
+      type: Number,
+      requier: false,
     },
   },
   name: "gallery",
@@ -92,12 +97,27 @@ export default Vue.defineComponent({
 
     const darkStyle = Vue.computed(() => state.darkStyle.value);
 
+    const proSrcs = Vue.ref<Array<string>>([]);
+
+    Vue.watch(
+      () => props.srcs,
+      async (newVal) => {
+        proSrcs.value = await Promise.all(
+          newVal?.map(async (src) => {
+            return await GetUrlFile(src, props.fileSize);
+          }) || []
+        );
+      },
+      { immediate: true }
+    );
+
     return {
       selectedImg,
       imgFullscreen,
       imgKeyDown,
       clickFullScreen,
       darkStyle,
+      proSrcs,
     };
   },
 });
