@@ -7,6 +7,7 @@
     :rules="rules"
     :loading="isLoading"
     @keydown.enter="checkName"
+    hide-bottom-space
   >
     <template v-slot:before>
       <q-select
@@ -32,12 +33,10 @@
 </template>
 <script lang="ts">
 import { state } from "../store/globals";
-import AddPgp from "./AddPgp.vue";
 import { checkUserOffline } from "./AntelopeHelpers";
 
 export default Vue.defineComponent({
   name: "userInput",
-  components: { AddPgp },
   emits: ["update:model-value"],
   props: {
     modelValue: {

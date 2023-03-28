@@ -1,7 +1,17 @@
 <template>
   <div>
-    <label v-if="hasPGP && !editPGP" for="pgpKey"></label>
-    <add-pgp :disable="!validModel" @pub-pgp="(v) => (pgpKey = v)"></add-pgp>
+    <div class="text-h6 text-bold col-auto"></div>
+    <div class="col-grow row justify-end">
+      <add-pgp-btn
+        icon="add_circle"
+        class="q-px-sm"
+        rounded
+        :disable="!validModel"
+        @pub-pgp="(v) => (pgpKey = v)"
+        color="blue"
+        dense
+      ></add-pgp-btn>
+    </div>
     <q-input
       class="q-mt-sm"
       type="textarea"
@@ -10,20 +20,24 @@
       v-model="pgpKey"
     ></q-input>
     <q-btn
-      class="q-mt-sm"
+      class="q-mt-sm q-px-md"
       :disable="
         !(validModel && modelValue !== undefined && modelValue.length > 0)
       "
       :label="(editPGP ? 'Update' : 'Store') + ' PGP key on chain'"
       @click="setPgpOnChain"
+      dense
+      color="blue"
+      icon="publish"
     ></q-btn>
   </div>
 </template>
 <script lang="ts">
-import AddPgp from "./AddPgp.vue";
+import AddPgpBtn from "./AddPgpBtn.vue";
+
 export default Vue.defineComponent({
   name: "tokenSymbol",
-  components: { AddPgp },
+  components: { AddPgpBtn },
   emits: ["update:model-value"],
   props: {
     modelValue: {

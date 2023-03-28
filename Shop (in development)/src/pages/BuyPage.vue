@@ -11,22 +11,56 @@
         :name="1"
         prefix="1"
         :done="step > 1"
-        title="Contact Seller"
-        active-icon="mail"
+        title="User"
+        active-icon="account_circle"
       >
-        <div class="text-h6">Enter your user name</div>
-        <user-input
-          :fix-chain="token?.chain"
-          v-model="buyerName"
-          class="q-mt-md"
-        ></user-input>
-        <div class="q-my-sm">
-          <div class="text-h6">Enter your public PGP key</div>
-          <set-pgp v-model="buyerPupPgp" :account="buyerName"></set-pgp>
+        <buy-step-1
+          v-model:buyer-data="buyerData"
+          v-model:json-data="jsonData"
+          v-model:encrypt="doEncryption"
+          v-model:address="address"
+          v-model:buyer-name="buyerName"
+          v-model:buyer-pup-pgp="buyerPupPgp"
+          :id="entry?.id"
+          :seller="entry?.seller"
+          :pieces="pieces"
+          :token="token"
+          @encrypted="step = 2"
+        ></buy-step-1>
+      </q-step>
+
+      <q-step
+        :name="2"
+        prefix="2"
+        :done="step > 2"
+        title="Contact"
+        active-icon="mark_email_read"
+      >
+        <div class="row justify-between">
+          <div class="col-auto text-h6 q-pb-md">
+            Send the seller your encrypted data
+          </div>
+          <div class="col-grow q-pb-md row justify-end">
+            <div class="col-auto">
+              <raw-data-btn
+                round
+                size="sm"
+                color="blue"
+                :raw-data="jsonData"
+              ></raw-data-btn>
+            </div>
+            <div class="col-auto">
+              <q-btn
+                round
+                color="blue"
+                size="sm"
+                class="q-ml-sm"
+                @click="copyPgpMsg(buyerData)"
+                icon="content_copy"
+              ></q-btn>
+            </div>
+          </div>
         </div>
-        <div class="text-h6">Enter your address</div>
-        <address-input @address="setAddress"></address-input>
-        <div class="text-h6 q-mt-md">Send the seller your encrypted data</div>
         <q-input
           type="textarea"
           readonly
@@ -37,10 +71,10 @@
       </q-step>
 
       <q-step
-        :name="2"
-        prefix="2"
-        :done="step > 2"
-        title="Send Payment"
+        :name="3"
+        prefix="3"
+        :done="step > 3"
+        title="Payment"
         active-icon="currency_bitcoin"
       >
         <q-input
@@ -106,10 +140,10 @@
       </q-step>
 
       <q-step
-        :name="3"
-        prefix="3"
-        :done="step > 3"
-        title="Inform Seller"
+        :name="4"
+        prefix="4"
+        :done="step > 4"
+        title="Inform"
         active-icon="mark_email_read"
       >
         Send the seller the link of your transaction and store it for
@@ -117,7 +151,7 @@
         [Encrypt]<br />
       </q-step>
 
-      <q-step :name="4" title="Finish" active-icon="local_shipping">
+      <q-step :name="5" title="Finish" active-icon="local_shipping">
         Wait for the delivery.<br /><br />
 
         <div>Finalize the payment, if you receive the item.</div>
@@ -143,7 +177,7 @@
             icon="arrow_back_ios"
           />
           <q-btn
-            v-if="step < 2 || step == 3 || (step === 2 && transLinkValid)"
+            v-if="step < 3 || step == 4 || (step === 3 && transLinkValid)"
             :class="{ 'q-ml-sm': step > 1 }"
             class="q-pr-sm"
             outline
@@ -151,6 +185,8 @@
             color="blue"
             :label="step === 3 ? 'Finish' : 'Continue'"
             icon-right="arrow_forward_ios"
+            :loading="doEncryption"
+            :disable="doEncryption"
           />
         </q-stepper-navigation>
       </template>
@@ -162,7 +198,9 @@ import SetPgp from "../Components/SetPgp.vue";
 import UserInput from "../Components/UserInput.vue";
 import UserLink from "../Components/UserLink.vue";
 import TokenSymbol from "../Components/TokenSymbol.vue";
+import RawDataBtn from "../Components/RawDataBtn.vue";
 import AddressInput, { Address } from "../Components/AddressInput.vue";
+import BuyStep1 from "../Components/BuySteps/BuyStep1.vue";
 import { Entry } from "../Components/Items";
 import { state } from "../store/globals";
 import { route } from "../router/simpleRouter";
@@ -179,7 +217,15 @@ export interface UserData extends Address {
 }
 
 export default Vue.defineComponent({
-  components: { SetPgp, UserInput, UserLink, TokenSymbol, AddressInput },
+  components: {
+    SetPgp,
+    UserInput,
+    UserLink,
+    TokenSymbol,
+    AddressInput,
+    RawDataBtn,
+    BuyStep1,
+  },
   name: "buyPage",
   setup() {
     const id =
@@ -201,8 +247,13 @@ export default Vue.defineComponent({
 
     const step = Vue.ref<number>(1);
 
-    function nextStep() {
-      if (step.value < 4) step.value++;
+    const doEncryption = Vue.ref<boolean>(false);
+    async function nextStep() {
+      if (step.value == 1) {
+        doEncryption.value = true;
+        return;
+      }
+      if (step.value < 5) step.value++;
     }
 
     function backStep() {
@@ -268,57 +319,65 @@ export default Vue.defineComponent({
       },
     });
 
-    const address = Vue.ref<Address>();
-    function setAddress(event: Address) {
-      address.value = event;
-      encrypt();
-    }
+    const jsonData = Vue.ref<string>("");
+    const address = Vue.ref<Address>({
+      firstName: "",
+      middleNames: "",
+      lastName: "",
+      country: "",
+      state: "",
+      city: "",
+      postal: "",
+      addressL1: "",
+      addressL2: "",
+    });
 
     const buyerPupPgp = Vue.ref<string>("");
     const sellerPupPgp = Vue.ref<string>("");
 
-    const jsonData = Vue.computed(() => {
-      if (
-        !token ||
-        !entry.value ||
-        buyerName.value.length == 0 ||
-        buyerPupPgp.value.length == 0
-      )
-        return;
-      const userData = address.value as UserData;
-      userData.buyer = buyerName.value;
-      userData.item = id;
-      userData.pieces = pieces.value;
-      userData.token = token;
-      userData.seller = entry.value.seller;
-      userData.sigDate = Date.now();
-      userData.pubPgp = buyerPupPgp.value;
-
-      return JSON.stringify(userData);
-    });
-
-    async function encrypt() {
-      // https://github.com/openpgpjs/openpgpjs
-      if (jsonData.value === undefined) return;
-      console.log("sign", jsonData.value);
-
-      try {
-        const message = await openpgp.createMessage({ text: jsonData.value });
-        const publicKey = await openpgp.readKey({
-          armoredKey: buyerPupPgp.value,
+    function copyPgpMsg(text: string) {
+      Quasar.copyToClipboard(text)
+        .then(() => {
+          Quasar.Notify.create({
+            type: "positive",
+            message: "Copy PGP message to clipboard",
+            position: "top",
+          });
+        })
+        .catch(() => {
+          Quasar.Notify.create({
+            type: "negative",
+            message: "Cannot copy to clipboard",
+            position: "top",
+          });
         });
-
-        buyerData.value = (
-          await openpgp.encrypt({
-            message,
-            encryptionKeys: new Array(publicKey),
-          })
-        ).toString();
-      } catch (e) {
-        console.error("Error on signing", e);
-        buyerData.value = "";
-      }
     }
+
+    //- Default for test
+    //     buyerName.value = "savact";
+    //     buyerPupPgp.value = `-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+    // xjMEZCKAJxYJKwYBBAHaRw8BAQdAfw9y51Ua2AysnsxM1izayvkfB2LYjIbK
+    // yhdGYJCfM0/NAMKMBBAWCgA+BYJkIoAnBAsJBwgJkI4s12BvgWWjAxUICgQW
+    // AAIBAhkBApsDAh4BFiEEdTgZRZAKKhgdlUk6jizXYG+BZaMAAGXwAQDmjnlg
+    // B1XjnCp4tX+jnRVwZM2pNTgD4U4ecrZeiIPPbQEAr9BcgQaM0OZ/vDUSRNXi
+    // gUqDrVoC7O6I9Av3kMwh5grOOARkIoAnEgorBgEEAZdVAQUBAQdAT+w35HNV
+    // FpC953E6092UdcuKduOMRqnTcsLVNr1KUGUDAQgHwngEGBYIACoFgmQigCcJ
+    // kI4s12BvgWWjApsMFiEEdTgZRZAKKhgdlUk6jizXYG+BZaMAAAXVAQDWPPY1
+    // FapepFbedf6bNFOQ8xLpsKzOSk7HPjxbCNjOdwEAquFcoiYYDKrMj3JtaTsB
+    // 14tgQTuri+kOA0cZ/3+66wc=
+    // =6UQU
+    // -----END PGP PUBLIC KEY BLOCK-----
+    // `;
+    //     address.value.firstName = "Savact";
+    //     address.value.lastName = "Test";
+    //     address.value.country = "US";
+    //     address.value.state = "CA";
+    //     address.value.city = "Los Angeles";
+    //     address.value.postal = "90001";
+    //     address.value.addressL1 = "123 Main St";
+    //     address.value.addressL2 = "Apt 1";
+    //     //-
 
     return {
       progress: state.progress,
@@ -338,10 +397,12 @@ export default Vue.defineComponent({
       sellerResponse,
       sellerConfirms,
       buyerData,
-      setAddress,
+      doEncryption,
       buyerPupPgp,
       sellerPupPgp,
       jsonData,
+      address,
+      copyPgpMsg,
     };
   },
 });
