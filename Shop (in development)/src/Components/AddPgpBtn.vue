@@ -84,8 +84,6 @@ export default Vue.defineComponent({
       openpgp
         .generateKey({ userIDs: { name: "" }, passphrase: "", type: "ecc" })
         .then((key) => {
-          console.log(key);
-
           privatePGP.value = key.privateKey;
           publicPGP.value = key.publicKey;
         })

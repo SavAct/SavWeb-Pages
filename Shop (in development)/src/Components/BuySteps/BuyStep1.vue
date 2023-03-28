@@ -5,7 +5,7 @@
       icon="perm_identity"
       label="Your user name"
       :caption="userName"
-      :header-class="{ 'text-red': !validBuyerName }"
+      :header-class="{ 'text-red': validBuyerName === false }"
       v-model="expBuyerName"
     >
       <q-card>
@@ -19,12 +19,12 @@
       expand-separator
       icon="enhanced_encryption"
       label="Your public PGP key"
-      :header-class="{ 'text-red': !validBuyerPgp }"
+      :header-class="{ 'text-red': validBuyerPgp === false }"
       v-model="expBuyerPgp"
     >
       <q-card>
         <q-card-section>
-          <set-pgp v-model="pubPgp" :account="userName"></set-pgp>
+          <set-pgp v-model="pubBuyer" :account="userName"></set-pgp>
         </q-card-section>
       </q-card>
     </q-expansion-item>
@@ -33,7 +33,7 @@
       expand-separator
       icon="home"
       label="Your address"
-      :header-class="{ 'text-red': !validAddress }"
+      :header-class="{ 'text-red': validAddress === false }"
       v-model="expAddress"
     >
       <q-card>
@@ -72,6 +72,11 @@ export default Vue.defineComponent({
       default: "",
     },
     buyerPupPgp: {
+      type: String,
+      requier: true,
+      default: "",
+    },
+    sellerPupPgp: {
       type: String,
       requier: true,
       default: "",
@@ -120,9 +125,9 @@ export default Vue.defineComponent({
     const expBuyerName = Vue.ref<boolean>(props.buyerName.length > 0);
     const expBuyerPgp = Vue.ref<boolean>(false);
     const expAddress = Vue.ref<boolean>(false);
-    const validBuyerName = Vue.ref<boolean>(true);
-    const validBuyerPgp = Vue.ref<boolean>(true);
-    const validAddress = Vue.ref<boolean>(true);
+    const validBuyerName = Vue.ref<boolean | undefined>();
+    const validBuyerPgp = Vue.ref<boolean | undefined>();
+    const validAddress = Vue.ref<boolean | undefined>();
 
     const userName = Vue.computed({
       get() {
@@ -133,9 +138,18 @@ export default Vue.defineComponent({
       },
     });
 
-    const pubPgp = Vue.computed({
+    const pubBuyer = Vue.computed({
       get() {
         return props.buyerPupPgp;
+      },
+      set(value: string) {
+        context.emit("update:buyerPupPgp", value);
+      },
+    });
+
+    const pubSeller = Vue.computed({
+      get() {
+        return props.sellerPupPgp;
       },
       set(value: string) {
         context.emit("update:buyerPupPgp", value);
@@ -162,12 +176,20 @@ export default Vue.defineComponent({
       }
     );
 
-    Vue.watch(userName, () => {
-      if (userName.value.length > 0) {
-        expBuyerName.value = false;
-        expBuyerPgp.value = true;
-      }
-    });
+    Vue.watch(
+      userName,
+      () => {
+        if (userName.value.length > 0) {
+          expBuyerName.value = false;
+          if (props.buyerData.length > 0) {
+            // TODO: check if buyerData is valid and set expBuyerPgp
+          } else {
+            expBuyerPgp.value = true;
+          }
+        }
+      },
+      { immediate: true }
+    );
 
     function checkUserData() {
       validBuyerName.value = true;
@@ -247,14 +269,17 @@ export default Vue.defineComponent({
 
       try {
         const message = await openpgp.createMessage({ text });
-        const publicKey = await openpgp.readKey({
+        const publicBuyerKey = await openpgp.readKey({
           armoredKey: props.buyerPupPgp,
+        });
+        const publicSellerKey = await openpgp.readKey({
+          armoredKey: props.sellerPupPgp,
         });
 
         const data = (
           await openpgp.encrypt({
             message,
-            encryptionKeys: new Array(publicKey),
+            encryptionKeys: new Array(publicBuyerKey, publicSellerKey),
           })
         ).toString();
         context.emit("update:buyerData", data);
@@ -302,7 +327,8 @@ export default Vue.defineComponent({
       validBuyerPgp,
       validAddress,
       userName,
-      pubPgp,
+      pubBuyer,
+      pubSeller,
       addr,
     };
   },

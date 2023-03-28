@@ -21,6 +21,7 @@
           v-model:address="address"
           v-model:buyer-name="buyerName"
           v-model:buyer-pup-pgp="buyerPupPgp"
+          v-model:seller-pup-pgp="sellerPupPgp"
           :id="entry?.id"
           :seller="entry?.seller"
           :pieces="pieces"
@@ -36,38 +37,11 @@
         title="Contact"
         active-icon="mark_email_read"
       >
-        <div class="row justify-between">
-          <div class="col-auto text-h6 q-pb-md">
-            Send the seller your encrypted data
-          </div>
-          <div class="col-grow q-pb-md row justify-end">
-            <div class="col-auto">
-              <raw-data-btn
-                round
-                size="sm"
-                color="blue"
-                :raw-data="jsonData"
-              ></raw-data-btn>
-            </div>
-            <div class="col-auto">
-              <q-btn
-                round
-                color="blue"
-                size="sm"
-                class="q-ml-sm"
-                @click="copyPgpMsg(buyerData)"
-                icon="content_copy"
-              ></q-btn>
-            </div>
-          </div>
-        </div>
-        <q-input
-          type="textarea"
-          readonly
-          :model-value="buyerData"
-          outlined
-          label="Encrypted data"
-        ></q-input>
+        <buy-step2
+          :encrypted="buyerData"
+          :raw="jsonData"
+          :pub-pgp="sellerPupPgp"
+        ></buy-step2>
       </q-step>
 
       <q-step
@@ -201,6 +175,7 @@ import TokenSymbol from "../Components/TokenSymbol.vue";
 import RawDataBtn from "../Components/RawDataBtn.vue";
 import AddressInput, { Address } from "../Components/AddressInput.vue";
 import BuyStep1 from "../Components/BuySteps/BuyStep1.vue";
+import BuyStep2 from "../Components/BuySteps/BuyStep2.vue";
 import { Entry } from "../Components/Items";
 import { state } from "../store/globals";
 import { route } from "../router/simpleRouter";
@@ -225,6 +200,7 @@ export default Vue.defineComponent({
     AddressInput,
     RawDataBtn,
     BuyStep1,
+    BuyStep2,
   },
   name: "buyPage",
   setup() {
@@ -333,51 +309,46 @@ export default Vue.defineComponent({
     });
 
     const buyerPupPgp = Vue.ref<string>("");
-    const sellerPupPgp = Vue.ref<string>("");
+    const sellerPupPgp = Vue.ref<string>(`-----BEGIN PGP PUBLIC KEY BLOCK-----
 
-    function copyPgpMsg(text: string) {
-      Quasar.copyToClipboard(text)
-        .then(() => {
-          Quasar.Notify.create({
-            type: "positive",
-            message: "Copy PGP message to clipboard",
-            position: "top",
-          });
-        })
-        .catch(() => {
-          Quasar.Notify.create({
-            type: "negative",
-            message: "Cannot copy to clipboard",
-            position: "top",
-          });
-        });
-    }
+xjMEZCLVyxYJKwYBBAHaRw8BAQdA/0EykbX9Pn7AteNUSKgZZEYA4R5HBbvz
++OQFC/DcI8HNAMKMBBAWCgA+BYJkItXLBAsJBwgJkAN/uZJn3/7RAxUICgQW
+AAIBAhkBApsDAh4BFiEEvgFLzCbE2q8FqySfA3+5kmff/tEAAGv3AP9WhnfS
+buP9pAItsUBYWP1v+Fo98yL26eimHG4zvrHoPAD8CpjrI9drE4dCqKEp0bCo
+gq+CI9UNwM/680rq/LdEigDOOARkItXLEgorBgEEAZdVAQUBAQdAcs7c7FdD
+699aOYZ1FUPbkcnz/QfYnRpMhOWFF8rrOD8DAQgHwngEGBYIACoFgmQi1csJ
+kAN/uZJn3/7RApsMFiEEvgFLzCbE2q8FqySfA3+5kmff/tEAAE0PAP9U4z26
+1/A66AayqVRsPsxUh8ysZMm5UHaX9zngSSZ6lwD+KbKl/4TBB+/qPk8P1y70
+L7mDr4xuUpUNEUMbYc1O9A4=
+=a2sb
+-----END PGP PUBLIC KEY BLOCK-----
+    `);
 
     //- Default for test
-    //     buyerName.value = "savact";
-    //     buyerPupPgp.value = `-----BEGIN PGP PUBLIC KEY BLOCK-----
+    buyerName.value = "savact";
+    buyerPupPgp.value = `-----BEGIN PGP PUBLIC KEY BLOCK-----
 
-    // xjMEZCKAJxYJKwYBBAHaRw8BAQdAfw9y51Ua2AysnsxM1izayvkfB2LYjIbK
-    // yhdGYJCfM0/NAMKMBBAWCgA+BYJkIoAnBAsJBwgJkI4s12BvgWWjAxUICgQW
-    // AAIBAhkBApsDAh4BFiEEdTgZRZAKKhgdlUk6jizXYG+BZaMAAGXwAQDmjnlg
-    // B1XjnCp4tX+jnRVwZM2pNTgD4U4ecrZeiIPPbQEAr9BcgQaM0OZ/vDUSRNXi
-    // gUqDrVoC7O6I9Av3kMwh5grOOARkIoAnEgorBgEEAZdVAQUBAQdAT+w35HNV
-    // FpC953E6092UdcuKduOMRqnTcsLVNr1KUGUDAQgHwngEGBYIACoFgmQigCcJ
-    // kI4s12BvgWWjApsMFiEEdTgZRZAKKhgdlUk6jizXYG+BZaMAAAXVAQDWPPY1
-    // FapepFbedf6bNFOQ8xLpsKzOSk7HPjxbCNjOdwEAquFcoiYYDKrMj3JtaTsB
-    // 14tgQTuri+kOA0cZ/3+66wc=
-    // =6UQU
-    // -----END PGP PUBLIC KEY BLOCK-----
-    // `;
-    //     address.value.firstName = "Savact";
-    //     address.value.lastName = "Test";
-    //     address.value.country = "US";
-    //     address.value.state = "CA";
-    //     address.value.city = "Los Angeles";
-    //     address.value.postal = "90001";
-    //     address.value.addressL1 = "123 Main St";
-    //     address.value.addressL2 = "Apt 1";
-    //     //-
+xjMEZCLsEBYJKwYBBAHaRw8BAQdALyn9yx1KGIwZubd/UUS/6jowvbtQRkis
+N05MGazxOjnNAMKMBBAWCgA+BYJkIuwQBAsJBwgJkJ+kr6PAN4DrAxUICgQW
+AAIBAhkBApsDAh4BFiEEcuYpqdEJfn2Y0OMkn6Svo8A3gOsAAFVNAQDdXy4I
+iqKC3Hp+M27h1WbV4HL5tGqjuLVdMgsz98EPMgEA9PYrW78S5nZ8SUTxE4YV
+twE2/rdQ67AzQE9TKUv7egXOOARkIuwQEgorBgEEAZdVAQUBAQdAYwjojDDx
+NRSAZTEMw6R6XnrBb9PTJzAsGH8/wJFD+RIDAQgHwngEGBYIACoFgmQi7BAJ
+kJ+kr6PAN4DrApsMFiEEcuYpqdEJfn2Y0OMkn6Svo8A3gOsAAJSfAQDSh++f
+1NOK5Jj0HaOhjMDlbt0DPLk9hU/oUIx7PoyaowEA4tGBnlFlOsEAHtqIeWBd
+zKI28PnOqa65z2Qa0lAnxAw=
+=XCMl
+-----END PGP PUBLIC KEY BLOCK-----
+    `;
+    address.value.firstName = "Savact";
+    address.value.lastName = "Test";
+    address.value.country = "US";
+    address.value.state = "CA";
+    address.value.city = "Los Angeles";
+    address.value.postal = "90001";
+    address.value.addressL1 = "123 Main St";
+    address.value.addressL2 = "Apt 1";
+    //-
 
     return {
       progress: state.progress,
@@ -402,7 +373,6 @@ export default Vue.defineComponent({
       sellerPupPgp,
       jsonData,
       address,
-      copyPgpMsg,
     };
   },
 });
