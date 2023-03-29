@@ -24,6 +24,8 @@
             class="q-mt-sm col-12"
             type="textarea"
             label="Sellers public key"
+            label-color="white"
+            :input-style="{ color: 'white' }"
             readonly
             outlined
             text-color="white"
@@ -55,7 +57,8 @@
             label="Raw data"
             readonly
             outlined
-            text-color="white"
+            label-color="white"
+            :input-style="{ color: 'white' }"
             :model-value="rawData"
           ></q-input>
         </q-card-section>
@@ -68,6 +71,8 @@
   </div>
 </template>
 <script lang="ts">
+import { copy } from "./QuasarHelpers";
+
 export default Vue.defineComponent({
   name: "rawDataBtn",
   props: {
@@ -84,31 +89,6 @@ export default Vue.defineComponent({
   },
   setup(_props) {
     const show = Vue.ref<boolean>(false);
-
-    async function copy(
-      text: string | undefined,
-      message: string,
-      caption?: string
-    ) {
-      if (text !== undefined) {
-        try {
-          await Quasar.copyToClipboard(text);
-
-          Quasar.Notify.create({
-            type: "positive",
-            message,
-            caption,
-            position: "top",
-          });
-          return;
-        } catch (e) {}
-      }
-      Quasar.Notify.create({
-        type: "negative",
-        message: "Cannot copy to clipboard",
-        position: "top",
-      });
-    }
 
     return {
       show,

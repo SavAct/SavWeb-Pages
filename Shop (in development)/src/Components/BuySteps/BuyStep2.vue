@@ -22,7 +22,7 @@
               color="blue"
               size="sm"
               class="q-ml-sm"
-              @click="copyPgpMsg(encrypted)"
+              @click="copy(encrypted, 'Copy PGP message to clipboard')"
               icon="content_copy"
             ></q-btn>
           </div>
@@ -39,6 +39,7 @@
   </q-card>
 </template>
 <script lang="ts">
+import { copy } from "../QuasarHelpers";
 import RawDataBtn from "../RawDataBtn.vue";
 
 export default Vue.defineComponent({
@@ -64,25 +65,8 @@ export default Vue.defineComponent({
     },
   },
   setup() {
-    function copyPgpMsg(text: string) {
-      Quasar.copyToClipboard(text)
-        .then(() => {
-          Quasar.Notify.create({
-            type: "positive",
-            message: "Copy PGP message to clipboard",
-            position: "top",
-          });
-        })
-        .catch(() => {
-          Quasar.Notify.create({
-            type: "negative",
-            message: "Cannot copy to clipboard",
-            position: "top",
-          });
-        });
-    }
     return {
-      copyPgpMsg,
+      copy,
     };
   },
 });

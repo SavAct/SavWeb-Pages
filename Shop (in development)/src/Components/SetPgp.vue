@@ -3,6 +3,7 @@
     <div class="text-h6 text-bold col-auto"></div>
     <div class="col-grow row justify-end">
       <add-pgp-btn
+        label="Create new key"
         icon="add_circle"
         class="q-px-sm"
         rounded

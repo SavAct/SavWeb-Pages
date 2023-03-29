@@ -11,7 +11,7 @@
         :name="1"
         prefix="1"
         :done="step > 1"
-        title="User"
+        :title="$q.screen.gt.xs ? 'User' : ''"
         active-icon="account_circle"
       >
         <buy-step-1
@@ -34,7 +34,7 @@
         :name="2"
         prefix="2"
         :done="step > 2"
-        title="Contact"
+        :title="$q.screen.gt.xs ? 'Contact' : ''"
         active-icon="mark_email_read"
       >
         <buy-step2
@@ -48,76 +48,21 @@
         :name="3"
         prefix="3"
         :done="step > 3"
-        title="Payment"
+        :title="$q.screen.gt.xs ? 'Payment' : ''"
         active-icon="currency_bitcoin"
       >
-        <q-input
-          type="textarea"
-          v-model="sellerResponse"
-          outlined
-          label="Sellers response"
-        ></q-input>
-        [If it is encrypted, enter your private key to decrypt]<br />
-        <!-- [Checkbox]<br /> -->
-        <div
-          v-if="entry && sellerConfirms"
-          class="row"
-          style="border: 1px solid #ddd; border-radius: 4px"
-        >
-          <div class="col-3">
-            <pro-img
-              v-if="entry.imgs.length > 0"
-              :src="entry.imgs[0]"
-              fit="contain"
-              :class="darkStyle ? 'bg-grey-10' : 'bg-grey-2'"
-            ></pro-img>
-          </div>
-          <div class="col-9 q-px-md">
-            <div
-              class="text-bold q-pt-sm q-px-sm"
-              :class="$q.screen.gt.xs ? 'text-h6' : ''"
-            >
-              {{ entry.title }}
-            </div>
-            <div class="row justify-between">
-              <div class="col-auto">
-                <q-chip
-                  icon="attach_money"
-                  :label="entry.price + ' USD'"
-                ></q-chip>
-              </div>
-              <user-link class="col-auto" :user="entry.seller"></user-link>
-            </div>
-
-            <token-symbol
-              :chain="token?.chain"
-              :contract="token?.contract"
-              :symbol="token?.symbol"
-              size="18px"
-            ></token-symbol>
-          </div>
-          <q-btn
-            class="full-width"
-            color="blue"
-            label="Send Payment"
-            @click="sendPayment"
-          ></q-btn>
-        </div>
-        <q-input
-          class="q-mt-md"
-          label="Transaction link"
-          v-model="transLink"
-          :loading="waitForTrans"
-          outlined
-          dense
-        ></q-input>
+        <buy-step3
+          :entry="entry"
+          :token="token"
+          v-bind:completed="setp3Completed"
+        ></buy-step3>
       </q-step>
 
       <q-step
         :name="4"
         prefix="4"
         :done="step > 4"
-        title="Inform"
+        :title="$q.screen.gt.xs ? 'Inform' : ''"
         active-icon="mark_email_read"
       >
         Send the seller the link of your transaction and store it for
@@ -151,7 +96,7 @@
             icon="arrow_back_ios"
           />
           <q-btn
-            v-if="step < 3 || step == 4 || (step === 3 && transLinkValid)"
+            v-if="step < 3 || step == 4 || (step === 3 && setp3Completed)"
             :class="{ 'q-ml-sm': step > 1 }"
             class="q-pr-sm"
             outline
@@ -176,6 +121,7 @@ import RawDataBtn from "../Components/RawDataBtn.vue";
 import AddressInput, { Address } from "../Components/AddressInput.vue";
 import BuyStep1 from "../Components/BuySteps/BuyStep1.vue";
 import BuyStep2 from "../Components/BuySteps/BuyStep2.vue";
+import BuyStep3 from "../Components/BuySteps/BuyStep3.vue";
 import { Entry } from "../Components/Items";
 import { state } from "../store/globals";
 import { route } from "../router/simpleRouter";
@@ -201,6 +147,7 @@ export default Vue.defineComponent({
     RawDataBtn,
     BuyStep1,
     BuyStep2,
+    BuyStep3,
   },
   name: "buyPage",
   setup() {
@@ -260,40 +207,7 @@ export default Vue.defineComponent({
 
     const buyerName = Vue.ref<string>("");
 
-    function sendPayment() {
-      waitForTrans.value = true;
-    }
-    const transLink = Vue.ref<string>("");
-    const waitForTrans = Vue.ref<boolean>(false);
-    const transLinkValid = Vue.computed(() => {
-      if (
-        transLink.value.length > 0 &&
-        transLink.value.toLocaleLowerCase().includes("savact.app")
-      ) {
-        return true;
-      }
-      return false;
-    });
-
     const buyerData = Vue.ref<string>("");
-
-    const sellerConfirms = Vue.ref<boolean>(false);
-    const _sellerResponse = Vue.ref<string>("");
-    const sellerResponse = Vue.computed({
-      get() {
-        return _sellerResponse.value;
-      },
-      set(v) {
-        // TODO: Defined by response of the seller deadline.minTime and deadline.maxTime
-        if (v.trim().toLocaleLowerCase().startsWith("yes")) {
-          sellerConfirms.value = true;
-        } else {
-          // TODO: try to decrypt and check then if it is a yes
-          sellerConfirms.value = false;
-        }
-        _sellerResponse.value = v;
-      },
-    });
 
     const jsonData = Vue.ref<string>("");
     const address = Vue.ref<Address>({
@@ -309,20 +223,8 @@ export default Vue.defineComponent({
     });
 
     const buyerPupPgp = Vue.ref<string>("");
-    const sellerPupPgp = Vue.ref<string>(`-----BEGIN PGP PUBLIC KEY BLOCK-----
-
-xjMEZCLVyxYJKwYBBAHaRw8BAQdA/0EykbX9Pn7AteNUSKgZZEYA4R5HBbvz
-+OQFC/DcI8HNAMKMBBAWCgA+BYJkItXLBAsJBwgJkAN/uZJn3/7RAxUICgQW
-AAIBAhkBApsDAh4BFiEEvgFLzCbE2q8FqySfA3+5kmff/tEAAGv3AP9WhnfS
-buP9pAItsUBYWP1v+Fo98yL26eimHG4zvrHoPAD8CpjrI9drE4dCqKEp0bCo
-gq+CI9UNwM/680rq/LdEigDOOARkItXLEgorBgEEAZdVAQUBAQdAcs7c7FdD
-699aOYZ1FUPbkcnz/QfYnRpMhOWFF8rrOD8DAQgHwngEGBYIACoFgmQi1csJ
-kAN/uZJn3/7RApsMFiEEvgFLzCbE2q8FqySfA3+5kmff/tEAAE0PAP9U4z26
-1/A66AayqVRsPsxUh8ysZMm5UHaX9zngSSZ6lwD+KbKl/4TBB+/qPk8P1y70
-L7mDr4xuUpUNEUMbYc1O9A4=
-=a2sb
------END PGP PUBLIC KEY BLOCK-----
-    `);
+    const sellerPupPgp = Vue.ref<string>("");
+    const setp3Completed = Vue.ref<boolean>(false);
 
     //- Default for test
     buyerName.value = "savact";
@@ -338,6 +240,20 @@ kJ+kr6PAN4DrApsMFiEEcuYpqdEJfn2Y0OMkn6Svo8A3gOsAAJSfAQDSh++f
 1NOK5Jj0HaOhjMDlbt0DPLk9hU/oUIx7PoyaowEA4tGBnlFlOsEAHtqIeWBd
 zKI28PnOqa65z2Qa0lAnxAw=
 =XCMl
+-----END PGP PUBLIC KEY BLOCK-----
+    `;
+    sellerPupPgp.value = `-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+xjMEZCLVyxYJKwYBBAHaRw8BAQdA/0EykbX9Pn7AteNUSKgZZEYA4R5HBbvz
++OQFC/DcI8HNAMKMBBAWCgA+BYJkItXLBAsJBwgJkAN/uZJn3/7RAxUICgQW
+AAIBAhkBApsDAh4BFiEEvgFLzCbE2q8FqySfA3+5kmff/tEAAGv3AP9WhnfS
+buP9pAItsUBYWP1v+Fo98yL26eimHG4zvrHoPAD8CpjrI9drE4dCqKEp0bCo
+gq+CI9UNwM/680rq/LdEigDOOARkItXLEgorBgEEAZdVAQUBAQdAcs7c7FdD
+699aOYZ1FUPbkcnz/QfYnRpMhOWFF8rrOD8DAQgHwngEGBYIACoFgmQi1csJ
+kAN/uZJn3/7RApsMFiEEvgFLzCbE2q8FqySfA3+5kmff/tEAAE0PAP9U4z26
+1/A66AayqVRsPsxUh8ysZMm5UHaX9zngSSZ6lwD+KbKl/4TBB+/qPk8P1y70
+L7mDr4xuUpUNEUMbYc1O9A4=
+=a2sb
 -----END PGP PUBLIC KEY BLOCK-----
     `;
     address.value.firstName = "Savact";
@@ -361,18 +277,13 @@ zKI28PnOqa65z2Qa0lAnxAw=
       pieces,
       buyerName,
       token,
-      transLink,
-      waitForTrans,
-      sendPayment,
-      transLinkValid,
-      sellerResponse,
-      sellerConfirms,
       buyerData,
       doEncryption,
       buyerPupPgp,
       sellerPupPgp,
       jsonData,
       address,
+      setp3Completed,
     };
   },
 });
