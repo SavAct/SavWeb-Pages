@@ -19,7 +19,7 @@
     </div>
 
     <q-input
-      class="q-px-sm q-pt-sm"
+      class="q-px-sm q-pt-md"
       label="Address Line 1"
       v-model="modelValue.addressL1"
     ></q-input>
@@ -28,7 +28,7 @@
       label="Address Line 2 (Optional)"
       v-model="modelValue.addressL2"
     ></q-input>
-    <div class="row">
+    <div class="row q-mt-md">
       <q-input
         class="col-6 q-px-sm"
         label="City"
@@ -50,6 +50,11 @@
         v-model="modelValue.country"
       ></q-input>
     </div>
+    <q-input
+      class="full-width q-px-sm q-pt-md"
+      label="Note (Optional)"
+      v-model="modelValue.note"
+    ></q-input>
   </div>
 </template>
 <script lang="ts">
@@ -64,6 +69,7 @@ export interface Address {
   postal: string;
   addressL1: string;
   addressL2: string;
+  note: string;
 }
 
 export default Vue.defineComponent({

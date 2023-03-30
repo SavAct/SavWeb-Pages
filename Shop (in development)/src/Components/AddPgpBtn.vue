@@ -3,7 +3,9 @@
   <q-dialog v-model="show" persistent>
     <q-card class="bg-teal text-white" style="width: 400px">
       <q-card-section>
-        <div class="text-h6">Generate Private PGP Key</div>
+        <div class="text-h6">
+          {{ createNew ? "Generate" : "Enter" }} Private PGP Key
+        </div>
       </q-card-section>
       <q-card-section class="q-pt-none">
         <q-expansion-item
@@ -23,26 +25,30 @@
           </q-card>
         </q-expansion-item>
         <div class="row q-my-sm q-pr-sm">
-          <div class="col-6">
+          <div :class="createNew ? 'col-6' : 'col-12'">
             <q-input
               v-model="passphrase"
               outlined
               dense
+              label-color="white"
               type="password"
-              label="Passphrase (optional)"
+              :label="
+                'Passphrase ' + (createNew ? '(optional)' : '(if you have one)')
+              "
             ></q-input>
           </div>
-          <div class="col-6 q-pl-sm">
+          <div class="col-6 q-pl-sm" v-if="createNew">
             <q-input
               v-model="passphraseCheck"
               outlined
+              label-color="white"
               dense
               type="password"
               label="Repeart Passphrase"
             ></q-input>
           </div>
         </div>
-        <div class="row justify-between">
+        <div class="row justify-between" v-if="createNew">
           <div class="col-8">
             <q-btn
               class="q-mb-sm"
@@ -69,13 +75,14 @@
           class="q-mt-sm"
           type="textarea"
           label="Private PGP Key"
-          readonly
+          :readonly="createNew"
           outlined
           label-color="white"
           :input-style="{ color: 'white' }"
-          :model-value="privatePGP"
+          v-model="privatePGP"
         ></q-input>
         <q-checkbox
+          v-if="createNew"
           class="q-mt-md"
           v-model="checkSafe"
           label="I use this key at my own risk. I have stored it at a private and secure place and will remember my pasphrase."
@@ -92,7 +99,7 @@
         <q-btn
           flat
           color="green"
-          :disable="!checkSafe"
+          :disable="!okayIsValid"
           @click="confirm"
           label="Use this key"
         ></q-btn>
@@ -105,21 +112,39 @@ import { copy } from "./QuasarHelpers";
 
 export default Vue.defineComponent({
   name: "addPgpBtn",
-  emits: ["pub-pgp"],
+  emits: ["pub-pgp", "update:pri-pgp", "update:passphrase"],
   props: {
-    modelValue: {
+    createNew: {
       type: Boolean,
       requier: false,
       defaut: false,
     },
+    priPgp: {
+      type: String,
+      requier: false,
+      defaut: "",
+    },
+    passphrase: {
+      type: String,
+      requier: false,
+      defaut: "",
+    },
   },
-  setup(_props, context) {
+  setup(props, context) {
     const show = Vue.ref<boolean>(false);
     const checkSafe = Vue.ref<boolean>(false);
-    const passphrase = Vue.ref<string>("");
-    const passphraseCheck = Vue.ref<string>("");
-    const privatePGP = Vue.ref<string>("");
+    const passphrase = Vue.ref<string>(
+      props.passphrase !== undefined ? props.passphrase : ""
+    );
+    const passphraseCheck = Vue.ref<string>(
+      props.passphrase !== undefined ? props.passphrase : ""
+    );
+    const privatePGP = Vue.ref<string>(props.priPgp ? props.priPgp : "");
     const publicPGP = Vue.ref<string>("");
+
+    Vue.watch(passphrase, () => {
+      if (props.createNew) privatePGP.value = "";
+    });
 
     function generate() {
       // https://github.com/openpgpjs/openpgpjs
@@ -133,25 +158,75 @@ export default Vue.defineComponent({
       }
 
       openpgp
-        .generateKey({ userIDs: { name: "" }, passphrase: "", type: "ecc" })
+        .generateKey({
+          userIDs: { name: "" },
+          passphrase:
+            passphrase.value.length > 0 ? passphrase.value : undefined,
+          type: "ecc",
+        })
         .then((key) => {
           privatePGP.value = key.privateKey;
           publicPGP.value = key.publicKey;
         })
         .catch((err) => {
           console.log("Error on key generation", err);
+          context.emit("update:pri-pgp", "");
           Quasar.Notify.create({
             type: "negative",
             message: "Cannot generate PGP key",
+            caption: String(err),
             position: "top",
           });
         });
     }
 
-    function confirm() {
-      context.emit("pub-pgp", publicPGP.value);
-      show.value = false;
+    async function confirm() {
+      let caption = "";
+      try {
+        let key = await openpgp.readPrivateKey({
+          armoredKey: privatePGP.value,
+        });
+        if (passphrase.value.length > 0) {
+          key = await openpgp.decryptKey({
+            privateKey: key,
+            passphrase: passphrase.value,
+          });
+        }
+
+        if (key.isPrivate()) {
+          publicPGP.value = key.toPublic().armor();
+          context.emit("pub-pgp", publicPGP.value);
+          context.emit("update:passphrase", passphrase.value);
+          context.emit("update:pri-pgp", privatePGP.value);
+          show.value = false;
+          return;
+        }
+      } catch (e) {
+        console.log("Invalid private pgp key:", e);
+        caption = String(e);
+      }
+      Quasar.Notify.create({
+        type: "negative",
+        message: "Invalid private PGP key",
+        caption,
+        position: "top",
+      });
     }
+
+    const okayIsValid = Vue.computed(() => {
+      if (
+        privatePGP.value.indexOf("-----BEGIN PGP PRIVATE KEY BLOCK-----") !=
+          -1 &&
+        privatePGP.value.indexOf("-----END PGP PRIVATE KEY BLOCK-----") != -1
+      ) {
+        if (props.createNew) {
+          return checkSafe.value;
+        } else {
+          return true;
+        }
+      }
+      return false;
+    });
 
     return {
       show,
@@ -163,6 +238,7 @@ export default Vue.defineComponent({
       generate,
       confirm,
       copy,
+      okayIsValid,
     };
   },
 });

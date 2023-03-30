@@ -7,7 +7,26 @@
         outlined
         label="Sellers response"
       ></q-input>
-      [If it is encrypted, enter your private key to decrypt]<br />
+      <add-pgp-btn
+        v-if="isEncrypted"
+        class="q-px-sm q-mt-sm"
+        @pub-pgp="(v) => (publicKey = v)"
+        v-model:pri-pgp="privateKey"
+        v-model:passphrase="passphrase"
+        color="blue"
+        dense
+        label="Your PGP key"
+        icon="vpn_key"
+        rounded
+      ></add-pgp-btn>
+      <q-input
+        v-if="responseDecrypted.length > 0"
+        class="q-mt-sm"
+        type="textarea"
+        v-model="responseDecrypted"
+        outlined
+        label="Sellers note"
+      ></q-input>
       <!-- [Checkbox]<br /> -->
       <div
         v-if="entry && sellerConfirms"
@@ -66,6 +85,7 @@
 </template>
 <script lang="ts">
 import ProImg from "../ProImg.vue";
+import AddPgpBtn from "../AddPgpBtn.vue";
 import { PropType } from "vue";
 import { state } from "../../store/globals";
 import { Token } from "../AntelopeHelpers";
@@ -73,7 +93,7 @@ import { Entry } from "../Items";
 
 export default Vue.defineComponent({
   name: "buyStep3",
-  components: { ProImg },
+  components: { ProImg, AddPgpBtn },
   props: {
     entry: {
       type: Object as PropType<Entry>,
@@ -92,6 +112,10 @@ export default Vue.defineComponent({
     },
   },
   setup(_props, context) {
+    const publicKey = Vue.ref<string>("");
+    const privateKey = Vue.ref<string>("");
+    const passphrase = Vue.ref<string>("");
+
     const sellerConfirms = Vue.ref<boolean>(false);
     const _sellerResponse = Vue.ref<string>("");
     const sellerResponse = Vue.computed({
@@ -110,6 +134,15 @@ export default Vue.defineComponent({
       },
     });
 
+    const isEncrypted = Vue.computed(() => {
+      return (
+        sellerResponse.value.indexOf("-----BEGIN PGP MESSAGE-----") != -1 &&
+        sellerResponse.value.indexOf("-----END PGP MESSAGE-----") != -1
+      );
+    });
+
+    const responseDecrypted = Vue.ref<string>("");
+
     function sendPayment() {
       waitForTrans.value = true;
     }
@@ -127,6 +160,64 @@ export default Vue.defineComponent({
       return false;
     });
 
+    Vue.watch([isEncrypted, privateKey, passphrase], () => {
+      if (isEncrypted.value && privateKey.value.length > 0) {
+        decrypt();
+      }
+    });
+
+    async function decrypt() {
+      if (!isEncrypted.value) {
+        // TODO: Extract the note
+        responseDecrypted.value = sellerResponse.value;
+        return false;
+      }
+      const privateKeyArmored = privateKey.value;
+
+      try {
+        let privateKey = await openpgp.readPrivateKey({
+          armoredKey: privateKeyArmored,
+        });
+        if (passphrase.value.length > 0) {
+          privateKey = await openpgp.decryptKey({
+            privateKey: await openpgp.readPrivateKey({
+              armoredKey: privateKeyArmored,
+            }),
+            passphrase: passphrase.value,
+          });
+        }
+
+        const encrypted = sellerResponse.value;
+        const message = await openpgp.readMessage({
+          armoredMessage: encrypted, // parse armored message
+        });
+        const { data: decrypted, signatures } = await openpgp.decrypt({
+          message,
+          // verificationKeys: publicKey, // optional
+          decryptionKeys: privateKey,
+        });
+
+        // check signature validity (signed messages only)
+        try {
+          await signatures[0].verified; // throws on invalid signature
+          console.log("Signature is valid");
+        } catch (e) {
+          console.log("Signature could not be verified: ", e);
+        }
+        if (typeof decrypted == "string") {
+          responseDecrypted.value = decrypted;
+          return true;
+        } else {
+          responseDecrypted.value = "";
+          return false;
+        }
+      } catch (e) {
+        console.log("error", e);
+        responseDecrypted.value = "";
+        return false;
+      }
+    }
+
     return {
       darkStyle: state.darkStyle,
       sellerConfirms,
@@ -135,6 +226,12 @@ export default Vue.defineComponent({
       waitForTrans,
       transLinkValid,
       sendPayment,
+      publicKey,
+      privateKey,
+      isEncrypted,
+      responseDecrypted,
+      decrypt,
+      passphrase,
     };
   },
 });

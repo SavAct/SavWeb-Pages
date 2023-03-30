@@ -24,7 +24,12 @@
     >
       <q-card>
         <q-card-section>
-          <set-pgp v-model="pubBuyer" :account="userName"></set-pgp>
+          <set-pgp
+            v-model="pubBuyer"
+            :account="userName"
+            v-model:pri-pgp="bPriPgp"
+            v-model:passphrase="bPassphrase"
+          ></set-pgp>
         </q-card-section>
       </q-card>
     </q-expansion-item>
@@ -62,6 +67,8 @@ export default Vue.defineComponent({
     "update:jsonData",
     "update:buyerName",
     "update:buyerPupPgp",
+    "update:buyerPriPgp",
+    "update:buyerPassphrase",
     "update:address",
     "encrypted",
   ],
@@ -76,9 +83,19 @@ export default Vue.defineComponent({
       requier: true,
       default: "",
     },
+    buyerPriPgp: {
+      type: String,
+      requier: false,
+      default: "",
+    },
+    buyerPassphrase: {
+      type: String,
+      requier: false,
+      default: "",
+    },
     sellerPupPgp: {
       type: String,
-      requier: true,
+      requier: false,
       default: "",
     },
     address: {
@@ -258,7 +275,6 @@ export default Vue.defineComponent({
         return JSON.stringify(userData);
       } catch (e) {
         console.log("Error on stringify", e);
-
         return "";
       }
     }
@@ -272,14 +288,29 @@ export default Vue.defineComponent({
         const publicBuyerKey = await openpgp.readKey({
           armoredKey: props.buyerPupPgp,
         });
+
         const publicSellerKey = await openpgp.readKey({
           armoredKey: props.sellerPupPgp,
         });
 
+        let privateBuyerKey = undefined;
+        if (bPriPgp.value.length > 0) {
+          privateBuyerKey = await openpgp.readPrivateKey({
+            armoredKey: bPriPgp.value,
+          });
+          if (bPassphrase.value.length > 0) {
+            privateBuyerKey = await openpgp.decryptKey({
+              privateKey: privateBuyerKey,
+              passphrase: bPassphrase.value,
+            });
+          }
+        }
+
         const data = (
           await openpgp.encrypt({
             message,
-            encryptionKeys: new Array(publicBuyerKey, publicSellerKey),
+            encryptionKeys: [publicSellerKey, publicBuyerKey],
+            signingKeys: privateBuyerKey, // optional
           })
         ).toString();
         context.emit("update:buyerData", data);
@@ -319,6 +350,20 @@ export default Vue.defineComponent({
       return true;
     }
 
+    const bPriPgp = Vue.computed({
+      get: () => props.buyerPriPgp,
+      set: (v: string) => {
+        context.emit("update:buyerPriPgp", v);
+      },
+    });
+
+    const bPassphrase = Vue.computed({
+      get: () => props.buyerPassphrase,
+      set: (v: string) => {
+        context.emit("update:buyerPassphrase", v);
+      },
+    });
+
     return {
       expBuyerName,
       expBuyerPgp,
@@ -330,6 +375,8 @@ export default Vue.defineComponent({
       pubBuyer,
       pubSeller,
       addr,
+      bPriPgp,
+      bPassphrase,
     };
   },
 });

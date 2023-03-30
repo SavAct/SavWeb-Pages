@@ -27,6 +27,8 @@
           :pieces="pieces"
           :token="token"
           @encrypted="step = 2"
+          v-model:buyer-pri-pgp="buyerPriPgp"
+          v-model:buyer-passphrase="buyerPassphrase"
         ></buy-step-1>
       </q-step>
 
@@ -220,28 +222,17 @@ export default Vue.defineComponent({
       postal: "",
       addressL1: "",
       addressL2: "",
+      note: "",
     });
 
     const buyerPupPgp = Vue.ref<string>("");
+    const buyerPriPgp = Vue.ref<string>("");
+    const buyerPassphrase = Vue.ref<string>("");
     const sellerPupPgp = Vue.ref<string>("");
     const setp3Completed = Vue.ref<boolean>(false);
 
     //- Default for test
     buyerName.value = "savact";
-    buyerPupPgp.value = `-----BEGIN PGP PUBLIC KEY BLOCK-----
-
-xjMEZCLsEBYJKwYBBAHaRw8BAQdALyn9yx1KGIwZubd/UUS/6jowvbtQRkis
-N05MGazxOjnNAMKMBBAWCgA+BYJkIuwQBAsJBwgJkJ+kr6PAN4DrAxUICgQW
-AAIBAhkBApsDAh4BFiEEcuYpqdEJfn2Y0OMkn6Svo8A3gOsAAFVNAQDdXy4I
-iqKC3Hp+M27h1WbV4HL5tGqjuLVdMgsz98EPMgEA9PYrW78S5nZ8SUTxE4YV
-twE2/rdQ67AzQE9TKUv7egXOOARkIuwQEgorBgEEAZdVAQUBAQdAYwjojDDx
-NRSAZTEMw6R6XnrBb9PTJzAsGH8/wJFD+RIDAQgHwngEGBYIACoFgmQi7BAJ
-kJ+kr6PAN4DrApsMFiEEcuYpqdEJfn2Y0OMkn6Svo8A3gOsAAJSfAQDSh++f
-1NOK5Jj0HaOhjMDlbt0DPLk9hU/oUIx7PoyaowEA4tGBnlFlOsEAHtqIeWBd
-zKI28PnOqa65z2Qa0lAnxAw=
-=XCMl
------END PGP PUBLIC KEY BLOCK-----
-    `;
     sellerPupPgp.value = `-----BEGIN PGP PUBLIC KEY BLOCK-----
 
 xjMEZCLVyxYJKwYBBAHaRw8BAQdA/0EykbX9Pn7AteNUSKgZZEYA4R5HBbvz
@@ -264,6 +255,7 @@ L7mDr4xuUpUNEUMbYc1O9A4=
     address.value.postal = "90001";
     address.value.addressL1 = "123 Main St";
     address.value.addressL2 = "Apt 1";
+    address.value.note = "No note";
     //-
 
     return {
@@ -284,6 +276,8 @@ L7mDr4xuUpUNEUMbYc1O9A4=
       jsonData,
       address,
       setp3Completed,
+      buyerPriPgp,
+      buyerPassphrase,
     };
   },
 });
