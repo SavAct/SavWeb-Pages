@@ -51,4 +51,30 @@
 
     <script type="module" src="src/app.ts" defer></script>
   </body>
+  <style>
+    @keyframes fadeInGrow {
+      0% {
+        transform: scale(0.5);
+        opacity: 0;
+      }
+      25% {
+        transform: scale(1.1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(0.9);
+      }
+      75% {
+        transform: scale(1.1);
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .plopOnShow {
+      animation: fadeInGrow 1s ease-out;
+    }
+  </style>
 </html>

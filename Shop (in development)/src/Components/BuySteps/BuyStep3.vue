@@ -50,10 +50,19 @@
           </div>
           <div class="row justify-between">
             <div class="col-auto">
-              <q-chip
-                icon="attach_money"
-                :label="entry.price + ' USD'"
-              ></q-chip>
+              <div>{{ pieces }}x {{ entry.price }} USD</div>
+              <div>+ Shipping {{ 0 }} USD</div>
+              <div>
+                Total price
+                <q-chip icon="attach_money" :label="price + ' USD'"></q-chip>
+                Current token price
+                <q-chip
+                  icon="currency_bitcoin"
+                  :label="totalAsset"
+                  clickable
+                  @click="updateTokenPrice"
+                ></q-chip>
+              </div>
             </div>
             <user-link class="col-auto" :user="entry.seller"></user-link>
           </div>
@@ -88,7 +97,7 @@ import ProImg from "../ProImg.vue";
 import AddPgpBtn from "../AddPgpBtn.vue";
 import { PropType } from "vue";
 import { state } from "../../store/globals";
-import { Token } from "../AntelopeHelpers";
+import { AssetToString, Token } from "../AntelopeHelpers";
 import { Entry } from "../Items";
 
 export default Vue.defineComponent({
@@ -105,13 +114,23 @@ export default Vue.defineComponent({
       requier: true,
       default: null,
     },
+    price: {
+      type: Number,
+      requier: true,
+      default: 0,
+    },
+    pieces: {
+      type: Number,
+      requier: true,
+      default: 1,
+    },
     completed: {
       type: Boolean,
       requier: false,
       default: false,
     },
   },
-  setup(_props, context) {
+  setup(props, context) {
     const publicKey = Vue.ref<string>("");
     const privateKey = Vue.ref<string>("");
     const passphrase = Vue.ref<string>("");
@@ -142,10 +161,21 @@ export default Vue.defineComponent({
     });
 
     const responseDecrypted = Vue.ref<string>("");
+    const currentTokenPrice = Vue.ref<bigint>(BigInt(0));
+    const totalAsset = Vue.computed(() => {
+      return AssetToString({
+        amount: currentTokenPrice.value,
+        symbol: props.token.symbol,
+      });
+    });
 
-    function sendPayment() {
+    async function sendPayment() {
+      await updateTokenPrice();
+      const assetStr = `${totalAsset.value} ${props.token.contract}`;
+      state.savWeb.payment(props.token.chain, props.entry.seller, assetStr, "");
       waitForTrans.value = true;
     }
+
     const transLink = Vue.ref<string>("");
     const waitForTrans = Vue.ref<boolean>(false);
     const transLinkValid = Vue.computed(() => {
@@ -218,6 +248,11 @@ export default Vue.defineComponent({
       }
     }
 
+    async function updateTokenPrice() {
+      currentTokenPrice.value = BigInt(Math.round(props.price)); // TODO: Calculate the real current token price
+    }
+    updateTokenPrice();
+
     return {
       darkStyle: state.darkStyle,
       sellerConfirms,
@@ -232,6 +267,8 @@ export default Vue.defineComponent({
       responseDecrypted,
       decrypt,
       passphrase,
+      updateTokenPrice,
+      totalAsset,
     };
   },
 });

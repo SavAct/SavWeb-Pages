@@ -16,6 +16,7 @@ export interface Entry {
 }
 
 export interface Seller {
+  account: string;
   available: boolean;
   toDate: number; // available or not available until this date as unix timestamp
   pgp: string;

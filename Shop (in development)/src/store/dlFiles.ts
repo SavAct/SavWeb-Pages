@@ -36,7 +36,7 @@ async function getFile(url: string, maxFileSize: number): Promise<string> {
 }
 
 /**
- * Gets a file from a URL and caches it in urlMap
+ * Get a file from a URL and caches it in urlMap
  * @param url URL of the file to get
  * @param maxFileSize Maximum file size in bytes
  * @returns blob URL of the file

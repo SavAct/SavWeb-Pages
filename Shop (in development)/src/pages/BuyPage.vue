@@ -21,9 +21,8 @@
           v-model:address="address"
           v-model:buyer-name="buyerName"
           v-model:buyer-pup-pgp="buyerPupPgp"
-          v-model:seller-pup-pgp="sellerPupPgp"
           :id="entry?.id"
-          :seller="entry?.seller"
+          :seller="seller"
           :pieces="pieces"
           :token="token"
           @encrypted="step = 2"
@@ -42,7 +41,8 @@
         <buy-step2
           :encrypted="buyerData"
           :raw="jsonData"
-          :pub-pgp="sellerPupPgp"
+          :seller="seller"
+          v-model:contact="contact"
         ></buy-step2>
       </q-step>
 
@@ -57,6 +57,8 @@
           :entry="entry"
           :token="token"
           v-bind:completed="setp3Completed"
+          :price="usdPrice"
+          :pieces="pieces"
         ></buy-step3>
       </q-step>
 
@@ -67,8 +69,8 @@
         :title="$q.screen.gt.xs ? 'Inform' : ''"
         active-icon="mark_email_read"
       >
-        Send the seller the link of your transaction and store it for
-        yourself.<br />
+        Send the seller the link and token price of your transaction and store
+        it for yourself.<br />
         [Encrypt]<br />
       </q-step>
 
@@ -98,13 +100,18 @@
             icon="arrow_back_ios"
           />
           <q-btn
-            v-if="step < 3 || step == 4 || (step === 3 && setp3Completed)"
+            v-if="
+              step < 2 ||
+              (step === 2 && contact) ||
+              (step === 3 && setp3Completed) ||
+              step == 4
+            "
             :class="{ 'q-ml-sm': step > 1 }"
             class="q-pr-sm"
             outline
             @click="nextStep"
             color="blue"
-            :label="step === 3 ? 'Finish' : 'Continue'"
+            :label="forwardNaviLabel"
             icon-right="arrow_forward_ios"
             :loading="doEncryption"
             :disable="doEncryption"
@@ -124,7 +131,7 @@ import AddressInput, { Address } from "../Components/AddressInput.vue";
 import BuyStep1 from "../Components/BuySteps/BuyStep1.vue";
 import BuyStep2 from "../Components/BuySteps/BuyStep2.vue";
 import BuyStep3 from "../Components/BuySteps/BuyStep3.vue";
-import { Entry } from "../Components/Items";
+import { Entry, Seller } from "../Components/Items";
 import { state } from "../store/globals";
 import { route } from "../router/simpleRouter";
 import { Token } from "../Components/AntelopeHelpers";
@@ -164,15 +171,38 @@ export default Vue.defineComponent({
         ? (route.query.token as Token)
         : undefined;
 
+    const _pieces =
+      route.query &&
+      "pieces" in route.query &&
+      typeof route.query.pieces == "number"
+        ? route.query.pieces
+        : 1;
+    const pieces = Vue.ref<number>(_pieces);
+
+    const usdPrice = Vue.computed(() => {
+      if (entry.value) {
+        console.log("---price---", pieces.value * entry.value.price);
+
+        return pieces.value * entry.value.price; // TODO: Calculate and add delivery price
+      }
+      return -1;
+    });
+
     const regionName = new Intl.DisplayNames(["en"], { type: "region" });
     const entry = Vue.ref<Entry>();
     entry.value = state.itemsList.find((item) => item.id == id);
 
-    const pieces = Vue.ref<number>(1);
+    const seller = Vue.ref<Seller>();
+    seller.value =
+      entry.value && entry.value.seller.length > 0
+        ? state.sellerList[entry.value.seller]
+        : undefined;
 
     const step = Vue.ref<number>(1);
 
     const doEncryption = Vue.ref<boolean>(false);
+    const contact = Vue.ref<{ label: string; value: string }>();
+
     async function nextStep() {
       if (step.value == 1) {
         doEncryption.value = true;
@@ -228,25 +258,36 @@ export default Vue.defineComponent({
     const buyerPupPgp = Vue.ref<string>("");
     const buyerPriPgp = Vue.ref<string>("");
     const buyerPassphrase = Vue.ref<string>("");
-    const sellerPupPgp = Vue.ref<string>("");
     const setp3Completed = Vue.ref<boolean>(false);
+
+    const forwardNaviLabel = Vue.computed(() => {
+      switch (step.value) {
+        case 2:
+          return "Got a response";
+        case 3:
+          return "Finish";
+        default:
+          return "Continue";
+      }
+    });
 
     //- Default for test
     buyerName.value = "savact";
-    sellerPupPgp.value = `-----BEGIN PGP PUBLIC KEY BLOCK-----
+    buyerPupPgp.value = `-----BEGIN PGP PUBLIC KEY BLOCK-----
 
-xjMEZCLVyxYJKwYBBAHaRw8BAQdA/0EykbX9Pn7AteNUSKgZZEYA4R5HBbvz
-+OQFC/DcI8HNAMKMBBAWCgA+BYJkItXLBAsJBwgJkAN/uZJn3/7RAxUICgQW
-AAIBAhkBApsDAh4BFiEEvgFLzCbE2q8FqySfA3+5kmff/tEAAGv3AP9WhnfS
-buP9pAItsUBYWP1v+Fo98yL26eimHG4zvrHoPAD8CpjrI9drE4dCqKEp0bCo
-gq+CI9UNwM/680rq/LdEigDOOARkItXLEgorBgEEAZdVAQUBAQdAcs7c7FdD
-699aOYZ1FUPbkcnz/QfYnRpMhOWFF8rrOD8DAQgHwngEGBYIACoFgmQi1csJ
-kAN/uZJn3/7RApsMFiEEvgFLzCbE2q8FqySfA3+5kmff/tEAAE0PAP9U4z26
-1/A66AayqVRsPsxUh8ysZMm5UHaX9zngSSZ6lwD+KbKl/4TBB+/qPk8P1y70
-L7mDr4xuUpUNEUMbYc1O9A4=
-=a2sb
+xjMEZCZ9RhYJKwYBBAHaRw8BAQdAcB2tuC5ObU0pyCNJjMgRNl+S4F86SYjO
+k5XIjMdByOPNAMKMBBAWCgA+BYJkJn1GBAsJBwgJkK1IUVsYG/RtAxUICgQW
+AAIBAhkBApsDAh4BFiEEhz+eN9BFn1BKh0c7rUhRWxgb9G0AAGXrAP4h8LIo
+/SAbRgTUEFesB7ZqLKSozXdMVWnbXRWB4sZydAEAxK+fY/mDku8mMqooSP9L
+tzqceYJmn8WiSTLHNktryQrOOARkJn1GEgorBgEEAZdVAQUBAQdANlYaK2kr
+iE04LWpOkglVZnj2CBrLAxyQtMXZMAVClhIDAQgHwngEGBYIACoFgmQmfUYJ
+kK1IUVsYG/RtApsMFiEEhz+eN9BFn1BKh0c7rUhRWxgb9G0AABnNAQCGEKp4
+VBoJy1P3hpMHdpVmLXJhHsSRiRfG5QIPLZTHBwEAybtwUrCLn7cxIR+EAUhT
+Dw7NfxeIDcCBXLhiIpRBSAE=
+=VF72
 -----END PGP PUBLIC KEY BLOCK-----
-    `;
+`;
+
     address.value.firstName = "Savact";
     address.value.lastName = "Test";
     address.value.country = "US";
@@ -272,12 +313,15 @@ L7mDr4xuUpUNEUMbYc1O9A4=
       buyerData,
       doEncryption,
       buyerPupPgp,
-      sellerPupPgp,
+      seller,
       jsonData,
       address,
       setp3Completed,
       buyerPriPgp,
       buyerPassphrase,
+      usdPrice,
+      contact,
+      forwardNaviLabel,
     };
   },
 });

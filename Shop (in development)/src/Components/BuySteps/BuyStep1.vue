@@ -57,6 +57,7 @@ import { Address } from "../AddressInput.vue";
 import { PropType } from "vue";
 import { Token } from "../AntelopeHelpers";
 import { UserData } from "../../pages/BuyPage.vue";
+import { Seller } from "../Items";
 
 export default Vue.defineComponent({
   name: "buyStep1",
@@ -93,11 +94,6 @@ export default Vue.defineComponent({
       requier: false,
       default: "",
     },
-    sellerPupPgp: {
-      type: String,
-      requier: false,
-      default: "",
-    },
     address: {
       type: Object as PropType<Address>,
       requier: true,
@@ -113,9 +109,9 @@ export default Vue.defineComponent({
       default: false,
     },
     seller: {
-      type: String,
+      type: Object as PropType<Seller>,
       requier: true,
-      default: "",
+      default: undefined,
     },
     id: {
       type: Number,
@@ -158,15 +154,6 @@ export default Vue.defineComponent({
     const pubBuyer = Vue.computed({
       get() {
         return props.buyerPupPgp;
-      },
-      set(value: string) {
-        context.emit("update:buyerPupPgp", value);
-      },
-    });
-
-    const pubSeller = Vue.computed({
-      get() {
-        return props.sellerPupPgp;
       },
       set(value: string) {
         context.emit("update:buyerPupPgp", value);
@@ -263,12 +250,13 @@ export default Vue.defineComponent({
     function createJsonUserData() {
       try {
         if (props.token === undefined) throw new Error("No token");
+        if (props.seller === undefined) throw new Error("No seller");
         const userData = props.address as UserData;
         userData.buyer = props.buyerName;
         userData.item = props.id;
         userData.pieces = props.pieces;
         userData.token = props.token;
-        userData.seller = props.seller;
+        userData.seller = props.seller.account;
         userData.sigDate = Date.now();
         userData.pubPgp = props.buyerPupPgp;
 
@@ -289,10 +277,6 @@ export default Vue.defineComponent({
           armoredKey: props.buyerPupPgp,
         });
 
-        const publicSellerKey = await openpgp.readKey({
-          armoredKey: props.sellerPupPgp,
-        });
-
         let privateBuyerKey = undefined;
         if (bPriPgp.value.length > 0) {
           privateBuyerKey = await openpgp.readPrivateKey({
@@ -306,15 +290,23 @@ export default Vue.defineComponent({
           }
         }
 
-        const data = (
-          await openpgp.encrypt({
-            message,
-            encryptionKeys: [publicSellerKey, publicBuyerKey],
-            signingKeys: privateBuyerKey, // optional
-          })
-        ).toString();
-        context.emit("update:buyerData", data);
-        return true;
+        if (props.seller) {
+          const publicSellerKey = await openpgp.readKey({
+            armoredKey: props.seller.pgp,
+          });
+
+          const data = (
+            await openpgp.encrypt({
+              message,
+              encryptionKeys: [publicSellerKey, publicBuyerKey],
+              signingKeys: privateBuyerKey, // optional
+            })
+          ).toString();
+          context.emit("update:buyerData", data);
+          return true;
+        } else {
+          return "No seller defined";
+        }
       } catch (e) {
         console.error("Error on signing", e);
         context.emit("update:buyerData", "");
@@ -373,7 +365,6 @@ export default Vue.defineComponent({
       validAddress,
       userName,
       pubBuyer,
-      pubSeller,
       addr,
       bPriPgp,
       bPassphrase,
