@@ -21,7 +21,7 @@
                 icon="attach_money"
                 :label="entry.price + ' USD'"
               ></q-chip>
-              Units per order:
+              Units per ordered piece:
               <q-chip :label="entry.units"></q-chip>
               Price per unit:
               <q-chip
@@ -101,6 +101,17 @@
                 color="green"
                 class="q-my-sm"
               ></q-select>
+
+              <q-input
+                label="Pieces"
+                type="number"
+                v-model="pieces"
+                outlined
+                dense
+                class="q-mb-md"
+                min="1"
+                step="1"
+              ></q-input>
 
               <div v-if="totalPrice" class="col-12">
                 Total price:
@@ -263,6 +274,16 @@ export default Vue.defineComponent({
       return undefined;
     });
 
+    const _pieces = Vue.ref<number>(1);
+    const pieces = Vue.computed({
+      get: () => _pieces.value,
+      set: (v) => {
+        if (v > 0) {
+          _pieces.value = Math.round(v);
+        }
+      },
+    });
+
     function tokenClick(index: number) {
       if (acceptToken.value) {
         sToken.value = acceptToken.value[index];
@@ -282,6 +303,7 @@ export default Vue.defineComponent({
             id: entry.value.id,
             region: sRegion.value.value,
             token: sToken.value.value,
+            pieces: pieces.value,
           },
         });
       }
@@ -304,6 +326,7 @@ export default Vue.defineComponent({
       tokenClick,
       regionClick,
       buyClick,
+      pieces,
     };
   },
 });

@@ -27,53 +27,14 @@
         outlined
         label="Sellers note"
       ></q-input>
-      <!-- [Checkbox]<br /> -->
-      <div
-        v-if="entry && sellerConfirms"
-        class="row"
-        style="border: 1px solid #ddd; border-radius: 4px"
-      >
-        <div class="col-3">
-          <pro-img
-            v-if="entry.imgs.length > 0"
-            :src="entry.imgs[0]"
-            fit="contain"
-            :class="darkStyle ? 'bg-grey-10' : 'bg-grey-2'"
-          ></pro-img>
-        </div>
-        <div class="col-9 q-px-md">
-          <div
-            class="text-bold q-pt-sm q-px-sm"
-            :class="$q.screen.gt.xs ? 'text-h6' : ''"
-          >
-            {{ entry.title }}
-          </div>
-          <div class="row justify-between">
-            <div class="col-auto">
-              <div>{{ pieces }}x {{ entry.price }} USD</div>
-              <div>+ Shipping {{ 0 }} USD</div>
-              <div>
-                Total price
-                <q-chip icon="attach_money" :label="price + ' USD'"></q-chip>
-                Current token price
-                <q-chip
-                  icon="currency_bitcoin"
-                  :label="totalAsset"
-                  clickable
-                  @click="updateTokenPrice"
-                ></q-chip>
-              </div>
-            </div>
-            <user-link class="col-auto" :user="entry.seller"></user-link>
-          </div>
-
-          <token-symbol
-            :chain="token?.chain"
-            :contract="token?.contract"
-            :symbol="token?.symbol"
-            size="18px"
-          ></token-symbol>
-        </div>
+      <div v-if="entry && sellerConfirms">
+        <order-item
+          :entry="entry"
+          :price="price"
+          :token="token"
+          :pieces="pieces"
+          @current-token-price="currentTokenPrice = $event"
+        ></order-item>
         <div v-if="maxPayTime" class="q-mt-md q-mx-sm q-mb-sm">
           <span class="q-mr-sm"> Payment must be sent before </span>
           <span>
@@ -109,26 +70,19 @@
   </q-card>
 </template>
 <script lang="ts">
-import ProImg from "../ProImg.vue";
 import AddPgpBtn from "../AddPgpBtn.vue";
+import OrderItem from "../OrderItem.vue";
 import { PropType } from "vue";
 import { state } from "../../store/globals";
 import { AssetToString, Token } from "../AntelopeHelpers";
 import { Entry, Seller } from "../Items";
 import { formatDuration } from "../ConverTime";
-import { generateRandomString } from "../Generator";
-
-interface Response {
-  confirm: boolean;
-  buyer: string;
-  memo?: string;
-  time?: number;
-  sigTime?: number;
-}
+import { SellerResponse, decrypt, generateRandomString } from "../Generator";
 
 export default Vue.defineComponent({
   name: "buyStep3",
-  components: { ProImg, AddPgpBtn },
+  components: { AddPgpBtn, OrderItem },
+  emits: ["update:privateKey", "update:passphrase", "update:completed"],
   props: {
     entry: {
       type: Object as PropType<Entry>,
@@ -165,11 +119,37 @@ export default Vue.defineComponent({
       requier: true,
       default: "",
     },
+    privateKey: {
+      type: String,
+      requier: false,
+      default: "",
+    },
+    passphrase: {
+      type: String,
+      requier: false,
+      default: "",
+    },
   },
   setup(props, context) {
     const publicKey = Vue.ref<string>("");
-    const privateKey = Vue.ref<string>("");
-    const passphrase = Vue.ref<string>("");
+
+    const privateKey = Vue.computed({
+      get() {
+        return props.privateKey;
+      },
+      set(v) {
+        context.emit("update:privateKey", v);
+      },
+    });
+
+    const passphrase = Vue.computed({
+      get() {
+        return props.passphrase;
+      },
+      set(v) {
+        context.emit("update:passphrase", v);
+      },
+    });
 
     const sellerConfirms = Vue.ref<boolean>(false);
     const _sellerResponse = Vue.ref<string>("");
@@ -183,20 +163,25 @@ export default Vue.defineComponent({
       },
     });
 
-    const response = Vue.ref<Response | undefined>();
+    const response = Vue.ref<SellerResponse | undefined>();
     const maxPayTime = Vue.ref<number>();
 
     async function checkResponse(text: string) {
       if (!props.seller) return;
       if (text.startsWith("-----BEGIN PGP MESSAGE-----")) {
-        text = await decrypt(text);
+        text = await decrypt(
+          text,
+          privateKey.value,
+          passphrase.value,
+          props.seller.pgp
+        );
       } else if (!text.startsWith("{")) {
         text = "";
       }
 
       if (text.length > 0) {
         try {
-          response.value = JSON.parse(text) as Response;
+          response.value = JSON.parse(text) as SellerResponse;
           if (response.value.confirm) {
             if (response.value.buyer == props.buyer) {
               if (typeof response.value.time == "number") {
@@ -219,45 +204,6 @@ export default Vue.defineComponent({
       }
       response.value = undefined;
       sellerConfirms.value = false;
-    }
-
-    async function decrypt(text: string): Promise<string> {
-      if (!props.seller) return "";
-      const message = await openpgp.createMessage({ text });
-      const publicSellerKey = await openpgp.readKey({
-        armoredKey: props.seller.pgp,
-      });
-
-      let privateBuyerKey = undefined;
-      if (privateKey.value.length == 0) {
-        // TODO: await on dialog for private key and passphrase request
-      }
-
-      if (privateKey.value.length > 0) {
-        privateBuyerKey = await openpgp.readPrivateKey({
-          armoredKey: privateKey.value,
-        });
-        if (passphrase.value.length > 0) {
-          privateBuyerKey = await openpgp.decryptKey({
-            privateKey: privateBuyerKey,
-            passphrase: passphrase.value,
-          });
-        }
-        const decrypted = await openpgp.decrypt({
-          message,
-          verificationKeys: publicSellerKey,
-          decryptionKeys: [privateBuyerKey],
-        });
-        try {
-          console.log("------Decrypted", decrypted); // TODO: Test decription with signature verification
-          await decrypted.signatures[0].verified; // throws on invalid signature
-          console.log("Signature is valid");
-          return decrypted.data.toString();
-        } catch (e) {
-          console.error("Signature could not be verified", e);
-        }
-      }
-      return "";
     }
 
     const isEncrypted = Vue.computed(() => {
@@ -286,7 +232,7 @@ export default Vue.defineComponent({
         response.value?.memo ? response.value.memo : generateRandomString(8)
       );
       waitForTrans.value = true;
-      // TODO: Receive transaction result
+      // TODO: Receive transaction result and set transLink
     }
 
     const transLink = Vue.ref<string>("");
@@ -349,6 +295,7 @@ export default Vue.defineComponent({
       maxPayTime,
       restTime,
       formatDuration,
+      currentTokenPrice,
     };
   },
 });

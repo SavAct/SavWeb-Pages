@@ -59,18 +59,7 @@
 </template>
 <script lang="ts">
 import { PropType } from "vue";
-export interface Address {
-  firstName: string;
-  middleNames: string;
-  lastName: string;
-  country: string;
-  state: string;
-  city: string;
-  postal: string;
-  addressL1: string;
-  addressL2: string;
-  note: string;
-}
+import { Address } from "./Generator";
 
 export default Vue.defineComponent({
   name: "addressInput",

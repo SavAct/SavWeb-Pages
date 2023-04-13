@@ -4,6 +4,7 @@ import ads from "../pages/AdsPage.vue";
 import item from "../pages/ItemPage.vue";
 import user from "../pages/UserPage.vue";
 import buy from "../pages/BuyPage.vue";
+import sellResponse from "../pages/SellResponsePage.vue";
 
 /**
  * Here you can add more pages
@@ -31,12 +32,18 @@ export const routes: Array<{
     name: "user",
     component: user,
     title: "Account",
-    color: "cyan-12",
+    color: "light-green-13",
   },
   {
     name: "buy",
     component: buy,
     title: "Buy",
     color: "orange-13",
+  },
+  {
+    name: "response",
+    component: sellResponse,
+    title: "Response to a customer",
+    color: "cyan-12",
   },
 ];

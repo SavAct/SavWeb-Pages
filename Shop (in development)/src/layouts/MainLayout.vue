@@ -65,6 +65,12 @@
           icon="person"
           class="col-2"
         />
+        <q-route-tab
+          @click="to('response')"
+          name="response"
+          icon="storefront"
+          class="col-2"
+        />
       </q-tabs>
     </q-footer>
   </q-layout>

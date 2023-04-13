@@ -61,6 +61,8 @@
           :pieces="pieces"
           :seller="seller"
           :buyer="buyerName"
+          :private-key="buyerPriPgp"
+          :passphrase="buyerPassphrase"
         ></buy-step3>
       </q-step>
 
@@ -129,7 +131,7 @@ import UserInput from "../Components/UserInput.vue";
 import UserLink from "../Components/UserLink.vue";
 import TokenSymbol from "../Components/TokenSymbol.vue";
 import RawDataBtn from "../Components/RawDataBtn.vue";
-import AddressInput, { Address } from "../Components/AddressInput.vue";
+import AddressInput from "../Components/AddressInput.vue";
 import BuyStep1 from "../Components/BuySteps/BuyStep1.vue";
 import BuyStep2 from "../Components/BuySteps/BuyStep2.vue";
 import BuyStep3 from "../Components/BuySteps/BuyStep3.vue";
@@ -137,16 +139,7 @@ import { Entry, Seller } from "../Components/Items";
 import { state } from "../store/globals";
 import { route } from "../router/simpleRouter";
 import { Token } from "../Components/AntelopeHelpers";
-
-export interface UserData extends Address {
-  buyer: string;
-  pubPgp: string;
-  item: number;
-  pieces: number;
-  token: Token;
-  seller: string;
-  sigDate: number;
-}
+import { Address } from "../Components/Generator";
 
 export default Vue.defineComponent({
   components: {

@@ -53,11 +53,12 @@
 import UserInput from "../UserInput.vue";
 import SetPgp from "../SetPgp.vue";
 import AddressInput from "../AddressInput.vue";
-import { Address } from "../AddressInput.vue";
+
 import { PropType } from "vue";
 import { Token } from "../AntelopeHelpers";
-import { UserData } from "../../pages/BuyPage.vue";
+
 import { Seller } from "../Items";
+import { Address, UserData } from "../Generator";
 
 export default Vue.defineComponent({
   name: "buyStep1",
@@ -253,7 +254,7 @@ export default Vue.defineComponent({
         if (props.seller === undefined) throw new Error("No seller");
         const userData = props.address as UserData;
         userData.buyer = props.buyerName;
-        userData.item = props.id;
+        userData.itemId = props.id;
         userData.pieces = props.pieces;
         userData.token = props.token;
         userData.seller = props.seller.account;
