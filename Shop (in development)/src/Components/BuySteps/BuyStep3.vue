@@ -74,12 +74,28 @@
             size="18px"
           ></token-symbol>
         </div>
+        <div v-if="maxPayTime" class="q-mt-md q-mx-sm q-mb-sm">
+          <span class="q-mr-sm"> Payment must be sent before </span>
+          <span>
+            {{ new Date(maxPayTime * 1000).toLocaleString() }}
+          </span>
+          <div>
+            {{ formatDuration(restTime) }}
+          </div>
+        </div>
         <q-btn
+          v-if="!maxPayTime || restTime > 10 * 60"
           class="full-width"
           color="blue"
           label="Send Payment"
           @click="sendPayment"
         ></q-btn>
+        <div v-else>
+          The sellers condition until this payment should have been succeeded is
+          {{ restTime > 0 ? "over!" : "almost over!" }}<br />
+          If you have not sent the payment yet, you may initiate a new request
+          for the item and reach out to the seller once again.
+        </div>
       </div>
       <q-input
         class="q-mt-md"
@@ -98,7 +114,17 @@ import AddPgpBtn from "../AddPgpBtn.vue";
 import { PropType } from "vue";
 import { state } from "../../store/globals";
 import { AssetToString, Token } from "../AntelopeHelpers";
-import { Entry } from "../Items";
+import { Entry, Seller } from "../Items";
+import { formatDuration } from "../ConverTime";
+import { generateRandomString } from "../Generator";
+
+interface Response {
+  confirm: boolean;
+  buyer: string;
+  memo?: string;
+  time?: number;
+  sigTime?: number;
+}
 
 export default Vue.defineComponent({
   name: "buyStep3",
@@ -129,6 +155,16 @@ export default Vue.defineComponent({
       requier: false,
       default: false,
     },
+    seller: {
+      type: Object as PropType<Seller>,
+      requier: true,
+      default: undefined,
+    },
+    buyer: {
+      type: String,
+      requier: true,
+      default: "",
+    },
   },
   setup(props, context) {
     const publicKey = Vue.ref<string>("");
@@ -142,16 +178,87 @@ export default Vue.defineComponent({
         return _sellerResponse.value;
       },
       set(v) {
-        // TODO: Defined by response of the seller deadline.minTime and deadline.maxTime
-        if (v.trim().toLocaleLowerCase().startsWith("yes")) {
-          sellerConfirms.value = true;
-        } else {
-          // TODO: try to decrypt and check then if it is a yes
-          sellerConfirms.value = false;
-        }
+        checkResponse(v.trim());
         _sellerResponse.value = v;
       },
     });
+
+    const response = Vue.ref<Response | undefined>();
+    const maxPayTime = Vue.ref<number>();
+
+    async function checkResponse(text: string) {
+      if (!props.seller) return;
+      if (text.startsWith("-----BEGIN PGP MESSAGE-----")) {
+        text = await decrypt(text);
+      } else if (!text.startsWith("{")) {
+        text = "";
+      }
+
+      if (text.length > 0) {
+        try {
+          response.value = JSON.parse(text) as Response;
+          if (response.value.confirm) {
+            if (response.value.buyer == props.buyer) {
+              if (typeof response.value.time == "number") {
+                maxPayTime.value = response.value.time;
+                startTimer();
+              }
+              sellerConfirms.value = true;
+              return;
+            }
+            console.log("Wrong buyer", response.value.buyer, props.buyer);
+            Quasar.Notify.create({
+              position: "top",
+              type: "negative",
+              message: "This message does not match to your account!",
+            });
+          }
+        } catch (e) {
+          console.log("Error parsing JSON", e, text);
+        }
+      }
+      response.value = undefined;
+      sellerConfirms.value = false;
+    }
+
+    async function decrypt(text: string): Promise<string> {
+      if (!props.seller) return "";
+      const message = await openpgp.createMessage({ text });
+      const publicSellerKey = await openpgp.readKey({
+        armoredKey: props.seller.pgp,
+      });
+
+      let privateBuyerKey = undefined;
+      if (privateKey.value.length == 0) {
+        // TODO: await on dialog for private key and passphrase request
+      }
+
+      if (privateKey.value.length > 0) {
+        privateBuyerKey = await openpgp.readPrivateKey({
+          armoredKey: privateKey.value,
+        });
+        if (passphrase.value.length > 0) {
+          privateBuyerKey = await openpgp.decryptKey({
+            privateKey: privateBuyerKey,
+            passphrase: passphrase.value,
+          });
+        }
+        const decrypted = await openpgp.decrypt({
+          message,
+          verificationKeys: publicSellerKey,
+          decryptionKeys: [privateBuyerKey],
+        });
+        try {
+          console.log("------Decrypted", decrypted); // TODO: Test decription with signature verification
+          await decrypted.signatures[0].verified; // throws on invalid signature
+          console.log("Signature is valid");
+          return decrypted.data.toString();
+        } catch (e) {
+          console.error("Signature could not be verified", e);
+        }
+      }
+      return "";
+    }
 
     const isEncrypted = Vue.computed(() => {
       return (
@@ -172,8 +279,14 @@ export default Vue.defineComponent({
     async function sendPayment() {
       await updateTokenPrice();
       const assetStr = `${totalAsset.value} ${props.token.contract}`;
-      state.savWeb.payment(props.token.chain, props.entry.seller, assetStr, "");
+      state.savWeb.payment(
+        props.token.chain,
+        props.entry.seller,
+        assetStr,
+        response.value?.memo ? response.value.memo : generateRandomString(8)
+      );
       waitForTrans.value = true;
+      // TODO: Receive transaction result
     }
 
     const transLink = Vue.ref<string>("");
@@ -192,66 +305,30 @@ export default Vue.defineComponent({
 
     Vue.watch([isEncrypted, privateKey, passphrase], () => {
       if (isEncrypted.value && privateKey.value.length > 0) {
-        decrypt();
+        checkResponse(sellerResponse.value);
       }
     });
 
-    async function decrypt() {
-      if (!isEncrypted.value) {
-        // TODO: Extract the note
-        responseDecrypted.value = sellerResponse.value;
-        return false;
-      }
-      const privateKeyArmored = privateKey.value;
-
-      try {
-        let privateKey = await openpgp.readPrivateKey({
-          armoredKey: privateKeyArmored,
-        });
-        if (passphrase.value.length > 0) {
-          privateKey = await openpgp.decryptKey({
-            privateKey: await openpgp.readPrivateKey({
-              armoredKey: privateKeyArmored,
-            }),
-            passphrase: passphrase.value,
-          });
-        }
-
-        const encrypted = sellerResponse.value;
-        const message = await openpgp.readMessage({
-          armoredMessage: encrypted, // parse armored message
-        });
-        const { data: decrypted, signatures } = await openpgp.decrypt({
-          message,
-          // verificationKeys: publicKey, // optional
-          decryptionKeys: privateKey,
-        });
-
-        // check signature validity (signed messages only)
-        try {
-          await signatures[0].verified; // throws on invalid signature
-          console.log("Signature is valid");
-        } catch (e) {
-          console.log("Signature could not be verified: ", e);
-        }
-        if (typeof decrypted == "string") {
-          responseDecrypted.value = decrypted;
-          return true;
-        } else {
-          responseDecrypted.value = "";
-          return false;
-        }
-      } catch (e) {
-        console.log("error", e);
-        responseDecrypted.value = "";
-        return false;
-      }
-    }
-
     async function updateTokenPrice() {
       currentTokenPrice.value = BigInt(Math.round(props.price)); // TODO: Calculate the real current token price
+      // TODO: Warn if price changed below -5% that the seller might not accept the payment
     }
     updateTokenPrice();
+
+    const restTime = Vue.ref<number>(0);
+    let timerActive = false;
+    function startTimer() {
+      timerActive = true;
+      timer();
+    }
+    function timer() {
+      if (timerActive && maxPayTime.value) {
+        restTime.value = maxPayTime.value - Date.now() / 1000;
+        setTimeout(timer, 1000);
+      } else {
+        restTime.value = 0;
+      }
+    }
 
     return {
       darkStyle: state.darkStyle,
@@ -269,6 +346,9 @@ export default Vue.defineComponent({
       passphrase,
       updateTokenPrice,
       totalAsset,
+      maxPayTime,
+      restTime,
+      formatDuration,
     };
   },
 });

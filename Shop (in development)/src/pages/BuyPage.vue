@@ -59,6 +59,8 @@
           v-bind:completed="setp3Completed"
           :price="usdPrice"
           :pieces="pieces"
+          :seller="seller"
+          :buyer="buyerName"
         ></buy-step3>
       </q-step>
 

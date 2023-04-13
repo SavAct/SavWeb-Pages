@@ -3,7 +3,6 @@ import * as _quasar from "quasar";
 import _appUseQuasar from "quasar";
 import { ecc as _ecc } from "eosjs/dist/eosjs-ecc-migration";
 import * as _openpgp from "openpgp";
-// import _quasar from "quasar";
 
 // Define just the types of the components
 declare global {
