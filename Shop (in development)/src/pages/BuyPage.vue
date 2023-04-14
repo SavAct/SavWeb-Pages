@@ -94,7 +94,7 @@
       </q-step>
 
       <template v-slot:navigation>
-        <q-stepper-navigation>
+        <q-stepper-navigation class="q-gutter-sm">
           <q-btn
             v-if="step > 1"
             outline

@@ -1,6 +1,10 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated :class="darkStyle ? 'bg-dark' : 'bg-indigo-10'">
+    <q-header
+      elevated
+      :class="darkStyle ? 'bg-dark' : 'bg-indigo-10'"
+      ref="mainHeader"
+    >
       <q-toolbar>
         <q-btn
           flat
@@ -45,6 +49,7 @@
       elevated
       :class="darkStyle ? 'bg-dark' : 'bg-indigo-10'"
       class="text-white"
+      ref="mainFooter"
     >
       <q-tabs
         class="fit text-white"
@@ -109,6 +114,16 @@ export default Vue.defineComponent({
       }
     }
 
+    const mainHeader = Vue.computed({
+      get: () => state.mainHeaderRef.value,
+      set: (value) => (state.mainHeaderRef.value = value),
+    });
+
+    const mainFooter = Vue.computed({
+      get: () => state.mainFooterRef.value,
+      set: (value) => (state.mainFooterRef.value = value),
+    });
+
     return {
       canBack: router.canBack,
       canForward: router.canForward,
@@ -118,6 +133,8 @@ export default Vue.defineComponent({
       goBack,
       goForward,
       to: router.push,
+      mainHeader,
+      mainFooter,
     };
   },
 });

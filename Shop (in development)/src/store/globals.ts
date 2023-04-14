@@ -34,6 +34,22 @@ function onIni(msg: PageIni) {
 }
 const savWeb = new SavWeb(onIni);
 
+// Elements of the main header and footer
+const mainHeaderRef = Vue.ref<{ $el: HTMLElement } | null>(null);
+const mainFooterRef = Vue.ref<{ $el: HTMLElement } | null>(null);
+
+const thumbStyle: any = {
+  borderRadius: "7px",
+  backgroundColor: "#4994EC", //#4994EC
+  opacity: 0.7,
+};
+
+const barStyle: any = {
+  borderRadius: "9px",
+  backgroundColor: "white",
+  opacity: 0.2,
+};
+
 const itemsList: Array<Entry> = [
   {
     id: 0,
@@ -187,4 +203,8 @@ export const state = {
   itemsList,
   sellerList,
   messengers,
+  mainFooterRef,
+  mainHeaderRef,
+  thumbStyle,
+  barStyle,
 };
