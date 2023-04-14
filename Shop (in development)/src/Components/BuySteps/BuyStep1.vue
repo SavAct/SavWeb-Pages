@@ -58,7 +58,7 @@ import { PropType } from "vue";
 import { Token } from "../AntelopeHelpers";
 
 import { Seller } from "../Items";
-import { Address, UserData } from "../Generator";
+import { Address, UserData, encrypt } from "../Generator";
 
 export default Vue.defineComponent({
   name: "buyStep1",
@@ -173,7 +173,7 @@ export default Vue.defineComponent({
     Vue.watch(
       () => props.encrypt,
       async () => {
-        const result = await encrypt();
+        const result = await createAndEncrypt();
         context.emit("update:encrypt", false);
         if (result === true) {
           context.emit("encrypted");
@@ -268,54 +268,7 @@ export default Vue.defineComponent({
       }
     }
 
-    async function encryptData(text: string) {
-      // https://github.com/openpgpjs/openpgpjs
-      if (text === undefined || text.length == 0) return false;
-
-      try {
-        const message = await openpgp.createMessage({ text });
-        const publicBuyerKey = await openpgp.readKey({
-          armoredKey: props.buyerPupPgp,
-        });
-
-        let privateBuyerKey = undefined;
-        if (bPriPgp.value.length > 0) {
-          privateBuyerKey = await openpgp.readPrivateKey({
-            armoredKey: bPriPgp.value,
-          });
-          if (bPassphrase.value.length > 0) {
-            privateBuyerKey = await openpgp.decryptKey({
-              privateKey: privateBuyerKey,
-              passphrase: bPassphrase.value,
-            });
-          }
-        }
-
-        if (props.seller) {
-          const publicSellerKey = await openpgp.readKey({
-            armoredKey: props.seller.pgp,
-          });
-
-          const data = (
-            await openpgp.encrypt({
-              message,
-              encryptionKeys: [publicSellerKey, publicBuyerKey],
-              signingKeys: privateBuyerKey, // optional
-            })
-          ).toString();
-          context.emit("update:buyerData", data);
-          return true;
-        } else {
-          return "No seller defined";
-        }
-      } catch (e) {
-        console.error("Error on signing", e);
-        context.emit("update:buyerData", "");
-        return String(e);
-      }
-    }
-
-    async function encrypt() {
+    async function createAndEncrypt() {
       const result = checkUserData();
       if (typeof result === "string") {
         Quasar.Notify.create({
@@ -328,19 +281,30 @@ export default Vue.defineComponent({
       }
       const json = createJsonUserData();
       context.emit("update:jsonData", json);
-      const isEncrypted = await encryptData(json);
-      if (isEncrypted !== true) {
-        Quasar.Notify.create({
-          position: "top",
-          type: "negative",
-          message: "Encryption failed",
-          caption: isEncrypted !== false ? isEncrypted : "",
-        });
-        validBuyerPgp.value = false;
-        return false;
-      }
+      if (props.seller) {
+        const data = await encrypt(
+          json,
+          props.seller.pgp,
+          props.buyerPupPgp,
+          bPriPgp.value,
+          bPassphrase.value
+        );
+        if (typeof data == "string") {
+          context.emit("update:buyerData", data);
 
-      return true;
+          return true;
+        } else if (data !== false) {
+          context.emit("update:buyerData", "");
+          Quasar.Notify.create({
+            position: "top",
+            type: "negative",
+            message: "Encryption failed",
+            caption: "error" in data ? data.error : undefined,
+          });
+        }
+      }
+      validBuyerPgp.value = false;
+      return false;
     }
 
     const bPriPgp = Vue.computed({

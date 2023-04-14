@@ -2,11 +2,20 @@
   <q-card>
     <q-card-section>
       <q-input
-        type="textarea"
+        :type="sellerResponse.length > 0 ? 'text' : 'textarea'"
         v-model="sellerResponse"
         outlined
         label="Sellers response"
-      ></q-input>
+      >
+        <template v-slot:append>
+          <q-icon
+            v-if="sellerResponse.length > 0"
+            name="close"
+            @click="sellerResponse = ''"
+            class="cursor-pointer"
+          />
+        </template>
+      </q-input>
       <add-pgp-btn
         v-if="isEncrypted"
         class="q-px-sm q-mt-sm"
@@ -27,7 +36,7 @@
         outlined
         label="Sellers note"
       ></q-input>
-      <div v-if="entry && sellerConfirms">
+      <div v-if="entry && sellerConfirms" class="q-mt-sm">
         <order-item
           :entry="entry"
           :price="price"

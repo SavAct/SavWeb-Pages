@@ -3,6 +3,7 @@ import { Token } from "./AntelopeHelpers";
 export interface SellerResponse {
   confirm: boolean;
   buyer: string;
+  note?: string;
   memo?: string;
   time?: number;
   sigTime?: number;
@@ -92,4 +93,55 @@ export async function decrypt(
     console.log("Error decrypting", e);
   }
   return "";
+}
+
+export async function encrypt(
+  text: string,
+  recipientPublicKey: string,
+  senderPublicKey: string,
+  signingPrivateKey?: string,
+  signingPassphrase?: string
+) {
+  // https://github.com/openpgpjs/openpgpjs
+  if (text === undefined || text.length == 0) return false;
+
+  try {
+    const message = await openpgp.createMessage({ text });
+    const senderPupKey = await openpgp.readKey({
+      armoredKey: senderPublicKey,
+    });
+
+    let singingPriKey = undefined;
+    if (signingPrivateKey !== undefined && signingPrivateKey.length > 0) {
+      singingPriKey = await openpgp.readPrivateKey({
+        armoredKey: signingPrivateKey,
+      });
+      if (signingPassphrase !== undefined && signingPassphrase.length > 0) {
+        singingPriKey = await openpgp.decryptKey({
+          privateKey: singingPriKey,
+          passphrase: signingPassphrase,
+        });
+      }
+    }
+
+    if (recipientPublicKey) {
+      const recipientPupKey = await openpgp.readKey({
+        armoredKey: recipientPublicKey,
+      });
+
+      const data = (
+        await openpgp.encrypt({
+          message,
+          encryptionKeys: [recipientPupKey, senderPupKey],
+          signingKeys: singingPriKey, // optional
+        })
+      ).toString();
+      return data;
+    } else {
+      return { error: "No recipient defined" };
+    }
+  } catch (e) {
+    console.error("Error on signing", e);
+    return { error: String(e) };
+  }
 }

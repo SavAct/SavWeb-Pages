@@ -45,6 +45,7 @@
 </template>
 <script lang="ts">
 import ProImg from "../Components/ProImg.vue";
+import TokenSymbol from "./TokenSymbol.vue";
 import { PropType } from "vue";
 import { Entry } from "./Items";
 import { state } from "../store/globals";
@@ -52,7 +53,7 @@ import { AssetToString, Token } from "./AntelopeHelpers";
 
 export default Vue.defineComponent({
   name: "orderItem",
-  components: { ProImg },
+  components: { ProImg, TokenSymbol },
   emits: ["currentTokenPrice"],
   props: {
     entry: {
