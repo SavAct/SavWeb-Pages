@@ -124,6 +124,8 @@ export default Vue.defineComponent({
       set: (value) => (state.mainFooterRef.value = value),
     });
 
+    // TODO: Add an item upload page
+
     return {
       canBack: router.canBack,
       canForward: router.canForward,

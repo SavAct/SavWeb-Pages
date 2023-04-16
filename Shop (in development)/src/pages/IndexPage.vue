@@ -179,7 +179,6 @@ export default Vue.defineComponent({
 
     const itemRows = Vue.computed(() => {
       // TODO: Use filters
-      // TODO: Filter for currency
       return state.itemsList;
     });
 
@@ -187,7 +186,20 @@ export default Vue.defineComponent({
       router.push({ name: "item", query: { id: item.id } });
     }
 
-    // TODO: Sort option for lowest total price for users country
+    // TODO: Consider small screen size for the table
+    // TODO: Filter for currency and users country
+    // TODO: Sort option for lowest total price, file name, shipping time and date
+
+    /* TODO: Search for items.
+       Search primary for kategories.
+       Search secondary for decisive words in a contract table with this prosedure:
+       Title is split into a list of decisive words.
+       The words are sorted by character.
+       Hash of the combination of each word, but by keeping the sorted order of the words. ("c a b" will create the hash of "a b c", "a b", "a", "b" and "c") 
+       (Hash of "a b c" and "c b a" is the same)
+       The first 8 bytes of each hash are used as scope of a contract table.
+       The table holds the index of all items that are regarding to this hash.
+    */
 
     return {
       progress: state.progress,

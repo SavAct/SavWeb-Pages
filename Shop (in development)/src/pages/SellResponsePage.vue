@@ -237,6 +237,7 @@
 <script lang="ts">
 import OrderItem from "../Components/OrderItem.vue";
 import AddPgpBtn from "../Components/AddPgpBtn.vue";
+import RawDataBtn from "../Components/RawDataBtn.vue";
 import {
   SellerResponse,
   UserData,
@@ -249,7 +250,7 @@ import { state } from "../store/globals";
 import { copy } from "../Components/QuasarHelpers";
 
 export default Vue.defineComponent({
-  components: { AddPgpBtn, OrderItem },
+  components: { AddPgpBtn, OrderItem, RawDataBtn },
   name: "sellResponsePage",
   setup() {
     const _buyerResponse = Vue.ref<string>("");
@@ -261,7 +262,7 @@ export default Vue.defineComponent({
       },
     });
     const isEncrypted = Vue.ref<boolean>(false);
-    const publicKey = Vue.ref<string>("");
+    const publicKey = Vue.ref<string>(""); // TODO: Get public key of seller from blockchain
     const privateKey = Vue.ref<string>("");
     const passphrase = Vue.ref<string>("");
     const responseDecrypted = Vue.ref<string>("");
@@ -299,6 +300,7 @@ export default Vue.defineComponent({
           ) {
             if (response.token) {
               // TODO: Check all parameters like price, token, pieces
+              // TODO: Check if buyers public key is on blockchain and check if it is identical
               userData.value = response;
               findEntry(response.itemId);
               if (response.note.length > 0) {
@@ -371,9 +373,10 @@ export default Vue.defineComponent({
       return "";
     });
 
-    // TODO: Display buyer and memo on last page
-    // TODO: Open the history with the mentioned buyer as sender and seller as receiver
-    // TODO: Possibility to enter payment confirmation of customer in the first step and go to last one.
+    // TODO: Display buyer and memo on last step
+    // TODO: Display textarea to enter buyers payment confirmation on last step, change last step wait status to deliver status by setting isPaid = true
+    // TODO: Open the history page of the SavAct app with the mentioned buyer as sender and seller as receiver
+    // TODO: Possibility to enter a payment confirmation of the customer also in the first step and go automatically to the last step.
 
     const step = Vue.ref<number>(1);
     async function nextStep() {

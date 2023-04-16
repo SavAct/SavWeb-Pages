@@ -266,34 +266,6 @@ export default Vue.defineComponent({
       }
     });
 
-    //- Default for test
-    buyerName.value = "savact";
-    buyerPupPgp.value = `-----BEGIN PGP PUBLIC KEY BLOCK-----
-
-xjMEZCZ9RhYJKwYBBAHaRw8BAQdAcB2tuC5ObU0pyCNJjMgRNl+S4F86SYjO
-k5XIjMdByOPNAMKMBBAWCgA+BYJkJn1GBAsJBwgJkK1IUVsYG/RtAxUICgQW
-AAIBAhkBApsDAh4BFiEEhz+eN9BFn1BKh0c7rUhRWxgb9G0AAGXrAP4h8LIo
-/SAbRgTUEFesB7ZqLKSozXdMVWnbXRWB4sZydAEAxK+fY/mDku8mMqooSP9L
-tzqceYJmn8WiSTLHNktryQrOOARkJn1GEgorBgEEAZdVAQUBAQdANlYaK2kr
-iE04LWpOkglVZnj2CBrLAxyQtMXZMAVClhIDAQgHwngEGBYIACoFgmQmfUYJ
-kK1IUVsYG/RtApsMFiEEhz+eN9BFn1BKh0c7rUhRWxgb9G0AABnNAQCGEKp4
-VBoJy1P3hpMHdpVmLXJhHsSRiRfG5QIPLZTHBwEAybtwUrCLn7cxIR+EAUhT
-Dw7NfxeIDcCBXLhiIpRBSAE=
-=VF72
------END PGP PUBLIC KEY BLOCK-----
-`;
-
-    address.value.firstName = "Savact";
-    address.value.lastName = "Test";
-    address.value.country = "US";
-    address.value.state = "CA";
-    address.value.city = "Los Angeles";
-    address.value.postal = "90001";
-    address.value.addressL1 = "123 Main St";
-    address.value.addressL2 = "Apt 1";
-    address.value.note = "No note";
-    //-
-
     return {
       progress: state.progress,
       darkStyle: state.darkStyle,
