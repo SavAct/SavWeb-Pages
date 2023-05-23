@@ -8,8 +8,12 @@ const tokenContract = "token.savact";
 const browserLink = "https://savact.app";
 const gotoPageError = "#savactsavact";
 const affiPage = "#savact/!affiliate";
-const defaultPaySymbol = "EOS"; // Will be requested at the start automatically
-const defaultTokenSymbol = "SAVACT"; // Will be requested at the start automatically
+
+// Default parameters that will be replaced at the start automatically
+const paySymbol = Vue.ref("EOS");
+const payPrecision = Vue.ref(4);
+const conSymbol = Vue.ref("SAVACT");
+const conPrecision = Vue.ref(4);
 
 // Get browser language
 let userLang = navigator.language;
@@ -32,7 +36,7 @@ function getPathAffi(fullpath: string) {
   }
   if (start > 0) {
     const end = path.indexOf("&", start);
-    return end > 0 ? path.substring(start, end) : path.substr(start);
+    return end > 0 ? path.substring(start, end) : path.substring(start);
   }
   return "";
 }
@@ -56,15 +60,27 @@ function onIni(msg: PageIni) {
     savConnected.value = true;
   }
   if (typeof msg.fullPath == "string") {
-    coupon.value = getPathAffi(msg.fullPath);
+    let affi = getPathAffi(msg.fullPath);
+    if (affi.trim() == "be_an_affiliate") {
+      affi = "";
+      isIndex.value = false;
+    }
+    coupon.value = affi;
   }
 }
 const savWeb = new SavWeb(onIni);
+
+const isIndex = Vue.ref<boolean>(true);
 
 export const state = {
   coupon,
   lang,
   darkStyle,
+  isIndex,
+  conPrecision,
+  conSymbol,
+  paySymbol,
+  payPrecision,
   savWeb,
   savConnected,
   usedChain,
@@ -75,6 +91,4 @@ export const state = {
   browserLink,
   gotoPageError,
   affiPage,
-  defaultPaySymbol,
-  defaultTokenSymbol,
 };

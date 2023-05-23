@@ -82,7 +82,7 @@
           <q-btn
             flat
             :label="
-              createKeyConfirmed
+              createKeyConfirmed && myPriKey != ''
                 ? lang == 'de'
                   ? 'Ich habe meinen Private-Key sicher hinterlegt'
                   : 'I have stored my private key safely'

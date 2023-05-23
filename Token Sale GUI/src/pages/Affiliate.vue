@@ -14,6 +14,15 @@
             square
             external-label
             label-position="top"
+            color="deep-purple-5"
+            @click="isIndex = true"
+            icon="local_grocery_store"
+            label="Sale"
+          ></q-fab-action>
+          <q-fab-action
+            square
+            external-label
+            label-position="top"
             color="secondary"
             @click="reset"
             icon="restart_alt"
@@ -63,7 +72,7 @@
                       class="col-6 col-sm-3 col-md-2 col-lg-1"
                       v-model="hasacc"
                       val="true"
-                      :label="`${paySymbol} Account`"
+                      :label="paySymbol + ' Account'"
                     ></q-radio>
                   </div>
                 </div>
@@ -77,7 +86,7 @@
                     class="col-12 col-sm"
                     outlined
                     v-model="username"
-                    :label="`Your ${paySymbol} account name`"
+                    :label="'Your ' + paySymbol + ' account name'"
                   >
                     <template v-slot:prepend
                       ><q-icon name="account_box"></q-icon
@@ -102,7 +111,7 @@
                     class="col-12 col-sm"
                     outlined
                     v-model="userkey"
-                    :label="`Your ${paySymbol} public key`"
+                    :label="'Your ' + paySymbol + ' public key'"
                   ></q-input>
                   <q-btn
                     class="col-auto"
@@ -157,6 +166,8 @@
           </div>
         </div>
       </div>
+
+      <gen-dialog v-model="createKeyDialog"></gen-dialog>
     </div>
   </q-page>
 </template>
@@ -230,6 +241,7 @@ export default Vue.defineComponent({
     }
 
     return {
+      isIndex: state.isIndex,
       createKeyDialog,
       affiLink,
       step,
@@ -244,7 +256,7 @@ export default Vue.defineComponent({
       checkStep1,
       toClipboard,
       openURL: Quasar.openURL,
-      paySymbol: state.defaultPaySymbol,
+      paySymbol: state.paySymbol,
       optionOpen,
     };
   },

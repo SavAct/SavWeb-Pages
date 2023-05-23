@@ -34,8 +34,8 @@
             ></q-icon>
             <span class="col q-pl-sm">{{
               lang == "de"
-                ? "Benutzen Sie den Public-Key des Ledgers nicht um vollkommen ohne Account teilzunehmen. Die Account-Erstellung können Sie allerdings gleichzeitig mittels diesem Teilnahme-Formular durchführen."
-                : "Do not use the public key of a Ledger to participate completely without an EOS account. However, you can create the account at the same time using this participation form."
+                ? "Benutzen Sie den Public-Key des Ledgers nicht um ohne Account am Sale teilzunehmen! Allerdings können Sie gleichzeitig einen Account mittels diesem Teilnahme-Formular erstellen."
+                : "Do not use the public key of a Ledger to participate without an EOS account! However, you can create the account at the same time using this participation form."
             }}</span>
           </div>
         </q-card-section>
