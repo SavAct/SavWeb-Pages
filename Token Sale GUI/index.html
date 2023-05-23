@@ -2,12 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="https://savact.com/images/icon_x150.png"
-    />
-
     <!--
       WARNING! Make sure that you match all Quasar and Vue related
       tags to the same version! (Below it's "@2.12.0")
@@ -24,18 +18,6 @@
       rel="stylesheet"
       type="text/css"
     />
-    <script
-      src="https://cdn.jsdelivr.net/npm/eosjs-ecc@4.0.7/lib/eosjs-ecc.min.js"
-      integrity="sha512-jX1VorEWM2R90w3t8/vUaT7J7Cuk0mqitUuuAKNT2Ncwasz2OxrZOL/L7EXp9tV27hi6H6wJUhCi0L82vmqmNA=="
-      crossorigin="anonymous"
-    ></script>
-
-    <!-- Use https://www.srihash.org/ to generate integrity hash -->
-    <script
-      src="https://cdn.jsdelivr.net/npm/openpgp@5.9.0"
-      integrity="sha512-dIqWfDD8+4Xy2GBQMvpby54nwetwynJcrxGBITZE3u8EP5ucHQZ17qRlW48Rf6l8z/zD0xxnz1mvP4DmNCF2uA=="
-      crossorigin="anonymous"
-    ></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Small Single File</title>
@@ -51,30 +33,4 @@
 
     <script type="module" src="src/app.ts" defer></script>
   </body>
-  <style>
-    @keyframes fadeInGrow {
-      0% {
-        transform: scale(0.5);
-        opacity: 0;
-      }
-      25% {
-        transform: scale(1.1);
-        opacity: 1;
-      }
-      50% {
-        transform: scale(0.9);
-      }
-      75% {
-        transform: scale(1.1);
-      }
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-
-    .plopOnShow {
-      animation: fadeInGrow 1s ease-out;
-    }
-  </style>
 </html>
