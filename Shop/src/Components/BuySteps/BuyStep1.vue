@@ -5,7 +5,9 @@
       icon="perm_identity"
       label="Your user name"
       :caption="userName"
-      :header-class="{ 'text-red': validBuyerName === false }"
+      :header-class="{
+        'text-red': validBuyerName === false,
+      }"
       v-model="expBuyerName"
     >
       <q-card>

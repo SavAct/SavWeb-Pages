@@ -23,7 +23,8 @@ export interface VerifyIdResult {
 export interface PaymentResult {
   f: "payResult";
   id: string;
-  result: boolean;
+  result: false | PayParams;
+  data: unknown;
 }
 
 export interface GetFileResult {
@@ -78,6 +79,7 @@ export interface PayParams {
   memo?: string;
   t?: string | number; // Absolut time stamp of the deadline in seconds
   dt?: string | number; // Relative time until the deadline in seconds
+  index?: string; // Index of the RAM table entry
 }
 
 export interface Payment extends PayParams {
@@ -272,6 +274,14 @@ export class SavWeb {
               this.onIni(parentMsg);
             }
             break;
+          case "payResult":
+            const r = (parentMsg as PaymentResult).result;
+            if (r) {
+              this.requestResult[parentMsg.id] = r;
+            } else {
+              this.requestResult[parentMsg.id] = undefined;
+            }
+            break;
         }
       }
     }
@@ -329,8 +339,9 @@ export class SavWeb {
     // Wait for the result but only as long as defined by wait
     let timespan = 0;
     const interval = 100; // Check each 100 ms
+
     while (
-      timespan < maxWaitMs &&
+      (maxWaitMs === 0 || timespan < maxWaitMs) &&
       requestId in this.requestResult &&
       this.requestResult[requestId] === null
     ) {
@@ -344,6 +355,7 @@ export class SavWeb {
       this.requestResult[requestId] !== null
     ) {
       const r = this.requestResult[requestId];
+
       this.requestResult[requestId] = undefined; // Clear the item
       return r;
     }
@@ -491,21 +503,22 @@ export class SavWeb {
    * @param pay Asset as string
    * @param memo Memo as string
    * @param from Optional sender
+   * @param maxWaitMs Maximum amount of time to wait until the request should be handled. Default is here 0 for endless
    */
-  payment(
+  async payment(
     chain: string,
     to: string,
     pay: string,
     memo: string,
-    from: string | undefined = undefined
+    from: string | undefined = undefined,
+    maxWaitMs: number = 0
   ) {
-    this.requestNumber++;
-    console.log("Send via chain", chain);
-    window.parent.postMessage(
+    // Send request
+    const result = (await this.request(
       {
         SavWeb: {
           f: "pay",
-          id: this.requestNumber,
+          id: String(this.requestNumber),
           idToken: this.idToken,
           chain,
           to,
@@ -514,7 +527,18 @@ export class SavWeb {
           memo,
         },
       },
-      "*"
-    );
+      maxWaitMs
+    )) as string[] | FullRpcError | undefined | PaymentResult;
+
+    console.log("result on page", result);
+
+    if (typeof result == "object") {
+      if ("error" in result) {
+        return undefined;
+      }
+      return result;
+    }
+
+    return undefined;
   }
 }

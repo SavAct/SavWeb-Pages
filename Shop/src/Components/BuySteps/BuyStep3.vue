@@ -49,12 +49,13 @@
           <span>
             {{ new Date(maxPayTime * 1000).toLocaleString() }}
           </span>
-          <div>
+          <div v-if="restTime">
             {{ formatDuration(restTime) }}
           </div>
         </div>
         <q-btn
           v-if="!maxPayTime || restTime > 10 * 60"
+          v-show="!transLinkValid"
           class="full-width"
           color="blue"
           label="Send Payment"
@@ -62,12 +63,13 @@
         ></q-btn>
         <div v-else>
           The sellers condition until this payment should have been succeeded is
-          {{ restTime > 0 ? "over!" : "almost over!" }}<br />
+          {{ restTime > 0 ? "almost over!" : "over!" }}<br />
           If you have not sent the payment yet, you may initiate a new request
           for the item and reach out to the seller once again.
         </div>
       </div>
       <q-input
+        v-if="sellerConfirms"
         class="q-mt-md"
         label="Transaction link"
         v-model="transLink"
@@ -91,7 +93,13 @@ import { SellerResponse, decrypt, generateRandomString } from "../Generator";
 export default Vue.defineComponent({
   name: "buyStep3",
   components: { AddPgpBtn, OrderItem },
-  emits: ["update:privateKey", "update:passphrase", "update:completed"],
+  emits: [
+    "update:privateKey",
+    "update:passphrase",
+    "update:completed",
+    "update:response",
+    "update:link",
+  ],
   props: {
     entry: {
       type: Object as PropType<Entry>,
@@ -138,6 +146,16 @@ export default Vue.defineComponent({
       requier: false,
       default: "",
     },
+    response: {
+      type: String,
+      requier: false,
+      default: "",
+    },
+    link: {
+      type: String,
+      requier: false,
+      default: "",
+    },
   },
   setup(props, context) {
     const publicKey = Vue.ref<string>("");
@@ -161,7 +179,7 @@ export default Vue.defineComponent({
     });
 
     const sellerConfirms = Vue.ref<boolean>(false);
-    const _sellerResponse = Vue.ref<string>("");
+    const _sellerResponse = Vue.ref<string>(props.response);
     const sellerResponse = Vue.computed({
       get() {
         return _sellerResponse.value;
@@ -234,26 +252,61 @@ export default Vue.defineComponent({
     async function sendPayment() {
       await updateTokenPrice();
       const assetStr = `${totalAsset.value} ${props.token.contract}`;
-      state.savWeb.payment(
+      waitForTrans.value = true;
+      const result = await state.savWeb.payment(
         props.token.chain,
         props.entry.seller,
         assetStr,
-        response.value?.memo ? response.value.memo : generateRandomString(8)
+        response.value?.memo ? response.value.memo : generateRandomString(8) // TODO: all further messages should contain the same memo
       );
-      waitForTrans.value = true;
-      // TODO: Receive transaction result and set transLink
+
+      if (result) {
+        let link = "";
+        if ("to" in result && "chain" in result) {
+          let from = "from" in result ? result.from : props.buyer;
+          if ("index" in result) {
+            link = `https://savact.app/#/_trx_/action?user=${from}&to=${result.to}&id=${result.index}&chain=${result.chain}`;
+          } else {
+            link = `https://savact.app/#/_trx_/history?user=${result.to}&to=${from}&chain=${result.chain}`;
+          }
+        }
+        transLink.value = link;
+      } else {
+        Quasar.Notify.create({
+          position: "top",
+          type: "negative",
+          message: "Cannot find a transaction",
+        });
+        transLink.value = "";
+      }
+
+      waitForTrans.value = false;
     }
 
-    const transLink = Vue.ref<string>("");
+    const transLink = Vue.ref<string>(props.link);
     const waitForTrans = Vue.ref<boolean>(false);
     const transLinkValid = Vue.computed(() => {
       if (
         transLink.value.length > 0 &&
         transLink.value.toLocaleLowerCase().includes("savact.app")
       ) {
-        context.emit("update:completed", true);
+        if (
+          props.response != sellerResponse.value ||
+          props.link != transLink.value ||
+          props.completed != true
+        ) {
+          context.emit("update:response", sellerResponse.value);
+          context.emit("update:link", transLink.value);
+          context.emit("update:completed", true);
+          Quasar.Notify.create({
+            position: "top",
+            message: "Continue, to inform the seller.",
+          });
+        }
         return true;
       }
+      context.emit("update:response", "");
+      context.emit("update:link", "");
       context.emit("update:completed", false);
       return false;
     });
@@ -283,6 +336,10 @@ export default Vue.defineComponent({
       } else {
         restTime.value = 0;
       }
+    }
+
+    if (_sellerResponse.value.length > 0) {
+      checkResponse(_sellerResponse.value);
     }
 
     return {

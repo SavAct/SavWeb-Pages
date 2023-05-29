@@ -6,6 +6,7 @@
       animated
       active-color="blue"
       style="background-color: var(--q-color-page)"
+      v-if="step < 5"
     >
       <q-step
         :name="1"
@@ -14,7 +15,7 @@
         :title="$q.screen.gt.xs ? 'User' : ''"
         active-icon="account_circle"
       >
-        <buy-step-1
+        <buy-step1
           v-model:buyer-data="buyerData"
           v-model:json-data="jsonData"
           v-model:encrypt="doEncryption"
@@ -28,7 +29,7 @@
           @encrypted="step = 2"
           v-model:buyer-pri-pgp="buyerPriPgp"
           v-model:buyer-passphrase="buyerPassphrase"
-        ></buy-step-1>
+        ></buy-step1>
       </q-step>
 
       <q-step
@@ -56,13 +57,15 @@
         <buy-step3
           :entry="entry"
           :token="token"
-          v-bind:completed="setp3Completed"
           :price="usdPrice"
           :pieces="pieces"
           :seller="seller"
           :buyer="buyerName"
           :private-key="buyerPriPgp"
           :passphrase="buyerPassphrase"
+          v-model:completed="setp3Completed"
+          v-model:response="sellerResponse"
+          v-model:link="transLink"
         ></buy-step3>
       </q-step>
 
@@ -76,21 +79,6 @@
         Send the seller the link and token price of your transaction and store
         it for yourself.<br />
         [Encrypt]<br />
-      </q-step>
-
-      <q-step :name="5" title="Finish" active-icon="local_shipping">
-        Wait for the delivery.<br /><br />
-
-        <div>Finalize the payment, if you receive the item.</div>
-        <div>
-          Burn the payment shortly before the time limit ends, if you do not got
-          the item.
-        </div>
-
-        [Timer]<br />
-        [Open your payment] [Sellers antwort]<br />
-        [Checkbox]<br />
-        [Send payment]
       </q-step>
 
       <template v-slot:navigation>
@@ -123,6 +111,32 @@
         </q-stepper-navigation>
       </template>
     </q-stepper>
+    <div v-else class="q-ma-md">
+      <q-icon name="local_shipping" color="blue"></q-icon>
+      <div>
+        Wait for the delivery.<br /><br />
+
+        <div>Finalize the payment, if you receive the item.</div>
+        <div>
+          Burn the payment shortly before the time limit ends, if you do not got
+          the item.
+        </div>
+
+        [Timer]<br />
+        [Open your payment] [Sellers antwort]<br />
+        [Checkbox]<br />
+        [Send payment]<br />
+        [Store this data to look over it on a later time]
+      </div>
+
+      <q-btn
+        outline
+        color="deep-orange"
+        @click="backStep"
+        label="Back"
+        icon="arrow_back_ios"
+      />
+    </div>
   </q-page>
 </template>
 <script lang="ts">
@@ -255,16 +269,36 @@ export default Vue.defineComponent({
     const buyerPassphrase = Vue.ref<string>("");
     const setp3Completed = Vue.ref<boolean>(false);
 
+    const sellerResponse = Vue.ref<string>("");
+    const transLink = Vue.ref<string>("");
+
     const forwardNaviLabel = Vue.computed(() => {
       switch (step.value) {
         case 2:
           return "Got a response";
-        case 3:
+        case 4:
           return "Finish";
         default:
           return "Continue";
       }
     });
+
+    // Dev mode
+    if (false) {
+      address.value = {
+        firstName: "Sav",
+        middleNames: "",
+        lastName: "Act",
+        country: "Moon",
+        state: "Front side",
+        city: "Crater",
+        postal: "12345",
+        addressL1: "Sun street 12",
+        addressL2: "",
+        note: "With onions please",
+      };
+      buyerName.value = "savact";
+    }
 
     return {
       progress: state.progress,
@@ -289,6 +323,8 @@ export default Vue.defineComponent({
       usdPrice,
       contact,
       forwardNaviLabel,
+      sellerResponse,
+      transLink,
     };
   },
 });
