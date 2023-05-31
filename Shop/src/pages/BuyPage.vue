@@ -17,18 +17,16 @@
       >
         <buy-step1
           v-model:buyer-data="buyerData"
-          v-model:json-data="jsonData"
+          v-model:json-data="requestJson"
           v-model:encrypt="doEncryption"
           v-model:address="address"
           v-model:buyer-name="buyerName"
-          v-model:buyer-pup-pgp="buyerPupPgp"
+          v-model:buyer-keys="buyerKeys"
           :id="entry?.id"
           :seller="seller"
           :pieces="pieces"
           :token="token"
           @encrypted="step = 2"
-          v-model:buyer-pri-pgp="buyerPriPgp"
-          v-model:buyer-passphrase="buyerPassphrase"
         ></buy-step1>
       </q-step>
 
@@ -39,12 +37,13 @@
         :title="$q.screen.gt.xs ? 'Contact' : ''"
         active-icon="mark_email_read"
       >
-        <buy-step2
+        <buy-step-24-send-data
+          title="Make a request by sending the seller your encrypted data"
           :encrypted="buyerData"
-          :raw="jsonData"
+          :raw="requestJson"
           :seller="seller"
           v-model:contact="contact"
-        ></buy-step2>
+        ></buy-step-24-send-data>
       </q-step>
 
       <q-step
@@ -61,11 +60,12 @@
           :pieces="pieces"
           :seller="seller"
           :buyer="buyerName"
-          :private-key="buyerPriPgp"
-          :passphrase="buyerPassphrase"
+          :buyer-keys="buyerKeys"
           v-model:completed="setp3Completed"
           v-model:response="sellerResponse"
-          v-model:link="transLink"
+          v-model:link="trxLink"
+          v-model:inform-data="informData"
+          v-model:json-data="informJson"
         ></buy-step3>
       </q-step>
 
@@ -76,9 +76,13 @@
         :title="$q.screen.gt.xs ? 'Inform' : ''"
         active-icon="mark_email_read"
       >
-        Send the seller the link and token price of your transaction and store
-        it for yourself.<br />
-        [Encrypt]<br />
+        <buy-step-24-send-data
+          title="Better inform the seller about your payment by sending him this encrypted data"
+          :encrypted="informData"
+          :raw="informJson"
+          :seller="seller"
+          v-model:contact="contact"
+        ></buy-step-24-send-data>
       </q-step>
 
       <template v-slot:navigation>
@@ -111,24 +115,16 @@
         </q-stepper-navigation>
       </template>
     </q-stepper>
-    <div v-else class="q-ma-md">
-      <q-icon name="local_shipping" color="blue"></q-icon>
-      <div>
-        Wait for the delivery.<br /><br />
-
-        <div>Finalize the payment, if you receive the item.</div>
-        <div>
-          Burn the payment shortly before the time limit ends, if you do not got
-          the item.
-        </div>
-
-        [Timer]<br />
-        [Open your payment] [Sellers antwort]<br />
-        [Checkbox]<br />
-        [Send payment]<br />
-        [Store this data to look over it on a later time]
-      </div>
-
+    <div v-else class="q-ma-lg">
+      <finished
+        class="q-mb-lg"
+        :entry="entry"
+        :token="token"
+        :price="usdPrice"
+        :pieces="pieces"
+        :seller="seller"
+        :inform-json="informJson"
+      ></finished>
       <q-btn
         outline
         color="deep-orange"
@@ -147,9 +143,10 @@ import TokenSymbol from "../Components/TokenSymbol.vue";
 import RawDataBtn from "../Components/RawDataBtn.vue";
 import AddressInput from "../Components/AddressInput.vue";
 import BuyStep1 from "../Components/BuySteps/BuyStep1.vue";
-import BuyStep2 from "../Components/BuySteps/BuyStep2.vue";
+import BuyStep24SendData from "../Components/BuySteps/BuyStep24SendData.vue";
 import BuyStep3 from "../Components/BuySteps/BuyStep3.vue";
-import { Entry, Seller } from "../Components/Items";
+import Finished from "../Components/BuySteps/Finished.vue";
+import { Entry, PGP_Keys, Seller } from "../Components/Items";
 import { state } from "../store/globals";
 import { route } from "../router/simpleRouter";
 import { Token } from "../Components/AntelopeHelpers";
@@ -164,8 +161,9 @@ export default Vue.defineComponent({
     AddressInput,
     RawDataBtn,
     BuyStep1,
-    BuyStep2,
+    BuyStep24SendData,
     BuyStep3,
+    Finished,
   },
   name: "buyPage",
   setup() {
@@ -249,8 +247,10 @@ export default Vue.defineComponent({
     const buyerName = Vue.ref<string>("");
 
     const buyerData = Vue.ref<string>("");
+    const informData = Vue.ref<string>("");
 
-    const jsonData = Vue.ref<string>("");
+    const requestJson = Vue.ref<string>("");
+    const informJson = Vue.ref<string>("");
     const address = Vue.ref<Address>({
       firstName: "",
       middleNames: "",
@@ -264,27 +264,29 @@ export default Vue.defineComponent({
       note: "",
     });
 
-    const buyerPupPgp = Vue.ref<string>("");
-    const buyerPriPgp = Vue.ref<string>("");
-    const buyerPassphrase = Vue.ref<string>("");
+    const buyerKeys = Vue.ref<PGP_Keys>({
+      pub: "",
+      pri: "",
+      passphrase: "",
+    });
     const setp3Completed = Vue.ref<boolean>(false);
 
     const sellerResponse = Vue.ref<string>("");
-    const transLink = Vue.ref<string>("");
+    const trxLink = Vue.ref<string>("");
 
     const forwardNaviLabel = Vue.computed(() => {
       switch (step.value) {
         case 2:
           return "Got a response";
         case 4:
-          return "Finish";
+          return "Informing is done";
         default:
           return "Continue";
       }
     });
 
     // Dev mode
-    if (false) {
+    if (true) {
       address.value = {
         firstName: "Sav",
         middleNames: "",
@@ -298,6 +300,47 @@ export default Vue.defineComponent({
         note: "With onions please",
       };
       buyerName.value = "savact";
+
+      buyerKeys.value.pri = `-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+xVgEZHceshYJKwYBBAHaRw8BAQdAATe7K3EKTISl+ydnlYPRBt9/6umNrgHB
+0IVX0MdF/b8AAQCGTxcG2PzIOf4VttpjY56QYNDNfcB7Im0GdnV5myGJEA9i
+zQDCjAQQFgoAPgWCZHcesgQLCQcICZD0y5TvjrHEvwMVCAoEFgACAQIZAQKb
+AwIeARYhBOTkwymjLFxmWn2QKPTLlO+OscS/AACsgQD+MGYZgrTFb16/c9Cj
+08miHKAQu94gsN6ygCnYyXeenxYBAOalhOYVLkVSZaliCMLoUhcU026jdUD6
+nx0HYM6bOp0Gx10EZHceshIKKwYBBAGXVQEFAQEHQMXwAuKpAPalRmHi3uS+
+DIPuzN/nn4HuYDHE3bvKVLFUAwEIBwAA/3JjTLYhYmGpweNp2jjamtBDvvu0
+CuThqiZroEf6/rTYE+vCeAQYFggAKgWCZHcesgmQ9MuU746xxL8CmwwWIQTk
+5MMpoyxcZlp9kCj0y5TvjrHEvwAAtdIBAMQcsynLyHx4gNvKIbVE7/6dezuH
++Tii1Ro3cc+WYk9oAP9X3aTvv1GsDDvxBs1fp74WsEtJKL1wXKjuS6Avdvcv
+Cg==
+=Z/vq
+-----END PGP PRIVATE KEY BLOCK-----
+`;
+
+      buyerKeys.value.pub = `-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+xjMEZHceshYJKwYBBAHaRw8BAQdAATe7K3EKTISl+ydnlYPRBt9/6umNrgHB
+0IVX0MdF/b/NAMKMBBAWCgA+BYJkdx6yBAsJBwgJkPTLlO+OscS/AxUICgQW
+AAIBAhkBApsDAh4BFiEE5OTDKaMsXGZafZAo9MuU746xxL8AAKyBAP4wZhmC
+tMVvXr9z0KPTyaIcoBC73iCw3rKAKdjJd56fFgEA5qWE5hUuRVJlqWIIwuhS
+FxTTbqN1QPqfHQdgzps6nQbOOARkdx6yEgorBgEEAZdVAQUBAQdAxfAC4qkA
+9qVGYeLe5L4Mg+7M3+efge5gMcTdu8pUsVQDAQgHwngEGBYIACoFgmR3HrIJ
+kPTLlO+OscS/ApsMFiEE5OTDKaMsXGZafZAo9MuU746xxL8AALXSAQDEHLMp
+y8h8eIDbyiG1RO/+nXs7h/k4otUaN3HPlmJPaAD/V92k779RrAw78QbNX6e+
+FrBLSSi9cFyo7kugL3b3Lwo=
+=XIte
+-----END PGP PUBLIC KEY BLOCK-----
+`;
+
+      contact.value = {
+        label: "Telegram",
+        value: "t.me/test3",
+      };
+
+      sellerResponse.value = `{ "confirm": true,"buyer": "savact", "time": 1686111323}`;
+      trxLink.value =
+        "https://savact.app/#/_trx_/history?user=yearofthesav&to=savact&chain=eos";
     }
 
     return {
@@ -312,19 +355,19 @@ export default Vue.defineComponent({
       buyerName,
       token,
       buyerData,
+      informData,
       doEncryption,
-      buyerPupPgp,
+      buyerKeys,
       seller,
-      jsonData,
+      requestJson,
+      informJson,
       address,
       setp3Completed,
-      buyerPriPgp,
-      buyerPassphrase,
       usdPrice,
       contact,
       forwardNaviLabel,
       sellerResponse,
-      transLink,
+      trxLink,
     };
   },
 });

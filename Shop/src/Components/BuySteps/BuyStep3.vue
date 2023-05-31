@@ -19,9 +19,7 @@
       <add-pgp-btn
         v-if="isEncrypted"
         class="q-px-sm q-mt-sm"
-        @pub-pgp="(v) => (publicKey = v)"
-        v-model:pri-pgp="privateKey"
-        v-model:passphrase="passphrase"
+        v-model="buyerKeys"
         color="blue"
         dense
         label="Your PGP key"
@@ -85,10 +83,15 @@ import AddPgpBtn from "../AddPgpBtn.vue";
 import OrderItem from "../OrderItem.vue";
 import { PropType } from "vue";
 import { state } from "../../store/globals";
-import { AssetToString, Token } from "../AntelopeHelpers";
-import { Entry, Seller } from "../Items";
+import { AssetToString, InformSellerData, Token } from "../AntelopeHelpers";
+import { Entry, PGP_Keys, Seller } from "../Items";
 import { formatDuration } from "../ConverTime";
-import { SellerResponse, decrypt, generateRandomString } from "../Generator";
+import {
+  SellerResponse,
+  decrypt,
+  encrypt,
+  generateRandomString,
+} from "../Generator";
 
 export default Vue.defineComponent({
   name: "buyStep3",
@@ -99,6 +102,8 @@ export default Vue.defineComponent({
     "update:completed",
     "update:response",
     "update:link",
+    "update:jsonData",
+    "update:informData",
   ],
   props: {
     entry: {
@@ -136,16 +141,6 @@ export default Vue.defineComponent({
       requier: true,
       default: "",
     },
-    privateKey: {
-      type: String,
-      requier: false,
-      default: "",
-    },
-    passphrase: {
-      type: String,
-      requier: false,
-      default: "",
-    },
     response: {
       type: String,
       requier: false,
@@ -156,28 +151,23 @@ export default Vue.defineComponent({
       requier: false,
       default: "",
     },
+    informData: {
+      type: String,
+      requier: true,
+      default: "",
+    },
+    jsonData: {
+      type: String,
+      requier: true,
+      default: "",
+    },
+    buyerKeys: {
+      type: Object as PropType<PGP_Keys>,
+      requier: true,
+      default: "",
+    },
   },
   setup(props, context) {
-    const publicKey = Vue.ref<string>("");
-
-    const privateKey = Vue.computed({
-      get() {
-        return props.privateKey;
-      },
-      set(v) {
-        context.emit("update:privateKey", v);
-      },
-    });
-
-    const passphrase = Vue.computed({
-      get() {
-        return props.passphrase;
-      },
-      set(v) {
-        context.emit("update:passphrase", v);
-      },
-    });
-
     const sellerConfirms = Vue.ref<boolean>(false);
     const _sellerResponse = Vue.ref<string>(props.response);
     const sellerResponse = Vue.computed({
@@ -198,8 +188,8 @@ export default Vue.defineComponent({
       if (text.startsWith("-----BEGIN PGP MESSAGE-----")) {
         text = await decrypt(
           text,
-          privateKey.value,
-          passphrase.value,
+          props.buyerKeys.pri,
+          props.buyerKeys.passphrase,
           props.seller.pgp
         );
       } else if (!text.startsWith("{")) {
@@ -249,6 +239,10 @@ export default Vue.defineComponent({
       });
     });
 
+    const memo = Vue.ref<string>(
+      response.value?.memo ? response.value.memo : generateRandomString(8)
+    ); // TODO: all further messages should contain the same memo
+
     async function sendPayment() {
       await updateTokenPrice();
       const assetStr = `${totalAsset.value} ${props.token.contract}`;
@@ -257,7 +251,7 @@ export default Vue.defineComponent({
         props.token.chain,
         props.entry.seller,
         assetStr,
-        response.value?.memo ? response.value.memo : generateRandomString(8) // TODO: all further messages should contain the same memo
+        memo.value
       );
 
       if (result) {
@@ -297,11 +291,8 @@ export default Vue.defineComponent({
         ) {
           context.emit("update:response", sellerResponse.value);
           context.emit("update:link", transLink.value);
-          context.emit("update:completed", true);
-          Quasar.Notify.create({
-            position: "top",
-            message: "Continue, to inform the seller.",
-          });
+
+          delayedCreatAndEncrypt();
         }
         return true;
       }
@@ -311,11 +302,62 @@ export default Vue.defineComponent({
       return false;
     });
 
-    Vue.watch([isEncrypted, privateKey, passphrase], () => {
-      if (isEncrypted.value && privateKey.value.length > 0) {
+    Vue.watch([isEncrypted, props.buyerKeys], () => {
+      if (isEncrypted.value && props.buyerKeys.pri.length > 0) {
         checkResponse(sellerResponse.value);
       }
     });
+
+    let createAndEncryptId = 0;
+    function delayedCreatAndEncrypt() {
+      createAndEncryptId++;
+      const encryptId = createAndEncryptId;
+      setTimeout(() => {
+        if (encryptId == createAndEncryptId) {
+          createAndEncrypt();
+        }
+      }, 1000);
+    }
+
+    async function createAndEncrypt() {
+      const json = createInformJson();
+      context.emit("update:jsonData", json);
+      let fail = true;
+      if (props.seller && typeof props.seller.pgp == "string") {
+        // Ecrypt
+        const data = await encrypt(
+          json,
+          props.seller.pgp,
+          props.buyerKeys.pub,
+          props.buyerKeys.pri,
+          props.buyerKeys.passphrase
+        );
+        if (typeof data == "string") {
+          context.emit("update:informData", data);
+          fail = false;
+        } else if (data !== false) {
+          context.emit("update:informData", "");
+          fail = true;
+          Quasar.Notify.create({
+            position: "top",
+            type: "negative",
+            message: "Encryption failed",
+            caption: "error" in data ? data.error : undefined,
+          });
+        }
+      } else {
+        context.emit("update:informData", json);
+        fail = false;
+      }
+      context.emit("update:completed", !fail);
+      if (!fail) {
+        Quasar.Notify.create({
+          position: "top",
+          type: "positive",
+          message: "Looks fine. Now continue to inform the seller.",
+        });
+      }
+    }
 
     async function updateTokenPrice() {
       currentTokenPrice.value = BigInt(Math.round(props.price)); // TODO: Calculate the real current token price
@@ -338,6 +380,26 @@ export default Vue.defineComponent({
       }
     }
 
+    function createInformJson() {
+      try {
+        if (props.token === undefined) throw new Error("No token");
+        if (props.seller === undefined) throw new Error("No seller");
+        if (props.buyer === undefined) throw new Error("No buyer");
+        if (memo.value === undefined) throw new Error("No memo");
+        const jsonData: InformSellerData = {
+          buyer: props.buyer,
+          seller: props.seller.account,
+          token: props.token,
+          memo: memo.value,
+        };
+
+        return JSON.stringify(jsonData);
+      } catch (e) {
+        console.log("Error on stringify", e);
+        return "";
+      }
+    }
+
     if (_sellerResponse.value.length > 0) {
       checkResponse(_sellerResponse.value);
     }
@@ -350,12 +412,9 @@ export default Vue.defineComponent({
       waitForTrans,
       transLinkValid,
       sendPayment,
-      publicKey,
-      privateKey,
       isEncrypted,
       responseDecrypted,
       decrypt,
-      passphrase,
       updateTokenPrice,
       totalAsset,
       maxPayTime,

@@ -36,9 +36,7 @@
             <add-pgp-btn
               v-if="isEncrypted"
               class="q-px-sm q-mt-sm"
-              @pub-pgp="(v) => (publicKey = v)"
-              v-model:pri-pgp="privateKey"
-              v-model:passphrase="passphrase"
+              v-model="keys"
               color="blue"
               dense
               label="Your PGP key"
@@ -245,7 +243,7 @@ import {
   encrypt,
   generateRandomString,
 } from "../Components/Generator";
-import { Entry } from "../Components/Items";
+import { Entry, PGP_Keys } from "../Components/Items";
 import { state } from "../store/globals";
 import { copy } from "../Components/QuasarHelpers";
 
@@ -262,9 +260,7 @@ export default Vue.defineComponent({
       },
     });
     const isEncrypted = Vue.ref<boolean>(false);
-    const publicKey = Vue.ref<string>(""); // TODO: Get public key of seller from blockchain
-    const privateKey = Vue.ref<string>("");
-    const passphrase = Vue.ref<string>("");
+    const keys = Vue.ref<PGP_Keys>({ passphrase: "", pri: "", pub: "" }); // TODO: Get the public key of the seller from blockchain
     const responseDecrypted = Vue.ref<string>("");
     const currentTokenPrice = Vue.ref<bigint>(BigInt(0));
     const price = Vue.ref<number>(0); // TODO: Calculate current price, get price in payment token and compare
@@ -275,11 +271,11 @@ export default Vue.defineComponent({
       if (buyerResponse.value.startsWith("-----BEGIN PGP MESSAGE-----")) {
         isEncrypted.value = true;
 
-        if (privateKey.value.length > 0) {
+        if (keys.value.pri.length > 0) {
           responseDecrypted.value = await decrypt(
             buyerResponse.value,
-            privateKey.value,
-            passphrase.value,
+            keys.value.pri,
+            keys.value.passphrase,
             ""
           );
         }
@@ -362,9 +358,9 @@ export default Vue.defineComponent({
         const encryped = encrypt(
           rawAnswer.value,
           buyerPubKey.value,
-          publicKey.value,
-          privateKey.value,
-          passphrase.value
+          keys.value.pub,
+          keys.value.pri,
+          keys.value.passphrase
         );
         if (typeof encryped === "string") {
           return encryped;
@@ -427,9 +423,7 @@ export default Vue.defineComponent({
     return {
       buyerResponse,
       isEncrypted,
-      publicKey,
-      privateKey,
-      passphrase,
+      keys,
       requestId,
       responseDecrypted,
       currentTokenPrice,

@@ -133,6 +133,14 @@ export interface SetLocation {
   hash?: string;
 }
 
+export interface OpenHistory {
+  f: "openHistory";
+  idToken: string;
+  user?: string;
+  to?: string;
+  chain?: string;
+}
+
 export type Query = { [k: string]: string | null | Array<string | null> };
 
 export interface PageAction {
@@ -143,7 +151,8 @@ export interface PageAction {
     | Transaction
     | GetFile
     | EosioChainApi
-    | SetLocation;
+    | SetLocation
+    | OpenHistory;
 }
 
 interface PageAction_idNull {
@@ -475,6 +484,27 @@ export class SavWeb {
           f: "go",
           to: link,
           target,
+        },
+      },
+      "*"
+    );
+  }
+
+  /**
+   * Open the history of the SavAct app
+   * @param chain
+   * @param user
+   * @param to
+   */
+  openHistory(chain?: string, user?: string, to?: string) {
+    window.parent.postMessage(
+      {
+        SavWeb: {
+          f: "openHistory",
+          chain,
+          user,
+          to,
+          idToken: this.idToken,
         },
       },
       "*"

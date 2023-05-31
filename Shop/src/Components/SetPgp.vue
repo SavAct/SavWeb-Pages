@@ -8,12 +8,10 @@
         class="q-px-sm"
         rounded
         :disable="!validModel"
-        @pub-pgp="(v) => (pgpKey = v)"
         color="blue"
         dense
         create-new
-        v-model:pri-pgp="uPriPgp"
-        v-model:passphrase="uPassphrase"
+        v-model="keys"
       ></add-pgp-btn>
     </div>
     <q-input
@@ -21,12 +19,12 @@
       type="textarea"
       outlined
       label="Public PGP Key"
-      v-model="pgpKey"
+      v-model="publicKey"
     ></q-input>
     <q-btn
       class="q-mt-sm q-px-md"
       :disable="
-        !(validModel && modelValue !== undefined && modelValue.length > 0)
+        !(validModel && modelValue !== undefined && modelValue.pub.length > 0)
       "
       :label="(editPGP ? 'Update' : 'Store') + ' PGP key on chain'"
       @click="setPgpOnChain"
@@ -37,35 +35,32 @@
   </div>
 </template>
 <script lang="ts">
+import { PropType } from "vue";
 import AddPgpBtn from "./AddPgpBtn.vue";
+import { PGP_Keys } from "./Items";
 
 export default Vue.defineComponent({
   name: "tokenSymbol",
   components: { AddPgpBtn },
-  emits: ["update:model-value", "update:pri-pgp", "update:passphrase"],
+  emits: ["update:model-value"],
   props: {
     modelValue: {
-      type: String,
+      type: Object as PropType<PGP_Keys>,
       requier: true,
+      default: {
+        pub: "",
+        pri: "",
+        passphrase: "",
+      },
     },
     account: {
       type: String,
       requier: false,
       default: "",
     },
-    priPgp: {
-      type: String,
-      requier: false,
-      default: "",
-    },
-    passphrase: {
-      type: String,
-      requier: false,
-      default: "",
-    },
   },
   setup(props, context) {
-    const pgpKey = Vue.computed({
+    const keys = Vue.computed({
       get: () => props.modelValue,
       set: (v) => context.emit("update:model-value", v),
     });
@@ -82,28 +77,26 @@ export default Vue.defineComponent({
       // TODO: Set PGP key for this user on chain
     }
 
-    const uPriPgp = Vue.computed({
-      get: () => props.priPgp,
+    const publicKey = Vue.computed({
+      get: () => props.modelValue.pub,
       set: (v: string) => {
-        context.emit("update:pri-pgp", v);
-      },
-    });
-
-    const uPassphrase = Vue.computed({
-      get: () => props.passphrase,
-      set: (v: string) => {
-        context.emit("update:passphrase", v);
+        if (publicKey.value.trim() != props.modelValue.pub.trim()) {
+          context.emit("update:model-value", {
+            pri: "",
+            passphrase: "",
+            pub: v,
+          });
+        }
       },
     });
 
     return {
-      pgpKey,
+      keys,
       hasPGP,
       editPGP,
       setPgpOnChain,
       validModel,
-      uPriPgp,
-      uPassphrase,
+      publicKey,
     };
   },
 });

@@ -22,3 +22,9 @@ export interface Seller {
   pgp: string;
   contact: Array<string>;
 }
+
+export interface PGP_Keys {
+  pub: string;
+  pri: string;
+  passphrase: string;
+}

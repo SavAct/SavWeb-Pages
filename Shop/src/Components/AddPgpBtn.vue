@@ -108,38 +108,46 @@
   </q-dialog>
 </template>
 <script lang="ts">
+import { PropType } from "vue";
 import { copy } from "./QuasarHelpers";
+import { PGP_Keys } from "./Items";
 
 export default Vue.defineComponent({
   name: "addPgpBtn",
-  emits: ["pub-pgp", "update:pri-pgp", "update:passphrase"],
+  emits: ["update:model-value"],
   props: {
     createNew: {
       type: Boolean,
       requier: false,
       defaut: false,
     },
-    priPgp: {
-      type: String,
-      requier: false,
-      defaut: "",
-    },
-    passphrase: {
-      type: String,
-      requier: false,
-      defaut: "",
+    modelValue: {
+      type: Object as PropType<PGP_Keys>,
+      requier: true,
+      default: {
+        pub: "",
+        pri: "",
+        passphrase: "",
+      },
     },
   },
   setup(props, context) {
     const show = Vue.ref<boolean>(false);
     const checkSafe = Vue.ref<boolean>(false);
+
     const passphrase = Vue.ref<string>(
-      props.passphrase !== undefined ? props.passphrase : ""
+      props.modelValue.passphrase !== undefined
+        ? props.modelValue.passphrase
+        : ""
     );
     const passphraseCheck = Vue.ref<string>(
-      props.passphrase !== undefined ? props.passphrase : ""
+      props.modelValue.passphrase !== undefined
+        ? props.modelValue.passphrase
+        : ""
     );
-    const privatePGP = Vue.ref<string>(props.priPgp ? props.priPgp : "");
+    const privatePGP = Vue.ref<string>(
+      props.modelValue.pri ? props.modelValue.pri : ""
+    );
     const publicPGP = Vue.ref<string>("");
 
     Vue.watch(passphrase, () => {
@@ -170,7 +178,11 @@ export default Vue.defineComponent({
         })
         .catch((err) => {
           console.log("Error on key generation", err);
-          context.emit("update:pri-pgp", "");
+          context.emit("update:model-value", {
+            pub: "",
+            pri: "",
+            passphrase: "",
+          });
           Quasar.Notify.create({
             type: "negative",
             message: "Cannot generate PGP key",
@@ -195,9 +207,11 @@ export default Vue.defineComponent({
 
         if (key.isPrivate()) {
           publicPGP.value = key.toPublic().armor();
-          context.emit("pub-pgp", publicPGP.value);
-          context.emit("update:passphrase", passphrase.value);
-          context.emit("update:pri-pgp", privatePGP.value);
+          context.emit("update:model-value", {
+            pub: publicPGP.value,
+            pri: privatePGP.value,
+            passphrase: passphrase.value,
+          });
           show.value = false;
           return;
         }

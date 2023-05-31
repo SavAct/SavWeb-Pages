@@ -2,10 +2,10 @@
   <q-card>
     <q-card-section>
       <div class="row justify-between">
-        <div class="col-auto text-h6 q-pb-md">
-          Send the seller your encrypted data
+        <div class="col-12 col-sm-10 text-h6 q-pb-md">
+          {{ title }}
         </div>
-        <div class="col-grow q-pb-md row justify-end">
+        <div class="col-12 col-sm-2 q-pb-md row justify-end items-end">
           <div class="col-auto">
             <raw-data-btn
               icon="raw_off"
@@ -81,12 +81,17 @@ import { state } from "../../store/globals";
 import { SavWeb } from "../SavWeb";
 
 export default Vue.defineComponent({
-  name: "buyStep2",
+  name: "buyStep24SendData",
   emits: ["update:contact"],
   components: {
     RawDataBtn,
   },
   props: {
+    title: {
+      type: String,
+      requier: true,
+      default: "",
+    },
     raw: {
       type: String,
       requier: true,

@@ -26,12 +26,7 @@
     >
       <q-card>
         <q-card-section>
-          <set-pgp
-            v-model="pubBuyer"
-            :account="userName"
-            v-model:pri-pgp="bPriPgp"
-            v-model:passphrase="bPassphrase"
-          ></set-pgp>
+          <set-pgp v-model="bKeys" :account="userName"></set-pgp>
         </q-card-section>
       </q-card>
     </q-expansion-item>
@@ -59,7 +54,7 @@ import AddressInput from "../AddressInput.vue";
 import { PropType } from "vue";
 import { Token } from "../AntelopeHelpers";
 
-import { Seller } from "../Items";
+import { PGP_Keys, Seller } from "../Items";
 import { Address, UserData, encrypt } from "../Generator";
 
 export default Vue.defineComponent({
@@ -70,9 +65,7 @@ export default Vue.defineComponent({
     "update:buyerData",
     "update:jsonData",
     "update:buyerName",
-    "update:buyerPupPgp",
-    "update:buyerPriPgp",
-    "update:buyerPassphrase",
+    "update:buyerKeys",
     "update:address",
     "encrypted",
   ],
@@ -82,19 +75,9 @@ export default Vue.defineComponent({
       requier: true,
       default: "",
     },
-    buyerPupPgp: {
-      type: String,
+    buyerKeys: {
+      type: Object as PropType<PGP_Keys>,
       requier: true,
-      default: "",
-    },
-    buyerPriPgp: {
-      type: String,
-      requier: false,
-      default: "",
-    },
-    buyerPassphrase: {
-      type: String,
-      requier: false,
       default: "",
     },
     address: {
@@ -155,12 +138,12 @@ export default Vue.defineComponent({
       },
     });
 
-    const pubBuyer = Vue.computed({
+    const bKeys = Vue.computed({
       get() {
-        return props.buyerPupPgp;
+        return props.buyerKeys;
       },
-      set(value: string) {
-        context.emit("update:buyerPupPgp", value);
+      set(value: PGP_Keys) {
+        context.emit("update:buyerKeys", value);
       },
     });
 
@@ -216,8 +199,8 @@ export default Vue.defineComponent({
         expBuyerName.value = true;
         return "No valid buyer name entered";
       } else if (
-        props.buyerPupPgp === undefined ||
-        props.buyerPupPgp.length == 0
+        props.buyerKeys.pub === undefined ||
+        props.buyerKeys.pub.length == 0
       ) {
         validBuyerPgp.value = false;
         expBuyerPgp.value = true;
@@ -262,7 +245,7 @@ export default Vue.defineComponent({
         userData.token = props.token;
         userData.seller = props.seller.account;
         userData.sigDate = Date.now();
-        userData.pubPgp = props.buyerPupPgp;
+        userData.pubPgp = props.buyerKeys.pub;
 
         return JSON.stringify(userData);
       } catch (e) {
@@ -288,9 +271,9 @@ export default Vue.defineComponent({
         const data = await encrypt(
           json,
           props.seller.pgp,
-          props.buyerPupPgp,
-          bPriPgp.value,
-          bPassphrase.value
+          props.buyerKeys.pub,
+          props.buyerKeys.pri,
+          props.buyerKeys.passphrase
         );
         if (typeof data == "string") {
           context.emit("update:buyerData", data);
@@ -310,20 +293,6 @@ export default Vue.defineComponent({
       return false;
     }
 
-    const bPriPgp = Vue.computed({
-      get: () => props.buyerPriPgp,
-      set: (v: string) => {
-        context.emit("update:buyerPriPgp", v);
-      },
-    });
-
-    const bPassphrase = Vue.computed({
-      get: () => props.buyerPassphrase,
-      set: (v: string) => {
-        context.emit("update:buyerPassphrase", v);
-      },
-    });
-
     return {
       expBuyerName,
       expBuyerPgp,
@@ -332,10 +301,8 @@ export default Vue.defineComponent({
       validBuyerPgp,
       validAddress,
       userName,
-      pubBuyer,
+      bKeys,
       addr,
-      bPriPgp,
-      bPassphrase,
     };
   },
 });
