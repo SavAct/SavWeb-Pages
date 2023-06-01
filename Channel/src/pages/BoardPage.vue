@@ -8,6 +8,7 @@
         :key="index"
         v-model:checked="checked[index]"
         class="q-mb-sm"
+        thread
       ></post>
     </div>
   </q-page>
@@ -25,7 +26,13 @@ export default Vue.defineComponent({
   setup() {
     const loading = Vue.ref<boolean>(false);
 
-    const checked = Vue.ref<Array<boolean>>([false, false, false]);
+    const checked = Vue.ref<Array<boolean>>([
+      false,
+      false,
+      false,
+      false,
+      false,
+    ]);
     const threads = Vue.ref<Array<PostData>>([
       {
         imgsrc: "https://cdn.quasar.dev/img/parallax1.jpg",
@@ -47,7 +54,26 @@ export default Vue.defineComponent({
         replies: 0,
         rImages: 0,
       },
-
+      {
+        imgsrc: "",
+        subject: "No image for me",
+        text: "Too poor to afford an image",
+        date: Date.now(),
+        account: "savact",
+        id: "3",
+        replies: 100,
+        rImages: 0,
+      },
+      {
+        imgsrc: "",
+        subject: "",
+        text: "Too poor fo an image and subject",
+        date: Date.now(),
+        account: "savact",
+        id: "3",
+        replies: 100,
+        rImages: 0,
+      },
       {
         imgsrc:
           "https://images.pexels.com/photos/17016970/pexels-photo-17016970/free-photo-of-natur-blumen-sommer-gras.jpeg?auto=compress&cs=tinysrgb&w=400&lazy=load",

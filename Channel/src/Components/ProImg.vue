@@ -1,5 +1,10 @@
 <template>
-  <q-img :src="protSrc" @load="getFileData" ref="imageRef"></q-img>
+  <q-img
+    :src="protSrc"
+    @load="getFileData"
+    ref="imageRef"
+    @click="fopen = !fopen"
+  ></q-img>
 </template>
 <script lang="ts">
 import { GetUrlFile } from "../store/dlFiles";
@@ -15,11 +20,23 @@ export default Vue.defineComponent({
       type: Number,
       requier: false,
     },
+    open: {
+      type: Boolean,
+      requier: false,
+      default: false,
+    },
   },
-  emits: ["size", "type", "natural-width", "natural-height"],
+  emits: ["size", "type", "natural-width", "natural-height", "update:open"],
   setup(props, context) {
     const protSrc = Vue.ref<string>("");
     const imageRef = Vue.ref(null);
+    const fopen = Vue.computed({
+      get: () => {
+        return props.open;
+      },
+      set: (v) => context.emit("update:open", v),
+    });
+
     Vue.onMounted(async () => {
       if (props.src.length > 0) {
         const f = await GetUrlFile(props.src, props.fileSize);
@@ -50,6 +67,7 @@ export default Vue.defineComponent({
       protSrc,
       getFileData,
       imageRef,
+      fopen,
     };
   },
 });
