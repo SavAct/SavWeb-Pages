@@ -50,7 +50,7 @@
                 external-label
                 label-position="bottom"
                 color="orange"
-                @click="ledgerDialog = true"
+                @click="ledDialog = true"
                 icon="usb"
                 label="Ledger"
               ></q-fab-action>
@@ -661,7 +661,7 @@
     </div>
     <token-check></token-check>
     <gen-dialog v-model="createKeyDialog"></gen-dialog>
-    <ledger-dialog v-model="ledgerDialog"></ledger-dialog>
+    <ledger-dialog v-model="ledDialog"></ledger-dialog>
   </q-page>
 </template>
 <script lang="ts">
@@ -706,7 +706,7 @@ export default Vue.defineComponent({
   setup() {
     const coupon = state.coupon;
 
-    const ledgerDialog = Vue.ref(false);
+    const ledDialog = Vue.ref(false);
     const createKeyDialog = Vue.ref(false);
 
     const optionOpen = Vue.ref(false);
@@ -1188,8 +1188,7 @@ export default Vue.defineComponent({
     return {
       isIndex: state.isIndex,
       createKeyDialog,
-      ledgerDialog,
-      affiPage: state.affiPage,
+      ledDialog,
       checkSaleState,
       optionOpen,
       progress1,

@@ -71,7 +71,6 @@ export default Vue.defineComponent({
 
     return {
       lang: state.lang,
-
       open,
     };
   },

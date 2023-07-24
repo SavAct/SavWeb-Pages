@@ -7,7 +7,7 @@ const usedExchangeContract = "directsavact";
 const tokenContract = "token.savact";
 const browserLink = "https://savact.app";
 const gotoPageError = "#savactsavact";
-const affiPage = "#savact/!affiliate";
+const startAffiPageKey = "be_an_affiliate"  // [url]?affi=be_an_affiliate to go to affiliate page initially
 
 // Default parameters that will be replaced at the start automatically
 const paySymbol = Vue.ref("EOS");
@@ -61,7 +61,7 @@ function onIni(msg: PageIni) {
   }
   if (typeof msg.fullPath == "string") {
     let affi = getPathAffi(msg.fullPath);
-    if (affi.trim() == "be_an_affiliate") {
+    if (affi.trim() == startAffiPageKey) {
       affi = "";
       isIndex.value = false;
     }
@@ -90,5 +90,4 @@ export const state = {
   tokenContract,
   browserLink,
   gotoPageError,
-  affiPage,
 };
