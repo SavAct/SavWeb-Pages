@@ -2,7 +2,8 @@
   <q-card>
     <q-card-section>
       <q-input
-        :type="sellerResponse.length > 0 ? 'text' : 'textarea'"
+        type="textarea"
+        :rows="sellerResponse.length > 1? 1 : 5"
         v-model="sellerResponse"
         outlined
         label="Sellers response"

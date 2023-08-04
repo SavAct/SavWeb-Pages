@@ -226,6 +226,7 @@
             color="blue"
             :label="step === 4 ? 'I have responded' : 'Next'"
             icon-right="arrow_forward_ios"
+            :loading="nextLoading"
           />
         </q-stepper-navigation>
       </template>
@@ -266,17 +267,19 @@ export default Vue.defineComponent({
     const price = Vue.ref<number>(0); // TODO: Calculate current price, get price in payment token and compare
     const sellersNote = Vue.ref<string>("");
     const userData = Vue.ref<UserData>();
+    const nextLoading = Vue.ref<boolean>(false);
 
     async function evaluateInput() {
       if (buyerResponse.value.startsWith("-----BEGIN PGP MESSAGE-----")) {
         isEncrypted.value = true;
 
         if (keys.value.pri.length > 0) {
+          console.log(keys.value.pri);
           responseDecrypted.value = await decrypt(
             buyerResponse.value,
             keys.value.pri,
             keys.value.passphrase,
-            ""
+            ''
           );
         }
       } else if (buyerResponse.value.startsWith("{")) {
@@ -298,6 +301,7 @@ export default Vue.defineComponent({
               // TODO: Check all parameters like price, token, pieces
               // TODO: Check if buyers public key is on blockchain and check if it is identical
               userData.value = response;
+              buyerPubKey.value = response.pubPgp;
               findEntry(response.itemId);
               if (response.note.length > 0) {
                 note.value = response.note;
@@ -306,6 +310,7 @@ export default Vue.defineComponent({
               step.value = 2;
               return;
             }
+           
             // TODO: Other responses
           } else {
             console.log("Invalid response");
@@ -353,9 +358,12 @@ export default Vue.defineComponent({
         return "";
       }
     });
-    const encryptedAnswer = Vue.computed(() => {
+
+    
+    const encryptedAnswer = Vue.ref<string>('');
+    async function encryptAnswer(){
       if (accept.value !== null && userData.value) {
-        const encryped = encrypt(
+        const encryped = await encrypt(
           rawAnswer.value,
           buyerPubKey.value,
           keys.value.pub,
@@ -363,11 +371,53 @@ export default Vue.defineComponent({
           keys.value.passphrase
         );
         if (typeof encryped === "string") {
-          return encryped;
+          encryptedAnswer.value = encryped;
+          return
         }
       }
-      return "";
-    });
+      encryptedAnswer.value = "";
+    }
+
+
+    // dev mode
+    if(true){
+      keys.value.pub = `-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+xjMEZMwzBBYJKwYBBAHaRw8BAQdA/+/C8lm299s9AZ8YOya+FbbuPFpV3JHr
+V2mbEoQoPz7NAMKMBBAWCgA+BYJkzDMEBAsJBwgJkBQ0wwB7GCsCAxUICgQW
+AAIBAhkBApsDAh4BFiEENlDVzQ1pptmiGBU+FDTDAHsYKwIAACWqAP9Pu+PK
+b0cP6U4hdfFpg/ajAt6XThcFZPw5+E616apN6wEAjWi4Amd/HPBERnzFaLKb
+aBkaGlhPJZf4RN8w7uBZ+QvOOARkzDMEEgorBgEEAZdVAQUBAQdANBbouTlY
+uHJUZYhe0El8D+caQ5iXJREvTcpCk15+30cDAQgHwngEGBYIACoFgmTMMwQJ
+kBQ0wwB7GCsCApsMFiEENlDVzQ1pptmiGBU+FDTDAHsYKwIAAGLkAP9CBgwY
+U2WliTCVyjBUwZH4Dq+7ldEvYdw+UdHL0jw24AD/dfh8vv6YurfvqPRNwJnz
+WkrmPMQ2vCNN/vfNRi447wg=
+=Vfmh
+-----END PGP PUBLIC KEY BLOCK-----
+
+`,
+      keys.value.pri = `-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+xYYEZMwzBBYJKwYBBAHaRw8BAQdA/+/C8lm299s9AZ8YOya+FbbuPFpV3JHr
+V2mbEoQoPz7+CQMIV/9D7bpVhl3gFklYCb60b2FRBlg1G2DC8BPM3JfWI/2f
+DjcmEHQFqv8oPpWcGMIPupj37NJO5qu67QzXZ4OBLBAsObi9wr8NsHnX6Ho3
+3c0AwowEEBYKAD4FgmTMMwQECwkHCAmQFDTDAHsYKwIDFQgKBBYAAgECGQEC
+mwMCHgEWIQQ2UNXNDWmm2aIYFT4UNMMAexgrAgAAJaoA/0+748pvRw/pTiF1
+8WmD9qMC3pdOFwVk/Dn4TrXpqk3rAQCNaLgCZ38c8ERGfMVosptoGRoaWE8l
+l/hE3zDu4Fn5C8eLBGTMMwQSCisGAQQBl1UBBQEBB0A0Fui5OVi4clRliF7Q
+SXwP5xpDmJclES9NykKTXn7fRwMBCAf+CQMIjxocGQKmzZPg+ENih7UkHjeM
+qwKsl/Vdcg4xb/vDRZ1kgSoF6vSfRyPkRnlw1pjnXIsVce/7+2/XDhPNDMuk
+Q+d/+zrW5JwhjfmSch4MisJ4BBgWCAAqBYJkzDMECZAUNMMAexgrAgKbDBYh
+BDZQ1c0NaabZohgVPhQ0wwB7GCsCAABi5AD/QgYMGFNlpYkwlcowVMGR+A6v
+u5XRL2HcPlHRy9I8NuAA/3X4fL7+mLq376j0TcCZ81pK5jzENrwjTf73zUYu
+OO8I
+=pGPL
+-----END PGP PRIVATE KEY BLOCK-----
+`;
+        keys.value.passphrase = 'abc';
+    }
+
+
 
     // TODO: Display buyer and memo on last step
     // TODO: Display textarea to enter buyers payment confirmation on last step, change last step wait status to deliver status by setting isPaid = true
@@ -377,7 +427,16 @@ export default Vue.defineComponent({
     const step = Vue.ref<number>(1);
     async function nextStep() {
       if (step.value == 1) {
-        evaluateInput();
+        nextLoading.value = true;
+        await evaluateInput();
+        nextLoading.value = false;
+        return;
+      }
+      if(step.value == 3){
+        nextLoading.value = true;
+        await encryptAnswer();
+        nextLoading.value = false;
+        step.value++
         return;
       }
       if (step.value < 5) step.value++;
@@ -451,6 +510,7 @@ export default Vue.defineComponent({
       updateContentHeight,
       thumbStyle: state.thumbStyle,
       barStyle: state.barStyle,
+      nextLoading,
     };
   },
 });

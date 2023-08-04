@@ -49,7 +49,7 @@ export async function decrypt(
   verifyPublicKey: string
 ): Promise<string> {
   try {
-    const message = await openpgp.createMessage({ text });
+    const message = await openpgp.readMessage({ armoredMessage: text }); // openpgp.createMessage({ text }); 
     const veryPublicKey =
       verifyPublicKey.length > 0
         ? await openpgp.readKey({

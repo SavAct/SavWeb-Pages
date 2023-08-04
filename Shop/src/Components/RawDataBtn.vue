@@ -4,7 +4,7 @@
     <q-dialog v-model="show">
       <q-card class="bg-teal text-white" style="width: 400px">
         <q-card-section class="row justify-between">
-          <div class="text-h6 text-bold col-auto">Public key of seller</div>
+          <div class="text-h6 text-bold col-auto">Public key of message recipient</div>
           <div class="col-grow row justify-end">
             <q-btn
               round
@@ -14,7 +14,7 @@
               @click="
                 copy(
                   pubRecipient,
-                  'Copy public PGP key of the seller to clipboard'
+                  'Copy public PGP key of the message recipient to clipboard'
                 )
               "
               icon="content_copy"

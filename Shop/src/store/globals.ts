@@ -167,7 +167,7 @@ const sellerList: { [key: string]: Seller } = {
     available: true,
     toDate: 1679150279,
     contact: ["test2@test2.com", "t.me/test2"],
-    pgp: "PGP KEY-------test2--------PGP END",
+    pgp: `PGP KEY---------------PGP END`,
   },
   yearofthesav: {
     account: "yearofthesav",
@@ -180,18 +180,19 @@ const sellerList: { [key: string]: Seller } = {
     ],
     pgp: `-----BEGIN PGP PUBLIC KEY BLOCK-----
 
-xjMEZCLVyxYJKwYBBAHaRw8BAQdA/0EykbX9Pn7AteNUSKgZZEYA4R5HBbvz
-+OQFC/DcI8HNAMKMBBAWCgA+BYJkItXLBAsJBwgJkAN/uZJn3/7RAxUICgQW
-AAIBAhkBApsDAh4BFiEEvgFLzCbE2q8FqySfA3+5kmff/tEAAGv3AP9WhnfS
-buP9pAItsUBYWP1v+Fo98yL26eimHG4zvrHoPAD8CpjrI9drE4dCqKEp0bCo
-gq+CI9UNwM/680rq/LdEigDOOARkItXLEgorBgEEAZdVAQUBAQdAcs7c7FdD
-699aOYZ1FUPbkcnz/QfYnRpMhOWFF8rrOD8DAQgHwngEGBYIACoFgmQi1csJ
-kAN/uZJn3/7RApsMFiEEvgFLzCbE2q8FqySfA3+5kmff/tEAAE0PAP9U4z26
-1/A66AayqVRsPsxUh8ysZMm5UHaX9zngSSZ6lwD+KbKl/4TBB+/qPk8P1y70
-L7mDr4xuUpUNEUMbYc1O9A4=
-=a2sb
+xjMEZMwzBBYJKwYBBAHaRw8BAQdA/+/C8lm299s9AZ8YOya+FbbuPFpV3JHr
+V2mbEoQoPz7NAMKMBBAWCgA+BYJkzDMEBAsJBwgJkBQ0wwB7GCsCAxUICgQW
+AAIBAhkBApsDAh4BFiEENlDVzQ1pptmiGBU+FDTDAHsYKwIAACWqAP9Pu+PK
+b0cP6U4hdfFpg/ajAt6XThcFZPw5+E616apN6wEAjWi4Amd/HPBERnzFaLKb
+aBkaGlhPJZf4RN8w7uBZ+QvOOARkzDMEEgorBgEEAZdVAQUBAQdANBbouTlY
+uHJUZYhe0El8D+caQ5iXJREvTcpCk15+30cDAQgHwngEGBYIACoFgmTMMwQJ
+kBQ0wwB7GCsCApsMFiEENlDVzQ1pptmiGBU+FDTDAHsYKwIAAGLkAP9CBgwY
+U2WliTCVyjBUwZH4Dq+7ldEvYdw+UdHL0jw24AD/dfh8vv6YurfvqPRNwJnz
+WkrmPMQ2vCNN/vfNRi447wg=
+=Vfmh
 -----END PGP PUBLIC KEY BLOCK-----
-        `,
+
+`,
   },
 };
 
