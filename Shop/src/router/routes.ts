@@ -5,6 +5,7 @@ import item from "../pages/ItemPage.vue";
 import user from "../pages/UserPage.vue";
 import buy from "../pages/BuyPage.vue";
 import sellResponse from "../pages/SellResponsePage.vue";
+import uploadPage from "../pages/UploadPage.vue";
 
 /**
  * Here you can add more pages
@@ -45,5 +46,10 @@ export const routes: Array<{
     component: sellResponse,
     title: "Response to a customer",
     color: "cyan-12",
+  },
+  {
+    name: "upload",
+    component: uploadPage,
+    title: "Upload new item",
   },
 ];

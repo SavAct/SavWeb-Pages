@@ -171,6 +171,7 @@ import {
 } from "../Components/AntelopeHelpers";
 import { getCurrentTokenPrice } from "../Components/ConvertPrices";
 import { route, router } from "../router/simpleRouter";
+import { getRegion } from "../Components/ConvertRegion";
 
 export default Vue.defineComponent({
   components: { Gallery, TokenSymbol, UserLink },
@@ -182,23 +183,10 @@ export default Vue.defineComponent({
       route.query && "id" in route.query && typeof route.query.id == "number"
         ? route.query.id
         : -1;
-    const regionName = new Intl.DisplayNames(["en"], { type: "region" });
+    
 
     const entry = Vue.ref<Entry>();
     entry.value = state.itemsList.find((item) => item.id == id);
-
-    function getRegion(code: string) {
-      const c = regionName.of(code);
-      if (c !== undefined) {
-        return c;
-      } else {
-        switch (code) {
-          case "ww":
-            return "World Wide";
-        }
-      }
-      return undefined;
-    }
 
     const imgs = Vue.computed(() => entry.value?.imgs);
     const seller = entry.value

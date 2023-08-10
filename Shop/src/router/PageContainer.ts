@@ -1,7 +1,7 @@
 import { route, router } from "./simpleRouter";
 import { Component } from "@vue/runtime-dom";
 import { routes } from "./routes";
-import { Token } from "../Components/AntelopeHelpers";
+// import { Token } from "../Components/AntelopeHelpers";
 
 let components: { [key: string]: Component } = {};
 for (const r of routes) {
@@ -33,16 +33,20 @@ export default Vue.defineComponent({
     if (router.currentRoute() === undefined) {
       // Initial page
       router.push({
-        name: "buy",
-        query: {
-          id: 0,
-          token: {
-            chain: "eos",
-            contract: "eosio.token",
-            symbol: { name: "EOS", precision: 4 },
-          } as Token,
-        },
+
+      //   name: "buy",
+      //   query: {
+      //     id: 0,
+      //     token: {
+      //       chain: "eos",
+      //       contract: "eosio.token",
+      //       symbol: { name: "EOS", precision: 4 },
+      //     } as Token,
+      //   },
+
+        name: "upload"
       });
+    
     }
     return { name };
   },
