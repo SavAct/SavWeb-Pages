@@ -4,17 +4,13 @@ This is a GUI for a token sale on Antelope blockchains. The parameters for the d
 
 For any changes, you need to setup this environment as described below.
 
-# Transpiled file
+## Transpiled file
 
 In the `dist` folder is the transpiled file which can be uploaded to the blockchain.
 
-# Setup
+## Setup for code editing
 
-1. Clone this repository
-
-```bash
-git clone <repository link>
-```
+1. Install [Node](https://nodejs.org).
 
 2. Use [Visual Studio Code](https://code.visualstudio.com/download) to open the file `Token-Sale-GUI.code-workspace`.
 
@@ -28,19 +24,25 @@ Install dependencies
 yarn install
 ```
 
-Developing mode for instant code change update
-
-```bash
-yarn dev
-```
-
-Transpile the code to a single html file
+Transpile the code to a single html file: `dist/index.html`
 
 ```bash
 yarn build
 ```
 
+Developing mode for instant code change update **without** SavAct browser specific functionality
+
+```bash
+yarn dev
+```
+
 Transpile the code to a single html file and show it in the SavAct browser
+
+```bash
+yarn preview
+```
+
+Developing mode for instant code change **with** update SavAct browser specific functionality
 
 ```bash
 yarn show
@@ -51,7 +53,7 @@ yarn show
 Add other icon libraries in the header of index.html.
 See here for more information: https://quasar.dev/start/umd
 
-# Access immortal dApps and websites
+## Access immortal dApps and websites
 
 You can open the application with the SavAct browser, see [https://savact.app/#/\_browser\_](https://savact.app/#/_browser_)
 
