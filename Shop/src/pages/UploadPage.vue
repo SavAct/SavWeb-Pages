@@ -22,7 +22,68 @@
             type="textarea"
             outlined
           ></q-input>
-          TODO: images
+          <q-input
+            class="q-mt-md"
+            v-model="imageSrc"
+            label="Image source"
+            outlined
+          >
+            <template v-slot:prepend>
+              <q-icon name="image"></q-icon>
+            </template>
+            <template v-slot:append>
+              <q-btn
+                v-if="imageSrc !== ''"
+                @click="imageSrc = ''"
+                round
+                icon="clear"
+              />
+            </template>
+            <template v-slot:after>
+              <q-btn
+                :disable="imageSrc === ''"
+                icon="send"
+                @click="addImage"
+                :color="imageSrc !== '' ? 'green' : 'grey'"
+              ></q-btn>
+            </template>
+          </q-input>
+          <div
+            v-for="(img, index) in imgSrcs"
+            :key="img.id"
+            class="row justify-between q-mt-md"
+          >
+            <div class="col-grow q-pr-md">
+              <pro-img
+                :src="img.src"
+                style="max-height: 200px"
+                fit="contain"
+                class="bg-black"
+              />
+            </div>
+            <div class="column q-gutter-sm">
+              <q-btn
+                class="col-grow"
+                icon="clear"
+                color="red"
+                @click="imgSrcs.splice(index, 1)"
+              ></q-btn>
+              <q-btn
+                :disable="index === 0"
+                class="col-auto"
+                color="grey"
+                icon="keyboard_arrow_up"
+                @click="moveStringOneFieldBefore(index)"
+              ></q-btn>
+              <q-btn
+                :disable="index === imgSrcs.length - 1"
+                class="col-auto"
+                color="grey"
+                icon="keyboard_arrow_down"
+                @click="moveStringOneFieldAfter(index)"
+              ></q-btn>
+            </div>
+          </div>
         </q-card-section>
       </q-card>
       <q-card class="q-mt-md">
@@ -171,6 +232,7 @@
   </q-page>
 </template>
 <script lang="ts">
+import ProImg from "../Components/ProImg.vue";
 import DurationInput from "../Components/DurationInput.vue";
 import { countryCodes, getRegion } from "../Components/ConvertRegion";
 import { state } from "../store/globals";
@@ -178,11 +240,13 @@ import { Ref } from "vue";
 
 export default Vue.defineComponent({
   name: "uploadPage",
-  components: { DurationInput },
+  components: { ProImg, DurationInput },
   setup() {
     // const item = Vue.ref<Entry>();
     const seller = Vue.ref<string>("");
     const title = Vue.ref<string>("");
+    const imageSrc = Vue.ref<string>("");
+    const imgSrcs = Vue.ref<Array<{ id: number; src: string }>>([]);
 
     const description = Vue.ref<string>("");
     const hasNote = Vue.ref<boolean>(false);
@@ -224,6 +288,28 @@ export default Vue.defineComponent({
     >([]);
     const excludeRegions = Vue.ref<Array<{ label: string; value: string }>>([]);
 
+    let imageSrcBiggestId = 3;
+    function addImage() {
+      const trimed = imageSrc.value.trim();
+      if (imgSrcs.value.find((s) => s.src === trimed)) return;
+      imgSrcs.value.push({ id: imageSrcBiggestId++, src: trimed });
+      imageSrc.value = "";
+    }
+
+    function moveStringOneFieldBefore(index: number) {
+      if (index > 0) {
+        const item = imgSrcs.value.splice(index, 1)[0];
+        imgSrcs.value.splice(index - 1, 0, item);
+      }
+    }
+
+    function moveStringOneFieldAfter(index: number) {
+      if (index < imgSrcs.value.length - 1) {
+        const item = imgSrcs.value.splice(index, 1)[0];
+        imgSrcs.value.splice(index + 2, 0, item);
+      }
+    }
+
     function send() {
       for (const exc of excludeRegions.value) {
         for (const to of toRegions.value) {
@@ -263,6 +349,11 @@ export default Vue.defineComponent({
       countries,
       toRegions,
       excludeRegions,
+      imageSrc,
+      imgSrcs,
+      addImage,
+      moveStringOneFieldBefore,
+      moveStringOneFieldAfter,
     };
   },
 });
