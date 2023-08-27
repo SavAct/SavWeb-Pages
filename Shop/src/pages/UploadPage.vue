@@ -214,7 +214,7 @@
         </q-card-section>
       </q-card>
 
-      <q-card class="q-mt-md">
+      <q-card class="q-mt-md q-mb-md">
         <q-card-section>
           <q-input v-model="seller" label="Seller account name" outlined>
             <template v-slot:after>
@@ -288,7 +288,7 @@ export default Vue.defineComponent({
     >([]);
     const excludeRegions = Vue.ref<Array<{ label: string; value: string }>>([]);
 
-    let imageSrcBiggestId = 3;
+    let imageSrcBiggestId = 0;
     function addImage() {
       const trimed = imageSrc.value.trim();
       if (imgSrcs.value.find((s) => s.src === trimed)) return;

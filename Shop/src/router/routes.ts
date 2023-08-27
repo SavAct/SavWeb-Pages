@@ -16,7 +16,7 @@ export const routes: Array<{
   title?: string;
   color?: string;
 }> = [
-  { name: "home", component: home, title: "Immortal Shop", color: "teal-12" },
+  { name: "home", component: home, title: "Immortal Shop", color: "teal-6" },
   {
     name: "item",
     component: item,
@@ -33,7 +33,7 @@ export const routes: Array<{
     name: "user",
     component: user,
     title: "Account",
-    color: "light-green-13",
+    color: "orange-13",
   },
   {
     name: "buy",
@@ -45,11 +45,12 @@ export const routes: Array<{
     name: "response",
     component: sellResponse,
     title: "Response to a customer",
-    color: "cyan-12",
+    color: "blue-12",
   },
   {
     name: "upload",
     component: uploadPage,
     title: "Upload new item",
+    color: "red-12",
   },
 ];

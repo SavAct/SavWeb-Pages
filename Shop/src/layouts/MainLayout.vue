@@ -1,7 +1,7 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
+  <q-layout view="hHh Lpr lff">
     <q-header
-      elevated
+      bordered
       :class="darkStyle ? 'bg-dark' : 'bg-indigo-10'"
       ref="mainHeader"
     >
@@ -12,7 +12,7 @@
           round
           icon="menu"
           aria-label="Menu"
-          @click="leftDrawerOpen = !leftDrawerOpen"
+          @click="menuClick"
         />
         <q-btn
           :disable="!canBack"
@@ -44,8 +44,45 @@
         ></q-btn>
       </q-toolbar>
     </q-header>
+
+    <q-drawer
+      v-model="leftDrawerOpen"
+      show-if-above
+      :mini="miniDrawer"
+      @mouseover="miniDrawer = false"
+      @mouseout="miniDrawer = true"
+      :width="200"
+      :breakpoint="500"
+      bordered
+    >
+      <q-scroll-area class="fit" :horizontal-thumb-style="{ opacity: '0' }">
+        <q-list padding>
+          <menu-route-item
+            route-name="home"
+            icon="home"
+            text="Items"
+          ></menu-route-item>
+          <menu-route-item
+            route-name="user"
+            icon="person"
+            text="Profil"
+          ></menu-route-item>
+          <menu-route-item
+            route-name="upload"
+            icon="storefront"
+            text="Sell"
+          ></menu-route-item>
+          <q-separator />
+          <menu-route-item
+            route-name="response"
+            icon="drafts"
+            text="Message"
+          ></menu-route-item>
+        </q-list>
+      </q-scroll-area>
+    </q-drawer>
     <page-container></page-container>
-    <q-footer
+    <!-- <q-footer
       elevated
       :class="darkStyle ? 'bg-dark' : 'bg-indigo-10'"
       class="text-white"
@@ -77,19 +114,22 @@
           class="col-2"
         />
       </q-tabs>
-    </q-footer>
+    </q-footer> -->
   </q-layout>
 </template>
 <script lang="ts">
+import MenuRouteItem from "../Components/MenuRouteItem.vue";
 import PageContainer from "../router/PageContainer";
 import { state } from "../store/globals";
 import { route, router } from "../router/simpleRouter";
+import { routes } from "../router/routes";
 
 export default Vue.defineComponent({
   name: "MainLayout",
-  components: { PageContainer },
+  components: { MenuRouteItem, PageContainer },
   setup() {
     const leftDrawerOpen = Vue.ref<boolean>(false);
+    const miniDrawer = Vue.ref<boolean>(true);
 
     const darkStyle = state.darkStyle;
     darkStyle.value = true;
@@ -124,19 +164,33 @@ export default Vue.defineComponent({
       set: (value) => (state.mainFooterRef.value = value),
     });
 
-    // TODO: Add an item upload page
+    function menuClick() {
+      if (leftDrawerOpen.value) {
+        if (!miniDrawer.value) {
+          miniDrawer.value = true;
+          return;
+        }
+        leftDrawerOpen.value = false;
+        miniDrawer.value = false;
+        return;
+      }
+      leftDrawerOpen.value = true;
+    }
 
     return {
       canBack: router.canBack,
       canForward: router.canForward,
       leftDrawerOpen,
+      miniDrawer,
       route,
+      routes,
       darkStyle,
       goBack,
       goForward,
       to: router.push,
       mainHeader,
       mainFooter,
+      menuClick,
     };
   },
 });
