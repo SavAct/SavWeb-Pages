@@ -1,12 +1,12 @@
-import { defineConfig } from "vite";
-import { viteSingleFile } from "vite-plugin-singlefile";
 import InlineVue from "./vite-plugin-inline-vue";
 import MinifyVue from "./vite-plugin-vue-minify";
+import express from "express";
+import { defineConfig } from "vite";
+import { viteSingleFile } from "vite-plugin-singlefile";
 import { ViteMinifyPlugin } from "vite-plugin-minify";
 import { createServer } from "http";
 import { join } from "path";
 import { spawn } from "child_process";
-import express from "express";
 
 const folder = "/savact.app";
 const file = "index.html";

@@ -242,7 +242,7 @@ export default Vue.defineComponent({
   name: "uploadPage",
   components: { ProImg, DurationInput },
   setup() {
-    // const item = Vue.ref<Entry>();
+    const $q = Quasar.useQuasar();
     const seller = Vue.ref<string>("");
     const title = Vue.ref<string>("");
     const imageSrc = Vue.ref<string>("");
@@ -311,15 +311,24 @@ export default Vue.defineComponent({
     }
 
     function send() {
+      let invalidRegion: Array<string> = [];
       for (const exc of excludeRegions.value) {
         for (const to of toRegions.value) {
           if (exc.value === to.value) {
-            // Quasar.Notify({ message: `Exclude region ${to.value} and ship to regions overlap.`, type: 'negative' })
-            return alert(
-              `${to.label} can not be a ship to regions and an excluded region at the same time.`
-            );
+            invalidRegion.push(to.label);
           }
         }
+      }
+      if (invalidRegion.length > 0) {
+        $q.notify({
+          position: "top",
+          message: `Exclude and ship to region overlap`,
+          caption: `The following regions are invalid: ${invalidRegion.join(
+            ", "
+          )}`,
+          type: "negative",
+        });
+        return;
       }
       console.log(duration.value); //-
     }

@@ -1,10 +1,5 @@
 <template>
   <q-page class="q-pa-md text-center">
-    <div class="row items-end q-mb-md">
-      <div class="col-grow"></div>
-      <q-btn class="col-auto" outline label="Upload new item" icon-right="add_business" @click="openNewItemPage"></q-btn>
-    </div>
-
     <div v-if="!savConnected" class="q-my-md">
       This page needs to be executed in the
       <a
@@ -23,7 +18,6 @@
 import UserInput from "../Components/UserInput.vue";
 import SetPgp from "../Components/SetPgp.vue";
 import { state } from "../store/globals";
-import { router } from "../router/simpleRouter";
 
 export default Vue.defineComponent({
   name: "userPage",
@@ -34,10 +28,6 @@ export default Vue.defineComponent({
     const userName = Vue.ref<string>();
     const pgpKey = Vue.ref<string>();
 
-    function openNewItemPage(){
-      router.push({ name: "upload" });
-    }
-
     // TODO: Attention icon if no pgp key is defined
 
     return {
@@ -45,7 +35,6 @@ export default Vue.defineComponent({
       darkStyle,
       savConnected,
       pgpKey,
-      openNewItemPage
     };
   },
 });

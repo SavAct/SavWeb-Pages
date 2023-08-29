@@ -3,19 +3,19 @@
     <div class="col text-center">
       <div>
         <!-- Search bar -->
-        <q-input class="q-ma-md" v-model="search" outlined dense>
+        <q-input class="q-ma-md" v-model="searchText" outlined dense>
           <template v-slot:append>
             <q-icon
-              v-if="search !== ''"
+              v-if="searchText !== ''"
               name="close"
-              @click="search = ''"
+              @click="searchText = ''"
               class="cursor-pointer"
             ></q-icon>
           </template>
           <template v-slot:after>
             <q-btn
               icon-right="search"
-              @click="search = ''"
+              @click="search"
               class="cursor-pointer bg-blue"
               color="white"
             ></q-btn>
@@ -129,7 +129,23 @@ export default Vue.defineComponent({
     ProImg,
   },
   setup() {
-    const search = Vue.ref<any>(true);
+    const searchText = Vue.ref<string>("");
+
+    async function search() {
+      const { h64ToString } = await xxhash();
+      const split = searchText.value.split(" "); // Should remove special signs?
+
+      const hashes: Array<string> = [];
+      for (const v of split) {
+        const t = v.trim();
+        if (t.length > 0) {
+          // For convenience, get hash as string of its zero-padded hex representation
+          hashes.push(h64ToString(v.toLowerCase())); // "502b0c5fc4a5704c" (Hex String) //hasher.h64(v); // 5776724552493396044n (BigInt)
+        }
+      }
+      console.log(hashes);
+      // TODO: Search for each hash in contract table
+    }
 
     const categories = Vue.ref<Array<{ name: string; value: string }>>([
       { name: "All", value: "all" },
@@ -192,19 +208,26 @@ export default Vue.defineComponent({
 
     /* TODO: Search for items.
        Search primary for kategories.
-       Search secondary for decisive words in a contract table with this prosedure:
+       -------
+       Search secondary for decisive words in a contract table with this prosedure (This pricedure is too RAM expensive, see below for alternative):
        Title is split into a list of decisive words.
        The words are sorted by character.
        Hash of the combination of each word, but by keeping the sorted order of the words. ("c a b" will create the hash of "a b c", "a b", "a", "b" and "c") 
        (Hash of "a b c" and "c b a" is the same)
        The first 8 bytes of each hash are used as scope of a contract table.
        The table holds the index of all items that are regarding to this hash.
+       -------
+       Alternative: 
+       Split title in words. 
+       Create 8 byte hash of each word with xxhash.
+       Use the hashes as primary key of an RAM table and store all item indexes in a sorted array.
+       Any access of an item of this array is done by a binary search.
     */
 
     return {
       progress: state.progress,
       darkStyle: state.darkStyle,
-      search,
+      searchText,
       category,
       categories,
       categoryOpen,
@@ -212,6 +235,7 @@ export default Vue.defineComponent({
       itemRows,
       itemColumns,
       openItem,
+      search,
     };
   },
 });

@@ -21,7 +21,8 @@
     "vite": "^4.1.0",
     "vite-plugin-minify": "^1.5.2",
     "vite-plugin-singlefile": "^0.13.3",
-    "vue": "^3.2.47"
+    "vue": "^3.2.47",
+    "xxhash-wasm": "^1.0.2"
   },
   "dependencies": {}
 }
