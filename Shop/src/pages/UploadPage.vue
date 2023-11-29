@@ -27,6 +27,7 @@
             v-model="imageSrc"
             label="Image source"
             outlined
+            @keyup.enter="addImage"
           >
             <template v-slot:prepend>
               <q-icon name="image"></q-icon>
@@ -84,6 +85,55 @@
               ></q-btn>
             </div>
           </div>
+
+          <div>
+            <q-input
+              class="q-mt-md"
+              v-model="tempOptions"
+              label="Add Option"
+              outlined
+              @keyup.enter="pushOption"
+            >
+              <template v-slot:prepend>
+                <q-icon name="style"></q-icon>
+              </template>
+              <template v-slot:append>
+                <q-btn
+                  v-if="tempOptions !== ''"
+                  @click="tempOptions = ''"
+                  round
+                  icon="clear"
+                />
+              </template>
+              <template v-slot:after>
+                <q-btn
+                  :disable="tempOptions === ''"
+                  icon="send"
+                  @click="pushOption"
+                  :color="tempOptions !== '' ? 'green' : 'grey'"
+                ></q-btn>
+              </template>
+            </q-input>
+
+            <div v-for="(opt, index) in options" :key="index">
+              <q-input
+                class="q-mt-md"
+                v-model="opt.value"
+                :maxlength="127"
+                :label="'Option ' + index + 1"
+                outlined
+              >
+                <template v-slot:after>
+                  <q-btn
+                    class="col-grow"
+                    icon="clear"
+                    color="red"
+                    @click="options.splice(index, 1)"
+                  ></q-btn>
+                </template>
+              </q-input>
+            </div>
+          </div>
         </q-card-section>
       </q-card>
       <q-card class="q-mt-md">
@@ -121,14 +171,23 @@
 
       <q-card class="q-mt-md">
         <q-card-section>
-          <duration-input
-            label="Max shipping preparation time"
-            v-model="duration"
-          ></duration-input>
+          <date-time-input
+            v-model="expired"
+            label="Expired date"
+          ></date-time-input>
           <q-checkbox
             v-model="available"
             label="Items are available from now on"
           ></q-checkbox>
+        </q-card-section>
+      </q-card>
+
+      <q-card class="q-mt-md">
+        <q-card-section>
+          <duration-input
+            label="Max shipping preparation time"
+            v-model="duration"
+          ></duration-input>
         </q-card-section>
       </q-card>
 
@@ -234,13 +293,18 @@
 <script lang="ts">
 import ProImg from "../Components/ProImg.vue";
 import DurationInput from "../Components/DurationInput.vue";
+import DateTimeInput from "../Components/DateTimeInput.vue";
 import { countryCodes, getRegion } from "../Components/ConvertRegion";
 import { state } from "../store/globals";
 import { Ref } from "vue";
+import {
+  ActionAddItem,
+  ContractToRegion,
+} from "../Components/ContractInterfaces";
 
 export default Vue.defineComponent({
   name: "uploadPage",
-  components: { ProImg, DurationInput },
+  components: { ProImg, DurationInput, DateTimeInput },
   setup() {
     const $q = Quasar.useQuasar();
     const seller = Vue.ref<string>("");
@@ -254,6 +318,16 @@ export default Vue.defineComponent({
     const price = Vue.ref<number>(1);
     // const units = Vue.ref<number>(1);
     const duration = Vue.ref<number>(3 * 24 * 3600 * 1000);
+    const expired = Vue.ref<number>(Date.now() + 90 * 24 * 3600 * 1000);
+    const options = Vue.ref<Array<Ref<string>>>([]);
+    const tempOptions = Vue.ref<string>("");
+
+    function pushOption() {
+      if (tempOptions.value.trim() === "") return;
+      options.value.push(Vue.ref<string>(tempOptions.value));
+      tempOptions.value = "";
+    }
+
     const allowedTokens = Vue.ref<Array<string>>([]);
     const availableTokens = Vue.ref<
       Array<{ label: string; symbol: string; contract: string; chain: string }>
@@ -335,23 +409,58 @@ export default Vue.defineComponent({
         .join("")
         .toLocaleLowerCase();
 
-      let shipTo: Array<{ time: number; price: number; regions: string }> = [];
+      let shipTo: Array<ContractToRegion> = [];
       toRegions.value.forEach((r) => {
-        const s = shipTo.find((s) => s.time === r.sd && s.price === r.sp);
+        const s = shipTo.find((s) => s.t === r.sd && s.p === r.sp);
         if (s === undefined) {
           shipTo.push({
-            time: r.sd,
-            price: r.sp,
-            regions: r.value.toLocaleLowerCase(),
+            t: r.sd,
+            p: r.sp,
+            rs: r.value.toLocaleLowerCase(),
           });
         } else {
-          s.regions += r.value.toLocaleLowerCase();
+          s.rs += r.value.toLocaleLowerCase();
         }
       });
+
+      const opts: Array<string> = options.value.map((o) => o.value.trim());
+      for (const opt of opts) {
+        if (opt.length === 0 || opt.length > 127) {
+          $q.notify({
+            position: "top",
+            message: `Option length`,
+            caption: `Each options must be between 1 and 127 characters long.`,
+            type: "negative",
+          });
+          return;
+        }
+      }
 
       console.log("duration", Math.floor(duration.value)); //-
       console.log("excludeCodes", excludeCodes); //-
       console.log("shipTo", shipTo); //-
+
+      // TODO: Send data to contract
+      const data: ActionAddItem = {
+        seller: seller.value,
+        title: title.value,
+        price: price.value,
+
+        note: hasNote.value ? note.value : "",
+        descr: description.value,
+        imgs: imgSrcs.value.map((i) => i.src),
+        available: available.value,
+        category: category.value,
+        fromR: fromRegion.value.value.toLocaleLowerCase(),
+        shipTo,
+        excl: excludeCodes,
+        prepT: Math.floor(duration.value / 1000),
+        expired: Math.floor(expired.value / 1000),
+        opts,
+      };
+
+      // TODO: extra parameter to edit user table for extra transactions
+      // allowedTokens: allowedTokens.value,
     }
 
     // id: number;
@@ -368,9 +477,13 @@ export default Vue.defineComponent({
       seller,
       title,
       description,
+      options,
+      tempOptions,
+      pushOption,
       price,
       // units,
       duration,
+      expired,
       send,
       availableTokens,
       allowedTokens,

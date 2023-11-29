@@ -92,6 +92,18 @@ interface Payment_idNull extends Omit<Payment, "id"> {
   id: string | null;
 }
 
+export interface Transaction {
+  f: "trx";
+  id: string;
+  chain?: string; // Chain id or chain short name
+  actor?: string;
+  contract: string;
+  action: string;
+  data: unknown;
+  permission?: string;
+  idToken: string;
+}
+
 export interface EosioChainApi {
   f: "eosioChainApi" | null;
   id: string;
@@ -103,14 +115,6 @@ export interface EosioChainApi {
 
 interface EosioChainApi_idNull extends Omit<EosioChainApi, "id"> {
   id: string | null;
-}
-
-export interface Transaction {
-  f: "trx";
-  id: string;
-  chain: string;
-  data: unknown;
-  idToken: string;
 }
 
 interface Transaction_idNull extends Omit<Transaction, "id"> {

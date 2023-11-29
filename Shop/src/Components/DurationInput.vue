@@ -42,9 +42,10 @@ export default Vue.defineComponent({
     },
   },
   setup(props, { emit }) {
+    const iniDuration = getInitialDuration(props.modelValue);
     const _duractionUnit = Vue.ref<
       "months" | "weeks" | "days" | "hours" | "minutes"
-    >(getInitialDurationUnit(props.modelValue));
+    >(iniDuration.unit);
     const durationUnit = Vue.computed({
       get: () => _duractionUnit.value,
       set: (value) => {
@@ -54,7 +55,7 @@ export default Vue.defineComponent({
       },
     });
 
-    const _durationNumber = Vue.ref<number>(3);
+    const _durationNumber = Vue.ref<number>(iniDuration.n);
     const durationNumber = Vue.computed({
       get: () => _durationNumber.value,
       set: (value) => {
@@ -64,23 +65,25 @@ export default Vue.defineComponent({
     });
 
     /**
-     * Get the initial duration unit based on the value
+     * Get the initial duration unit and number based on the value
      * @param msValue Duration in milliseconds
      */
-    function getInitialDurationUnit(msValue: number) {
+    function getInitialDuration(msValue: number): {
+      unit: "months" | "weeks" | "days" | "hours" | "minutes";
+      n: number;
+    } {
       const value = Math.floor(msValue / 60000);
       if (value % monthInMin === 0) {
-        return "months";
+        return { unit: "months", n: value / monthInMin };
       } else if (value % weekInMin === 0) {
-        return "weeks";
+        return { unit: "weeks", n: value / weekInMin };
       } else if (value % dayInMin === 0) {
-        return "days";
+        return { unit: "days", n: value / dayInMin };
       } else if (value % hourInMin === 0) {
-        return "hours";
-      } else if (value % 1 === 0) {
-        return "minutes";
+        return { unit: "hours", n: value / hourInMin };
+      } else {
+        return { unit: "minutes", n: value };
       }
-      return "days";
     }
 
     /**
