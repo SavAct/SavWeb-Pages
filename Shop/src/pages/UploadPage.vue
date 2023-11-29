@@ -88,14 +88,14 @@
       </q-card>
       <q-card class="q-mt-md">
         <q-card-section class="row justify-between">
-          <div class="col-5 col-sm-2">
+          <!-- <div class="col-5 col-sm-2">
             <q-input
               v-model="units"
               label="Units per order"
               type="number"
               outlined
             ></q-input>
-          </div>
+          </div> -->
           <div class="col-5 q-mb-sm">
             <q-input
               v-model="price"
@@ -122,7 +122,7 @@
       <q-card class="q-mt-md">
         <q-card-section>
           <duration-input
-            label="Max review duration"
+            label="Max shipping preparation time"
             v-model="duration"
           ></duration-input>
           <q-checkbox
@@ -252,7 +252,7 @@ export default Vue.defineComponent({
     const hasNote = Vue.ref<boolean>(false);
     const note = Vue.ref<string>("");
     const price = Vue.ref<number>(1);
-    const units = Vue.ref<number>(1);
+    // const units = Vue.ref<number>(1);
     const duration = Vue.ref<number>(3 * 24 * 3600 * 1000);
     const allowedTokens = Vue.ref<Array<string>>([]);
     const availableTokens = Vue.ref<
@@ -330,11 +330,37 @@ export default Vue.defineComponent({
         });
         return;
       }
-      console.log(duration.value); //-
+
+      let excludeCodes: string = excludeRegions.value
+        .join("")
+        .toLocaleLowerCase();
+
+      let shipTo: Array<{ time: number; price: number; regions: string }> = [];
+      toRegions.value.forEach((r) => {
+        const s = shipTo.find((s) => s.time === r.sd && s.price === r.sp);
+        if (s === undefined) {
+          shipTo.push({
+            time: r.sd,
+            price: r.sp,
+            regions: r.value.toLocaleLowerCase(),
+          });
+        } else {
+          s.regions += r.value.toLocaleLowerCase();
+        }
+      });
+
+      console.log("duration", Math.floor(duration.value)); //-
+      console.log("excludeCodes", excludeCodes); //-
+      console.log("shipTo", shipTo); //-
     }
+
     // id: number;
     // imgs: Array<string>;
-    // to: Array<{ region: string; sp: number; sd: number }>; // Country code, shipping price in USD and shipping duration in seconds after payment. {region: "DE", sp: 5,10, sd: 604800}, regions may be "WW", "EU", "US DE AT",
+    // to: Array<{ region: string; sp: number; sd: number }>; // Country code, shipping price in USD and shipping duration in seconds after payment. {region: "DE", sp: 5.10, sd: 604800}, regions may be "WW", "EU", "US DE AT",
+
+    // TODO: extra options that are strings
+    // TODO: allowedTokens [{symbol, contract, chain}]
+    // TODO: Get allowed tokens of a seller. Show sellers options which can be eddited on (only on changes) submit.
 
     return {
       progress: state.progress,
@@ -343,7 +369,7 @@ export default Vue.defineComponent({
       title,
       description,
       price,
-      units,
+      // units,
       duration,
       send,
       availableTokens,

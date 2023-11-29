@@ -33,20 +33,18 @@ export default Vue.defineComponent({
     if (router.currentRoute() === undefined) {
       // Initial page
       router.push({
-
-      //   name: "buy",
-      //   query: {
-      //     id: 0,
-      //     token: {
-      //       chain: "eos",
-      //       contract: "eosio.token",
-      //       symbol: { name: "EOS", precision: 4 },
-      //     } as Token,
-      //   },
-
-        name: "upload"
+        name: "home",
+        // name: "upload",
+        //   name: "buy",
+        //   query: {
+        //     id: 0,
+        //     token: {
+        //       chain: "eos",
+        //       contract: "eosio.token",
+        //       symbol: { name: "EOS", precision: 4 },
+        //     } as Token,
+        //   },
       });
-    
     }
     return { name };
   },

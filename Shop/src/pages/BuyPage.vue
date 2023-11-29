@@ -338,9 +338,9 @@ FrBLSSi9cFyo7kugL3b3Lwo=
         value: "t.me/test3",
       };
 
-      sellerResponse.value = `{ "confirm": true,"buyer": "savact", "time": 1696111323}`;
-      trxLink.value =
-        "https://savact.app/#/_trx_/history?user=yearofthesav&to=savact&chain=eos";
+      sellerResponse.value = `{ "confirm": true,"buyer": "savact", "time": 1706111323}`;
+      // trxLink.value =
+      // "https://savact.app/#/_trx_/history?user=yearofthesav&to=savact&chain=eos";
     }
 
     return {
