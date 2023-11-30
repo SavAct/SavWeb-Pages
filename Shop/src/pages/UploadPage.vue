@@ -115,12 +115,12 @@
               </template>
             </q-input>
 
-            <div v-for="(opt, index) in options" :key="index">
+            <div v-for="(opt, o_index) in options" :key="o_index">
               <q-input
                 class="q-mt-md"
                 v-model="opt.value"
                 :maxlength="127"
-                :label="'Option ' + index + 1"
+                :label="'Option ' + (o_index + 1)"
                 outlined
               >
                 <template v-slot:after>
@@ -128,7 +128,7 @@
                     class="col-grow"
                     icon="clear"
                     color="red"
-                    @click="options.splice(index, 1)"
+                    @click="options.splice(o_index, 1)"
                   ></q-btn>
                 </template>
               </q-input>
@@ -173,21 +173,12 @@
         <q-card-section>
           <date-time-input
             v-model="expired"
-            label="Expired date"
+            label="Placement expired in"
           ></date-time-input>
           <q-checkbox
             v-model="available"
             label="Items are available from now on"
           ></q-checkbox>
-        </q-card-section>
-      </q-card>
-
-      <q-card class="q-mt-md">
-        <q-card-section>
-          <duration-input
-            label="Max shipping preparation time"
-            v-model="duration"
-          ></duration-input>
         </q-card-section>
       </q-card>
 
@@ -218,6 +209,11 @@
               outlined
               label-color="red"
             />
+            <duration-input
+              class="q-mt-md"
+              label="Max shipping preparation time"
+              v-model="duration"
+            ></duration-input>
             <q-card v-for="region in toRegions" class="q-mt-sm">
               <q-card-section>
                 <div class="row justify-between">
@@ -318,7 +314,7 @@ export default Vue.defineComponent({
     const price = Vue.ref<number>(1);
     // const units = Vue.ref<number>(1);
     const duration = Vue.ref<number>(3 * 24 * 3600 * 1000);
-    const expired = Vue.ref<number>(Date.now() + 90 * 24 * 3600 * 1000);
+    const expired = Vue.ref<number>(Date.now() + 30 * 24 * 3600 * 1000);
     const options = Vue.ref<Array<Ref<string>>>([]);
     const tempOptions = Vue.ref<string>("");
 
@@ -406,6 +402,7 @@ export default Vue.defineComponent({
       }
 
       let excludeCodes: string = excludeRegions.value
+        .map((r) => r.value)
         .join("")
         .toLocaleLowerCase();
 
@@ -436,21 +433,15 @@ export default Vue.defineComponent({
         }
       }
 
-      console.log("duration", Math.floor(duration.value)); //-
-      console.log("excludeCodes", excludeCodes); //-
-      console.log("shipTo", shipTo); //-
-
-      // TODO: Send data to contract
       const data: ActionAddItem = {
-        seller: seller.value,
-        title: title.value,
+        seller: seller.value.trim(),
+        title: title.value.trim(),
         price: price.value,
-
         note: hasNote.value ? note.value : "",
         descr: description.value,
         imgs: imgSrcs.value.map((i) => i.src),
         available: available.value,
-        category: category.value,
+        category: category.value.toLocaleLowerCase().substring(0, 13),
         fromR: fromRegion.value.value.toLocaleLowerCase(),
         shipTo,
         excl: excludeCodes,
@@ -458,16 +449,25 @@ export default Vue.defineComponent({
         expired: Math.floor(expired.value / 1000),
         opts,
       };
+      console.log("Transaction additem data", data);
+
+      state.savWeb.transaction({
+        chain: state.contract.chain,
+        contract: state.contract.account,
+        action: state.contract.actions.addItem,
+        data,
+      });
 
       // TODO: extra parameter to edit user table for extra transactions
       // allowedTokens: allowedTokens.value,
+
+      // TODO: Create preview page
     }
 
     // id: number;
     // imgs: Array<string>;
     // to: Array<{ region: string; sp: number; sd: number }>; // Country code, shipping price in USD and shipping duration in seconds after payment. {region: "DE", sp: 5.10, sd: 604800}, regions may be "WW", "EU", "US DE AT",
 
-    // TODO: extra options that are strings
     // TODO: allowedTokens [{symbol, contract, chain}]
     // TODO: Get allowed tokens of a seller. Show sellers options which can be eddited on (only on changes) submit.
 

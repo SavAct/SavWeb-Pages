@@ -575,4 +575,49 @@ export class SavWeb {
 
     return undefined;
   }
+
+  /**
+   * Send a transaction request
+   * @param chain Blockchain of the payment
+   * @param to Recipient
+   * @param pay Asset as string
+   * @param memo Memo as string
+   * @param from Optional sender
+   * @param maxWaitMs Maximum amount of time to wait until the request should be handled. Default is here 0 for endless
+   */
+  async transaction(
+    trxData: {
+      chain: string;
+      contract: string;
+      action: string;
+      data: unknown;
+      actor?: string;
+      permission?: string;
+    },
+    maxWaitMs: number = 0
+  ) {
+    // Send request
+    const result = (await this.request(
+      {
+        SavWeb: {
+          f: "trx",
+          id: String(this.requestNumber),
+          idToken: this.idToken,
+          ...trxData,
+        },
+      },
+      maxWaitMs
+    )) as string[] | FullRpcError | undefined | PaymentResult;
+
+    console.log("result on page", result);
+
+    if (typeof result == "object") {
+      if ("error" in result) {
+        return undefined;
+      }
+      return result;
+    }
+
+    return undefined;
+  }
 }

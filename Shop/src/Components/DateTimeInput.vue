@@ -1,7 +1,7 @@
 <template>
   <div class="q-mb-sm row">
     <div class="col-grow">
-      Expired date in <span class="text-blue">{{ days }}</span
+      {{ label }} <span class="text-blue">{{ days }}</span
       >d <span class="text-blue">{{ String(hours).padStart(2, "0") }}</span
       >h <span class="text-blue">{{ String(minutes).padStart(2, "0") }}</span
       >m <span class="text-blue">{{ String(seconds).padStart(2, "0") }}</span
@@ -28,12 +28,15 @@
     <q-date
       v-model="expiredStr"
       mask="YYYY-MM-DDTHH:mm:ss"
-      :options="
-        (date) =>
-          date >= new Date().toISOString().substring(0, 10).replaceAll('-', '/')
-      "
+      :options="allowedDate"
     />
-    <q-time v-model="expiredStr" mask="YYYY-MM-DDTHH:mm:ss" with-seconds />
+    <q-time
+      format24h
+      v-model="expiredStr"
+      mask="YYYY-MM-DDTHH:mm:ss"
+      with-seconds
+      :options="allowedTime"
+    />
   </div>
 </template>
 <script lang="ts">
@@ -50,12 +53,36 @@ export default Vue.defineComponent({
       required: false,
       default: "",
     },
+    minDate: {
+      type: Number,
+      required: false,
+      default: Date.now() + 7 * 24 * 3600 * 1000,
+    },
+    maxDate: {
+      type: Number,
+      required: false,
+      default: new Date(Date.now() + 90 * 24 * 3600 * 1000),
+    },
   },
   setup(props, { emit }) {
     const toggleExpireDate = Vue.ref<boolean>(false);
-    const expiredStr = Vue.ref<string>(
+    const _expiredStr = Vue.ref<string>(
       new Date(props.modelValue).toISOString().substring(0, 19)
     );
+    const expiredStr = Vue.computed({
+      get: () => _expiredStr.value,
+      set: (val: string) => {
+        const exp = Math.floor(Date.parse(val + ".000Z"));
+        if (exp >= props.maxDate) {
+          val = new Date(props.maxDate).toISOString().substring(0, 19);
+        }
+        if (exp <= props.minDate) {
+          val = new Date(props.minDate).toISOString().substring(0, 19);
+        }
+        _expiredStr.value = val;
+        expiredDuration.value = expired.value - Date.now();
+      },
+    });
     const expired = Vue.computed(() => {
       const exp = Math.floor(Date.parse(expiredStr.value + ".000Z"));
       emit("update:modelValue", exp);
@@ -83,6 +110,67 @@ export default Vue.defineComponent({
       }, 1000);
     });
 
+    function allowedDate(date: string) {
+      return (
+        date >=
+          new Date(props.minDate)
+            .toISOString()
+            .substring(0, 10)
+            .replaceAll("-", "/") &&
+        date <=
+          new Date(props.maxDate)
+            .toISOString()
+            .substring(0, 10)
+            .replaceAll("-", "/")
+      );
+    }
+
+    function allowedTime(hr: number, min: number | null, sec: number | null) {
+      const minDate = new Date(props.minDate);
+      const maxDate = new Date(props.maxDate);
+      const expiredDate = new Date(expiredStr.value.substring(0, 10));
+      if (
+        new Date(maxDate.toISOString().substring(0, 10)).getTime() <
+          expiredDate.getTime() ||
+        new Date(minDate.toISOString().substring(0, 10)).getTime() >
+          expiredDate.getTime()
+      ) {
+        console.log("---out of range---");
+        return false;
+      }
+
+      if (props.minDate > expiredDate.getTime()) {
+        if (hr > minDate.getUTCHours()) {
+          return true;
+        } else if (hr === minDate.getUTCHours()) {
+          if (min === null || min > minDate.getUTCMinutes()) {
+            return true;
+          } else if (min === minDate.getUTCMinutes()) {
+            if (sec === null || sec >= minDate.getUTCSeconds()) {
+              return true;
+            }
+          }
+        }
+        return false;
+      } else if (props.maxDate - 86400000 < expiredDate.getTime()) {
+        if (hr < maxDate.getUTCHours()) {
+          return true;
+        } else if (hr === maxDate.getUTCHours()) {
+          if (min === null || min < maxDate.getUTCMinutes()) {
+            return true;
+          } else if (min === maxDate.getUTCMinutes()) {
+            if (sec === null || sec <= maxDate.getUTCSeconds()) {
+              return true;
+            }
+          }
+        }
+
+        return false;
+      }
+      console.log("---do not consider---");
+      return true;
+    }
+
     return {
       toggleExpireDate,
       expired,
@@ -92,6 +180,8 @@ export default Vue.defineComponent({
       minutes,
       seconds,
       expiredDuration,
+      allowedDate,
+      allowedTime,
     };
   },
 });

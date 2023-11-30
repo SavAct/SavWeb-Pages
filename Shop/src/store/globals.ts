@@ -1,6 +1,20 @@
 import { Entry, Seller } from "../Components/Items";
 import { PageIni, SavWeb } from "../Components/SavWeb";
 
+const contract = {
+  account: "infiniteshop",
+  chain: "eos",
+  actions: {
+    addItem: "additem",
+    removeItem: "removeitem",
+    removeExpired: "rmexpired",
+    updateItemState: "itemstate",
+    updateUser: "updateuser",
+    deleteUser: "deleteuser",
+    banUser: "ban",
+  },
+};
+
 // Dark style
 const darkStyle = Vue.computed({
   get: () => {
@@ -197,6 +211,7 @@ WkrmPMQ2vCNN/vfNRi447wg=
 };
 
 export const state = {
+  contract,
   darkStyle,
   progress,
   savWeb,
