@@ -1,6 +1,13 @@
 import { GetTableRowsResult } from "eosjs/dist/eosjs-rpc-interfaces";
 import { RpcError } from "eosjs";
 
+export interface PublicAccount {
+  name?: string;
+  chain?: string;
+  permission?: string;
+  publicKeys?: Array<string>;
+}
+
 export interface RouteLocation {
   fullPath: string;
   path: string;
@@ -40,8 +47,19 @@ export interface EosioChainApiResult {
   result: unknown;
 }
 
+export interface GetUserResult {
+  f: "getUserResult";
+  id: string;
+  user: PublicAccount | undefined; // Return undefined if there is no user logged in
+}
+
 export interface BrowserAction {
-  SavWeb: PageIni | GetFileResult | VerifyIdResult | EosioChainApiResult;
+  SavWeb:
+    | PageIni
+    | GetFileResult
+    | VerifyIdResult
+    | EosioChainApiResult
+    | GetUserResult;
 }
 
 export interface GoTo {
@@ -145,6 +163,17 @@ export interface OpenHistory {
   chain?: string;
 }
 
+export interface GetUser {
+  f: "getUser";
+  id: string;
+  idToken: string;
+  user?: PublicAccount; // Demand to connect to this user
+}
+
+interface GetUser_idNull extends Omit<GetUser, "id"> {
+  id: string | null;
+}
+
 export type Query = { [k: string]: string | null | Array<string | null> };
 
 export interface PageAction {
@@ -156,7 +185,8 @@ export interface PageAction {
     | GetFile
     | EosioChainApi
     | SetLocation
-    | OpenHistory;
+    | OpenHistory
+    | GetUser;
 }
 
 interface PageAction_idNull {
@@ -166,7 +196,8 @@ interface PageAction_idNull {
     | Payment_idNull
     | Transaction_idNull
     | GetFile_idNull
-    | EosioChainApi_idNull;
+    | EosioChainApi_idNull
+    | GetUser_idNull;
 }
 
 export interface FullRpcError extends RpcError {
@@ -272,7 +303,7 @@ export class SavWeb {
               default: // 'get_table_rows'
                 // console.log('Result in SavWeb page:', parentMsg.result);
                 const resultTable = parentMsg.result;
-                if (resultTable == undefined) {
+                if (resultTable === undefined) {
                   // Set to undefined for no result
                   this.requestResult[parentMsg.id] = undefined;
                 } else {
@@ -291,6 +322,14 @@ export class SavWeb {
             const r = (parentMsg as PaymentResult).result;
             if (r) {
               this.requestResult[parentMsg.id] = r;
+            } else {
+              this.requestResult[parentMsg.id] = undefined;
+            }
+            break;
+          case "getUserResult":
+            const u = (parentMsg as GetUserResult).user;
+            if (u) {
+              this.requestResult[parentMsg.id] = u;
             } else {
               this.requestResult[parentMsg.id] = undefined;
             }
@@ -368,7 +407,6 @@ export class SavWeb {
       this.requestResult[requestId] !== null
     ) {
       const r = this.requestResult[requestId];
-
       this.requestResult[requestId] = undefined; // Clear the item
       return r;
     }
@@ -435,7 +473,7 @@ export class SavWeb {
     if ("rows" in result) {
       const rows = result.rows;
       if (rows.length > 0) {
-        return typeof entry == "object" ? rows : rows[0];
+        return typeof entry === "object" ? rows : rows[0];
       } else {
         return null;
       }
@@ -471,7 +509,36 @@ export class SavWeb {
 
     // console.log('result on page', result);
 
-    if (typeof result == "object") {
+    if (typeof result === "object") {
+      if ("error" in result) {
+        return undefined;
+      }
+      return result;
+    }
+
+    return undefined;
+  }
+
+  async getUser(
+    user: PublicAccount | undefined = undefined,
+    maxWaitMs: number = 10000
+  ) {
+    // Send request
+    const result = (await this.request(
+      {
+        SavWeb: {
+          f: "getUser",
+          id: null, // With value null this parameter will be defined in request id
+          idToken: this.idToken,
+          user,
+        },
+      },
+      maxWaitMs
+    )) as PublicAccount | undefined;
+
+    // console.log('result on page', result);
+
+    if (typeof result === "object") {
       if ("error" in result) {
         return undefined;
       }

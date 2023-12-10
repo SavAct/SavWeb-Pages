@@ -60,6 +60,13 @@ export default Vue.defineComponent({
 
     const rules = [(val: string) => checkUserOffline(val)];
 
+    Vue.watch(
+      () => props.modelValue,
+      (val) => {
+        if (userName.value !== val) userName.value = val;
+      }
+    );
+
     async function checkName() {
       if (isLoading.value) {
         return;
