@@ -1,7 +1,9 @@
 <template>
   <div>
     <div class="text-h6 text-bold col-auto"></div>
-    <div class="col-grow row justify-end">
+    <div class="col-grow row justify-between">
+      <div class="text-secondary">{{ fingerprint }}</div>
+      <q-space />
       <add-pgp-btn
         label="Create new key"
         icon="add_circle"
@@ -47,11 +49,11 @@ export default Vue.defineComponent({
     modelValue: {
       type: Object as PropType<PGP_Keys>,
       requier: true,
-      default: {
+      default: Vue.reactive<PGP_Keys>({
         pub: "",
         pri: "",
         passphrase: "",
-      },
+      }),
     },
     account: {
       type: String,
@@ -62,7 +64,10 @@ export default Vue.defineComponent({
   setup(props, context) {
     const keys = Vue.computed({
       get: () => props.modelValue,
-      set: (v) => context.emit("update:model-value", v),
+      set: (v) => {
+        context.emit("update:model-value", v);
+        getFingerprint(v.pub);
+      },
     });
     const hasPGP = Vue.ref<boolean>(false);
     const editPGP = Vue.ref<boolean>(false);
@@ -80,14 +85,36 @@ export default Vue.defineComponent({
     const publicKey = Vue.computed({
       get: () => props.modelValue.pub,
       set: (v: string) => {
-        if (publicKey.value.trim() != props.modelValue.pub.trim()) {
+        v = v.trim();
+        if (v !== props.modelValue.pub.trim()) {
           context.emit("update:model-value", {
             pri: "",
             passphrase: "",
             pub: v,
           });
+          getFingerprint(v);
         }
       },
+    });
+
+    const fingerprint = Vue.ref<string>("");
+
+    async function getFingerprint(pub: string) {
+      if (pub.length > 0) {
+        try {
+          fingerprint.value = (
+            await openpgp.readKey({ armoredKey: pub })
+          ).getFingerprint();
+        } catch (e) {
+          fingerprint.value = "";
+        }
+      }
+    }
+
+    Vue.onMounted(() => {
+      if (validModel.value && fingerprint.value.length === 0) {
+        getFingerprint(props.modelValue.pub);
+      }
     });
 
     return {
@@ -97,6 +124,7 @@ export default Vue.defineComponent({
       setPgpOnChain,
       validModel,
       publicKey,
+      fingerprint,
     };
   },
 });

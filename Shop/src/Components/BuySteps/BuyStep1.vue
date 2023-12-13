@@ -12,7 +12,10 @@
     >
       <q-card>
         <q-card-section>
-          <user-input :fix-chain="token?.chain" v-model="userName"></user-input>
+          <user-input
+            :fix-chain="typeof token?.chain === 'string'"
+            v-model="userName"
+          ></user-input>
         </q-card-section>
       </q-card>
     </q-expansion-item>
@@ -78,7 +81,11 @@ export default Vue.defineComponent({
     buyerKeys: {
       type: Object as PropType<PGP_Keys>,
       requier: true,
-      default: "",
+      default: {
+        pub: "",
+        pri: "",
+        passphrase: "",
+      },
     },
     address: {
       type: Object as PropType<Address>,
@@ -159,10 +166,12 @@ export default Vue.defineComponent({
     Vue.watch(
       () => props.encrypt,
       async () => {
-        const result = await createAndEncrypt();
-        context.emit("update:encrypt", false);
-        if (result === true) {
-          context.emit("encrypted");
+        if (props.encrypt) {
+          const result = await createAndEncrypt();
+          context.emit("update:encrypt", false);
+          if (result === true) {
+            context.emit("encrypted");
+          }
         }
       }
     );
