@@ -34,7 +34,8 @@ export default Vue.defineComponent({
       // Initial page
       router.push({
         // name: "home",
-        name: "upload",
+        // name: "upload",
+        name: "user",
         //   name: "buy",
         //   query: {
         //     id: 0,

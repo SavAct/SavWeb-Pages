@@ -109,6 +109,7 @@ function userValidChars(val: string): boolean | string {
 export function checkUserOffline(user: string) {
   if (user.startsWith("EOS") || user.startsWith("PUB_")) {
     // Public key
+
     return eosjs_ecc.isValidPublic(user) ? true : "Invalid public key";
   } else {
     // User name

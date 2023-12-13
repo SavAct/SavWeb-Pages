@@ -25,7 +25,7 @@
           <q-input
             class="q-mt-md"
             v-model="imageSrc"
-            label="Image source"
+            label="Image link"
             outlined
             @keyup.enter="addImage"
           >
@@ -146,25 +146,16 @@
               outlined
             ></q-input>
           </div> -->
-          <div class="col-5 q-mb-sm">
+          <div class="col-sm-5 col-12 q-mb-sm">
             <q-input
               v-model="price"
-              label="Price"
+              label="Price without shipping"
               type="number"
               outlined
               min="0"
             >
               <template v-slot:append>USD</template>
             </q-input>
-          </div>
-          <div class="col-12 col-sm-4">
-            <q-select
-              v-model="allowedTokens"
-              multiple
-              :options="availableTokens"
-              label="Allowed tokens"
-              outlined
-            />
           </div>
         </q-card-section>
       </q-card>
@@ -324,14 +315,6 @@ export default Vue.defineComponent({
       tempOptions.value = "";
     }
 
-    const allowedTokens = Vue.ref<Array<string>>([]);
-    const availableTokens = Vue.ref<
-      Array<{ label: string; symbol: string; contract: string; chain: string }>
-    >([
-      { label: "EOS", symbol: "EOS", contract: "eosio.token", chain: "eos" },
-      { label: "ZEOS", symbol: "ZEOS", contract: "thezeostoken", chain: "eos" },
-      { label: "PEOS", symbol: "PEOS", contract: "thepeostoken", chain: "eos" },
-    ]);
     const category = Vue.ref<string>("");
     const categoryOptions = Vue.ref<Array<string>>([
       "Art",
@@ -459,7 +442,6 @@ export default Vue.defineComponent({
       });
 
       // TODO: extra parameter to edit user table for extra transactions
-      // allowedTokens: allowedTokens.value,
 
       // TODO: Create preview page
     }
@@ -467,9 +449,6 @@ export default Vue.defineComponent({
     // id: number;
     // imgs: Array<string>;
     // to: Array<{ region: string; sp: number; sd: number }>; // Country code, shipping price in USD and shipping duration in seconds after payment. {region: "DE", sp: 5.10, sd: 604800}, regions may be "WW", "EU", "US DE AT",
-
-    // TODO: allowedTokens [{symbol, contract, chain}]
-    // TODO: Get allowed tokens of a seller. Show sellers options which can be eddited on (only on changes) submit.
 
     return {
       progress: state.progress,
@@ -485,8 +464,6 @@ export default Vue.defineComponent({
       duration,
       expired,
       send,
-      availableTokens,
-      allowedTokens,
       hasNote,
       note,
       available,

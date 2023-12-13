@@ -11,13 +11,13 @@
   >
     <template v-slot:before>
       <q-select
-        :disable="fixChain.length > 0"
+        :disable="fixChain"
         style="width: 90px"
         outlined
         dense
-        v-model="chain"
+        v-model="selectedChain"
         :options="chainOptions"
-        :hide-dropdown-icon="fixChain.length > 0"
+        :hide-dropdown-icon="fixChain"
       />
     </template>
     <template v-slot:after>
@@ -37,17 +37,22 @@ import { checkUserOffline } from "./AntelopeHelpers";
 
 export default Vue.defineComponent({
   name: "userInput",
-  emits: ["update:model-value"],
+  emits: ["update:model-value", "update:chain"],
   props: {
     modelValue: {
       type: String,
       requier: true,
       default: "",
     },
-    fixChain: {
+    chain: {
       type: String,
       requier: false,
-      default: "",
+      default: undefined,
+    },
+    fixChain: {
+      type: Boolean,
+      requier: false,
+      default: false,
     },
   },
   setup(props, context) {
@@ -74,7 +79,7 @@ export default Vue.defineComponent({
       if (checkUserOffline(userName.value) === true) {
         isLoading.value = true;
         const result = await state.savWeb.checkName(
-          chain.value.value,
+          selectedChain.value.value,
           userName.value
         );
         isLoading.value = false;
@@ -107,20 +112,39 @@ export default Vue.defineComponent({
       context.emit("update:model-value", "");
     }
 
-    const chainOptions: Array<{ label: string; value: string }> =
-      props.fixChain.length > 0
-        ? [{ label: props.fixChain.toUpperCase(), value: props.fixChain }]
-        : [
-            {
-              label: "EOS",
-              value: "eos",
-            },
-            {
-              label: "WAX",
-              value: "wax",
-            },
-          ];
-    const chain = Vue.ref<{ label: string; value: string }>(chainOptions[0]);
+    const chainOptions = state.allChains;
+
+    const _selectedChain = Vue.ref<{
+      label: string;
+      value: string;
+      id: string;
+    }>(chainOptions[0]);
+    const selectedChain = Vue.computed({
+      get: () => {
+        if (props.chain !== undefined) {
+          const selected = chainOptions.find(
+            (c) => c.value == props.chain || c.id === props.chain
+          );
+          if (selected) {
+            return selected;
+          } else {
+            Quasar.Notify.create({
+              position: "top",
+              type: "negative",
+              message: "Chain is not available",
+              caption: "Please connect another user",
+            });
+            userName.value = "";
+            context.emit("update:model-value", "");
+          }
+        }
+        return _selectedChain.value;
+      },
+      set: (v) => {
+        _selectedChain.value = v;
+        context.emit("update:chain", v.value);
+      },
+    });
     return {
       userName,
       nameError,
@@ -128,7 +152,7 @@ export default Vue.defineComponent({
       isLoading,
       rules,
       chainOptions,
-      chain,
+      selectedChain,
       darkStyle,
       savConnected,
       pgpKey,

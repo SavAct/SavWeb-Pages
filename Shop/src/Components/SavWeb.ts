@@ -1,4 +1,7 @@
-import { GetTableRowsResult } from "eosjs/dist/eosjs-rpc-interfaces";
+import {
+  GetTableByScopeResult,
+  GetTableRowsResult,
+} from "eosjs/dist/eosjs-rpc-interfaces";
 import { RpcError } from "eosjs";
 
 export interface PublicAccount {
@@ -43,7 +46,11 @@ export interface GetFileResult {
 export interface EosioChainApiResult {
   f: "eosioChainApiResult";
   id: string;
-  post: "get_account" | "get_table_rows" | "get_currency_balance"; // like "get_table_rows", see https://developers.eos.io/manuals/eos/v2.0/nodeos/plugins/chain_api_plugin/api-reference/index
+  post:
+    | "get_account"
+    | "get_table_rows"
+    | "get_table_by_scope"
+    | "get_currency_balance"; // like "get_table_rows", see https://developers.eos.io/manuals/eos/v2.0/nodeos/plugins/chain_api_plugin/api-reference/index
   result: unknown;
 }
 
@@ -126,7 +133,11 @@ export interface EosioChainApi {
   f: "eosioChainApi" | null;
   id: string;
   chain: string; // Chain id or chain short name
-  post: "get_account" | "get_table_rows" | "get_currency_balance"; // like "get_table_rows", see https://developers.eos.io/manuals/eos/v2.0/nodeos/plugins/chain_api_plugin/api-reference/index
+  post:
+    | "get_account"
+    | "get_table_rows"
+    | "get_table_by_scope"
+    | "get_currency_balance"; // like "get_table_rows", see https://developers.eos.io/manuals/eos/v2.0/nodeos/plugins/chain_api_plugin/api-reference/index
   params: unknown;
   idToken: string;
 }
@@ -284,7 +295,7 @@ export class SavWeb {
           case "eosioChainApiResult":
             switch (parentMsg.post) {
               case "get_account":
-                // console.log('Result in SavWeb page:', parentMsg.result);
+                console.log("Result in SavWeb page:", parentMsg.result);
                 const result = parentMsg.result;
                 if (result == undefined) {
                   // Set to undefined
@@ -300,7 +311,7 @@ export class SavWeb {
                   }
                 }
                 break;
-              default: // 'get_table_rows'
+              default: // 'get_table_rows' // 'get_table_by_scope'
                 // console.log('Result in SavWeb page:', parentMsg.result);
                 const resultTable = parentMsg.result;
                 if (resultTable === undefined) {
@@ -430,15 +441,15 @@ export class SavWeb {
     contract: string,
     table: string,
     scope: string,
-    entry: number | string | Array<number | string>,
+    entry?: number | string | Array<number | string>,
     maxWaitMs = 10000
   ) {
-    let lower_bound;
-    let upper_bound;
+    let lower_bound: undefined | string = undefined;
+    let upper_bound: undefined | string = undefined;
     if (typeof entry == "object") {
       lower_bound = entry[0].toString();
       upper_bound = entry[1].toString();
-    } else {
+    } else if (entry !== undefined) {
       lower_bound = entry.toString();
       upper_bound = lower_bound;
     }
@@ -473,7 +484,58 @@ export class SavWeb {
     if ("rows" in result) {
       const rows = result.rows;
       if (rows.length > 0) {
-        return typeof entry === "object" ? rows : rows[0];
+        return rows;
+      } else {
+        return null;
+      }
+    }
+    return undefined;
+  }
+
+  async getTableByScope(
+    chain: string,
+    contract: string,
+    table?: string,
+    lower_bound?: string,
+    upper_bound?: string,
+    limit?: number,
+    reverse?: boolean,
+    show_payer?: boolean,
+    maxWaitMs = 10000
+  ) {
+    // Send request
+    const result = (await this.request(
+      {
+        SavWeb: {
+          f: "eosioChainApi",
+          id: null, // With value null this parameter will be defined in request id
+          chain,
+          post: "get_table_by_scope",
+          params: {
+            code: contract,
+            table,
+            lower_bound,
+            upper_bound,
+            limit,
+            reverse,
+            show_payer,
+          },
+          idToken: this.idToken,
+        },
+      },
+      maxWaitMs
+    )) as GetTableByScopeResult | FullRpcError | undefined;
+
+    if (result == undefined) {
+      console.error(`Cannot get the scopes from table ${table} of`, contract);
+      return undefined;
+    }
+
+    // Return the result
+    if ("rows" in result) {
+      const rows = result.rows;
+      if (rows.length > 0) {
+        return rows;
       } else {
         return null;
       }
