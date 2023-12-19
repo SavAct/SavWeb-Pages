@@ -1,15 +1,17 @@
 <template>
   <div>
     <div class="text-h6 text-bold col-auto"></div>
-    <div class="col-grow row justify-between">
-      <div class="text-secondary">{{ fingerprint }}</div>
+    <div class="col-grow row justify-end reverse-wrap">
+      <div class="col-auto q-mt-sm">
+        <span v-if="fingerprint.length >= 0">Fingerprint: </span
+        ><span class="text-secondary">{{ fingerprint.substring(0, 12) }}</span>
+      </div>
       <q-space />
       <add-pgp-btn
         label="Create new key"
         icon="add_circle"
-        class="q-px-sm"
+        class="q-px-sm col-auto"
         rounded
-        :disable="!validModel"
         color="blue"
         dense
         create-new
@@ -17,6 +19,7 @@
       ></add-pgp-btn>
     </div>
     <q-input
+      v-if="!hideInput"
       class="q-mt-sm"
       type="textarea"
       outlined
@@ -24,11 +27,12 @@
       v-model="publicKey"
     ></q-input>
     <q-btn
+      v-if="showUploadBtn"
       class="q-mt-sm q-px-md"
       :disable="
         !(validModel && modelValue !== undefined && modelValue.pub.length > 0)
       "
-      :label="(editPGP ? 'Update' : 'Store') + ' PGP key on chain'"
+      :label="(editPGP ? 'Update' : 'Store') + ' PGP key on chain [TODO]'"
       @click="setPgpOnChain"
       dense
       color="blue"
@@ -49,22 +53,39 @@ export default Vue.defineComponent({
     modelValue: {
       type: Object as PropType<PGP_Keys>,
       requier: true,
-      default: Vue.reactive<PGP_Keys>({
+      default: {
         pub: "",
         pri: "",
         passphrase: "",
-      }),
+      } as PGP_Keys,
     },
     account: {
       type: String,
       requier: false,
       default: "",
     },
+    card: {
+      type: Boolean,
+      requier: false,
+      default: false,
+    },
+    hideInput: {
+      type: Boolean,
+      requier: false,
+      default: false,
+    },
+    showUploadBtn: {
+      type: Boolean,
+      requier: false,
+      default: false,
+    },
   },
   setup(props, context) {
     const keys = Vue.computed({
       get: () => props.modelValue,
       set: (v) => {
+        console.log("get fingerprint from mV change", v); //-
+
         context.emit("update:model-value", v);
         getFingerprint(v.pub);
       },

@@ -43,7 +43,7 @@
     </q-card>
     <q-card class="my-card q-mt-md" flat bordered>
       <q-card-section>
-        <set-pgp class="q-mt-md" :account="pgpKey"></set-pgp>
+        <set-pgp v-model="pgpKey"></set-pgp>
       </q-card-section>
     </q-card>
     <q-card class="my-card q-mt-md" flat bordered>
@@ -51,7 +51,9 @@
         <div class="q-ml-sm text-h6" v-if="isBanned">
           You are banned as seller!
         </div>
-        <div class="q-ml-sm" v-else>Settings as seller</div>
+        <div class="q-ml-sm" v-else @click="expander = expander === 1 ? -1 : 1">
+          Settings as seller
+        </div>
         <q-space />
         <q-btn
           color="grey"
@@ -98,7 +100,21 @@
             @click="checkTokens"
             :disable="isGettingAvailableTokens"
             ref="allowedTokensSelect"
-          />
+            use-chips
+            stack-label
+          >
+            <template v-slot:after-options>
+              <!-- <q-separator /> -->
+              <q-btn
+                class="q-ma-sm full-width"
+                color="grey"
+                size="sm"
+                rounded
+                label="Close"
+                @click="allowedTokensSelect?.hidePopup()"
+              ></q-btn>
+            </template>
+          </q-select>
           <q-input
             class="q-ma-md"
             type="textarea"
@@ -106,10 +122,29 @@
             label="Note for all customers"
             v-model="note"
           ></q-input>
-          <div class="q-mt-md text-left">Selling items in categories of:</div>
+          <div class="q-mt-md text-left">
+            TODO: Selling items in categories of:
+          </div>
         </div>
       </q-slide-transition>
     </q-card>
+
+    <div class="q-mt-md row q-gutter-md justify-end">
+      <q-btn
+        class="col-grow"
+        color="primary"
+        @click="upload"
+        icon="publish"
+        label="Upload user data"
+      ></q-btn>
+      <q-btn
+        class="col-auto"
+        color="red"
+        icon="person_remove"
+        @click="deleteUser"
+        label="Delete user"
+      ></q-btn>
+    </div>
   </q-page>
 </template>
 <script lang="ts">
@@ -117,6 +152,7 @@ import UserInput from "../Components/UserInput.vue";
 import SetPgp from "../Components/SetPgp.vue";
 import { state } from "../store/globals";
 import { QSelect } from "quasar";
+import { PGP_Keys } from "../Components/Items";
 
 export default Vue.defineComponent({
   name: "userPage",
@@ -126,12 +162,19 @@ export default Vue.defineComponent({
     const savConnected = Vue.computed(() => state.savConnected.value);
     const userName = Vue.ref<string>("");
     const userChain = Vue.ref<string>("eos");
-    const pgpKey = Vue.ref<string>();
+    const pgpKey = Vue.ref<PGP_Keys>({
+      pub: "",
+      pri: "",
+      passphrase: "",
+    });
     const expander = Vue.ref<number>(-1);
     const allowedTokens = Vue.ref<Array<string>>([]);
     const note = Vue.ref<string>("");
     const sellerActive = Vue.ref<boolean>(true);
     const isBanned = Vue.ref<boolean>(false);
+    const showPgpInput = Vue.computed<boolean>(() => {
+      return pgpKey && pgpKey.value.pub.length > 0;
+    });
 
     interface Token {
       label: string;
@@ -164,11 +207,20 @@ export default Vue.defineComponent({
 
     async function checkTokens() {
       const aTokens = (
-        await state.getAllowedTokens(() => {
-          setTimeout(() => {
-            // setTimeout hack to let showPopup() work
-            allowedTokensSelect.value?.showPopup();
-          }, 0);
+        await state.getAllowedTokens((hasError?: boolean) => {
+          if (hasError === true) {
+            Quasar.Notify.create({
+              message: "Error on getting allowed tokens.",
+              caption: "Please try again later.",
+              type: "negative",
+              position: "top",
+            });
+          } else {
+            setTimeout(() => {
+              // setTimeout hack to let showPopup() work
+              allowedTokensSelect.value?.showPopup();
+            }, 0);
+          }
         })
       )?.map((t) => {
         return {
@@ -179,8 +231,14 @@ export default Vue.defineComponent({
       availableTokens.value = aTokens ? aTokens : [];
     }
 
-    // TODO: Set set-pgp in a expandable q-card
-    // TODO: Attention icon if no pgp key is defined
+    function upload() {
+      console.log("TODO: Upload data");
+    }
+
+    function deleteUser() {
+      console.log("TODO: Delete user");
+    }
+
     // TODO: As soon as userName is changed then get the currently selected data of the user:
     /*       
     Table name: "user", scope: "contract name" {
@@ -224,6 +282,9 @@ export default Vue.defineComponent({
       note,
       sellerActive,
       isBanned,
+      showPgpInput,
+      upload,
+      deleteUser,
     };
   },
 });
