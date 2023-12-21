@@ -57,6 +57,14 @@
         :loading="loading"
         no-data-label="No items found"
       >
+        <template v-slot:top>
+          <q-toggle
+            v-model="isPricePerUnit"
+            label="Price per unit"
+            left-label
+          />
+        </template>
+
         <!-- <template v-slot:header>
           <q-tr class="cursor-pointer">
             <q-td>
@@ -94,7 +102,12 @@
                 {{ props.row.title }}
               </div></q-td
             >
-            <q-td key="price" :props="props">{{ props.row.price }} USD</q-td>
+            <q-td key="price" :props="props">
+              <div v-if="isPricePerUnit">{{ props.row.price }} USD</div>
+              <div v-else>
+                {{ props.row.price }} USD for {{ props.row.units }} units
+              </div>
+            </q-td>
             <q-td key="seller" :props="props">
               #{{ props.row.id }} {{ props.row.seller }}
             </q-td>
@@ -130,6 +143,7 @@ export default Vue.defineComponent({
   },
   setup() {
     const searchText = Vue.ref<string>("");
+    const isPricePerUnit = Vue.ref<boolean>(false);
 
     async function search() {
       const { h64ToString } = await xxhash();
@@ -182,7 +196,13 @@ export default Vue.defineComponent({
         field: "price",
         sortable: true,
       },
-      { name: "units", align: "left", label: "Units", field: "units" },
+      {
+        name: "units",
+        align: "left",
+        label: "Units",
+        field: "units",
+        sortable: true,
+      },
       { name: "seller", align: "left", label: "Seller", field: "seller" },
       {
         name: "editDate",
@@ -195,7 +215,13 @@ export default Vue.defineComponent({
 
     const itemRows = Vue.computed(() => {
       // TODO: Use filters
-      return state.itemsList;
+
+      return state.itemsList.map((item) => {
+        return {
+          ...item,
+          price: isPricePerUnit.value ? item.price / item.units : item.price,
+        };
+      });
     });
 
     function openItem(item: Entry) {
@@ -212,13 +238,13 @@ export default Vue.defineComponent({
        Search secondary for decisive words in a contract table with this prosedure (This pricedure is too RAM expensive, see below for alternative):
        Title is split into a list of decisive words.
        The words are sorted by character.
-       Hash of the combination of each word, but by keeping the sorted order of the words. ("c a b" will create the hash of "a b c", "a b", "a", "b" and "c") 
+       Hash of the combination of each word, but by keeping the sorted order of the words. ("c a b" will create the hash of "a b c", "a b", "a", "b" and "c")
        (Hash of "a b c" and "c b a" is the same)
        The first 8 bytes of each hash are used as scope of a contract table.
        The table holds the index of all items that are regarding to this hash.
        -------
-       Alternative: 
-       Split title in words. 
+       Alternative:
+       Split title in words.
        Create 8 byte hash of each word with xxhash.
        Use the hashes as primary key of an RAM table and store all item indexes in a sorted array.
        Any access of an item of this array is done by a binary search.
@@ -227,6 +253,7 @@ export default Vue.defineComponent({
     return {
       progress: state.progress,
       darkStyle: state.darkStyle,
+      isPricePerUnit,
       searchText,
       category,
       categories,

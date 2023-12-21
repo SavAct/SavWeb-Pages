@@ -110,7 +110,7 @@ const itemsList: Array<Entry> = [
     title: "Quasar with ionic beams",
     imgs: ["https://cdn.quasar.dev/img/quasar.jpg"],
     price: 2.55,
-    units: 1,
+    units: 2,
     seller: "savact",
     maxTd: 3600 * 24 * 7,
     to: [

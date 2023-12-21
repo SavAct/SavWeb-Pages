@@ -33,9 +33,9 @@ export default Vue.defineComponent({
     if (router.currentRoute() === undefined) {
       // Initial page
       router.push({
-        // name: "home",
+        name: "home",
         // name: "upload",
-        name: "user",
+        // name: "user",
         //   name: "buy",
         //   query: {
         //     id: 0,

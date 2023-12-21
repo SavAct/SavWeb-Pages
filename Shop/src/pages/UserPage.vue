@@ -217,7 +217,7 @@ export default Vue.defineComponent({
             });
           } else {
             setTimeout(() => {
-              // setTimeout hack to let showPopup() work
+              // setTimeout hack to let showPopup() work // TODO: replace by await Vue.nextTick() and set to end of this function
               allowedTokensSelect.value?.showPopup();
             }, 0);
           }
