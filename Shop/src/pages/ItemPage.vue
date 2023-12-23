@@ -180,10 +180,11 @@ export default Vue.defineComponent({
     console.log("item page query: ", route.query);
 
     const id =
-      route.query && "id" in route.query && typeof route.query.id == "number"
-        ? route.query.id
+      route.query &&
+      "id" in route.query &&
+      (typeof route.query.id == "number" || typeof route.query.id == "string")
+        ? Number(route.query.id)
         : -1;
-    
 
     const entry = Vue.ref<Entry>();
     entry.value = state.itemsList.find((item) => item.id == id);

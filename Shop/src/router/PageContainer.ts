@@ -32,6 +32,8 @@ export default Vue.defineComponent({
     });
     if (router.currentRoute() === undefined) {
       // Initial page
+      console.log("Initial page", router);
+
       router.push({
         name: "home",
         // name: "upload",
@@ -46,6 +48,7 @@ export default Vue.defineComponent({
         //     } as Token,
         //   },
       });
+      console.log("Initial page home", router);
     }
     return { name };
   },

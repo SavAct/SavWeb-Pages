@@ -2,6 +2,22 @@ import { Token } from "../Components/AntelopeHelpers";
 import { get_available_tokens } from "../Components/AvailableTokens";
 import { Entry, Seller } from "../Components/Items";
 import { PageIni, SavWeb } from "../Components/SavWeb";
+import { router } from "../router/simpleRouter";
+
+function resolvePage(pIni: PageIni) {
+  const pageName =
+    pIni.path.length > 0 && pIni.path[0] === "/"
+      ? pIni.path.substring(1)
+      : pIni.path;
+  console.log("resolvePage", pageName, pIni.query);
+
+  if (pageName.length > 0) {
+    router.push({
+      name: pageName,
+      query: pIni.query,
+    });
+  }
+}
 
 const contract = {
   account: "infiniteshop",
@@ -62,8 +78,10 @@ const savConnected = Vue.ref<boolean>(false);
 function onIni(msg: PageIni) {
   if (typeof msg.darkstyle == "boolean") {
     darkStyle.value = msg.darkstyle;
-    savConnected.value = true;
   }
+  savConnected.value = true;
+  resolvePage(msg);
+
   console.log("PageIni", msg);
 }
 const savWeb = new SavWeb(onIni);
