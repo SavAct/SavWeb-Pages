@@ -1,4 +1,4 @@
-import { route, router } from "./simpleRouter";
+import { route } from "./simpleRouter";
 import { Component } from "@vue/runtime-dom";
 import { routes } from "./routes";
 // import { Token } from "../Components/AntelopeHelpers";
@@ -30,26 +30,6 @@ export default Vue.defineComponent({
     const name = Vue.computed(() => {
       return route.name;
     });
-    if (router.currentRoute() === undefined) {
-      // Initial page
-      console.log("Initial page", router);
-
-      router.push({
-        name: "home",
-        // name: "upload",
-        // name: "user",
-        //   name: "buy",
-        //   query: {
-        //     id: 0,
-        //     token: {
-        //       chain: "eos",
-        //       contract: "eosio.token",
-        //       symbol: { name: "EOS", precision: 4 },
-        //     } as Token,
-        //   },
-      });
-      console.log("Initial page home", router);
-    }
     return { name };
   },
 });

@@ -4,21 +4,6 @@ import { Entry, Seller } from "../Components/Items";
 import { PageIni, SavWeb } from "../Components/SavWeb";
 import { router } from "../router/simpleRouter";
 
-function resolvePage(pIni: PageIni) {
-  const pageName =
-    pIni.path.length > 0 && pIni.path[0] === "/"
-      ? pIni.path.substring(1)
-      : pIni.path;
-  console.log("resolvePage", pageName, pIni.query);
-
-  if (pageName.length > 0) {
-    router.push({
-      name: pageName,
-      query: pIni.query,
-    });
-  }
-}
-
 const contract = {
   account: "infiniteshop",
   chain: "eos",
@@ -32,6 +17,29 @@ const contract = {
     banUser: "ban",
   },
 };
+
+function resolvePage(pIni: PageIni) {
+  let pageName: string;
+  const paths = (
+    pIni.path.length > 0 && pIni.path[0] === "/"
+      ? pIni.path.substring(1)
+      : pIni.path
+  ).split("/");
+  if (paths === undefined || paths.length === 1) {
+    pageName = paths[0];
+  } else {
+    contract.account = paths[0]; // Change contract account if path has more than one "folder"
+    pageName = paths[1];
+    console.log("Use contract account:", contract.account);
+  }
+
+  console.log("resolvePage", pageName, pIni.query);
+
+  router.push({
+    name: pageName.length > 0 ? pageName : "home",
+    query: pIni.query,
+  });
+}
 
 // Dark style
 const darkStyle = Vue.computed({
