@@ -32,6 +32,7 @@
   </q-input>
 </template>
 <script lang="ts">
+import { savConnected, savWeb } from "../store/connect";
 import { state } from "../store/globals";
 import { checkUserOffline } from "./AntelopeHelpers";
 
@@ -60,7 +61,6 @@ export default Vue.defineComponent({
     const nameError = Vue.ref<boolean>(false);
     const isLoading = Vue.ref<boolean>(false);
     const darkStyle = Vue.computed(() => state.darkStyle.value);
-    const savConnected = Vue.computed(() => state.savConnected.value);
     const pgpKey = Vue.ref<string>();
 
     const rules = [(val: string) => checkUserOffline(val)];
@@ -78,7 +78,7 @@ export default Vue.defineComponent({
       }
       if (checkUserOffline(userName.value) === true) {
         isLoading.value = true;
-        const result = await state.savWeb.checkName(
+        const result = await savWeb.checkName(
           selectedChain.value.value,
           userName.value
         );

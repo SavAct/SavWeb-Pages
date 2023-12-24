@@ -3,7 +3,7 @@
     <q-card-section>
       <q-input
         type="textarea"
-        :rows="sellerResponse.length > 1? 1 : 5"
+        :rows="sellerResponse.length > 1 ? 1 : 5"
         v-model="sellerResponse"
         outlined
         label="Sellers response"
@@ -93,6 +93,7 @@ import {
   encrypt,
   generateRandomString,
 } from "../Generator";
+import { savWeb } from "../../store/connect";
 
 export default Vue.defineComponent({
   name: "buyStep3",
@@ -248,7 +249,7 @@ export default Vue.defineComponent({
       await updateTokenPrice();
       const assetStr = `${totalAsset.value} ${props.token.contract}`;
       waitForTrans.value = true;
-      const result = await state.savWeb.payment(
+      const result = await savWeb.payment(
         props.token.chain,
         props.entry.seller,
         assetStr,

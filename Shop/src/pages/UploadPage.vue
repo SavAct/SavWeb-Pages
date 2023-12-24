@@ -288,6 +288,7 @@ import {
   ActionAddItem,
   ContractToRegion,
 } from "../Components/ContractInterfaces";
+import { savWeb } from "../store/connect";
 
 export default Vue.defineComponent({
   name: "uploadPage",
@@ -434,7 +435,7 @@ export default Vue.defineComponent({
       };
       console.log("Transaction additem data", data);
 
-      state.savWeb.transaction({
+      savWeb.transaction({
         chain: state.contract.chain,
         contract: state.contract.account,
         action: state.contract.actions.addItem,

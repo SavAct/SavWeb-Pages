@@ -1,8 +1,6 @@
 import { Token } from "../Components/AntelopeHelpers";
 import { get_available_tokens } from "../Components/AvailableTokens";
 import { Entry, Seller } from "../Components/Items";
-import { PageIni, SavWeb } from "../Components/SavWeb";
-import { router } from "../router/simpleRouter";
 
 const contract = {
   account: "infiniteshop",
@@ -17,29 +15,6 @@ const contract = {
     banUser: "ban",
   },
 };
-
-function resolvePage(pIni: PageIni) {
-  let pageName: string;
-  const paths = (
-    pIni.path.length > 0 && pIni.path[0] === "/"
-      ? pIni.path.substring(1)
-      : pIni.path
-  ).split("/");
-  if (paths === undefined || paths.length === 1) {
-    pageName = paths[0];
-  } else {
-    contract.account = paths[0]; // Change contract account if path has more than one "folder"
-    pageName = paths[1];
-    console.log("Use contract account:", contract.account);
-  }
-
-  console.log("resolvePage", pageName, pIni.query);
-
-  router.push({
-    name: pageName.length > 0 ? pageName : "home",
-    query: pIni.query,
-  });
-}
 
 // Dark style
 const darkStyle = Vue.computed({
@@ -80,19 +55,6 @@ const progress = Vue.computed({
     _progress.value = (value % 11) / 10;
   },
 });
-
-// SavWeb interface
-const savConnected = Vue.ref<boolean>(false);
-function onIni(msg: PageIni) {
-  if (typeof msg.darkstyle == "boolean") {
-    darkStyle.value = msg.darkstyle;
-  }
-  savConnected.value = true;
-  resolvePage(msg);
-
-  console.log("PageIni", msg);
-}
-const savWeb = new SavWeb(onIni);
 
 // Elements of the main header and footer
 const mainHeaderRef = Vue.ref<{ $el: HTMLElement } | null>(null);
@@ -314,8 +276,6 @@ export const state = {
   contract,
   darkStyle,
   progress,
-  savWeb,
-  savConnected,
   itemsList,
   sellerList,
   messengers,

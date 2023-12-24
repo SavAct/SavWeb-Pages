@@ -153,13 +153,13 @@ import SetPgp from "../Components/SetPgp.vue";
 import { state } from "../store/globals";
 import { QSelect } from "quasar";
 import { PGP_Keys } from "../Components/Items";
+import { savConnected, savWeb } from "../store/connect";
 
 export default Vue.defineComponent({
   name: "userPage",
   components: { SetPgp, UserInput },
   setup() {
     const darkStyle = Vue.computed(() => state.darkStyle.value);
-    const savConnected = Vue.computed(() => state.savConnected.value);
     const userName = Vue.ref<string>("");
     const userChain = Vue.ref<string>("eos");
     const pgpKey = Vue.ref<PGP_Keys>({
@@ -190,7 +190,7 @@ export default Vue.defineComponent({
       const user =
         userName.value.length > 0 ? { name: userName.value } : undefined;
 
-      const resultUser = await state.savWeb.getUser(user, 60000);
+      const resultUser = await savWeb.getUser(user, 60000);
 
       console.log("Received user data", resultUser);
       if (resultUser !== undefined && resultUser.name !== undefined) {

@@ -1,9 +1,9 @@
 import { Ref } from "vue";
 import { StringToSymbol, Token } from "./AntelopeHelpers";
-import { state } from "../store/globals";
+import { savWeb } from "../store/connect";
 
 async function getTokensData(tokenContract: string, chain: string) {
-  const t_data = await state.savWeb.getTableRows(
+  const t_data = await savWeb.getTableRows(
     chain,
     "savactsavpay",
     "tokens",
@@ -36,11 +36,7 @@ export async function get_available_tokens(
   isGetting.value = true;
   let noError = true;
   const chain = "eos";
-  const result = await state.savWeb.getTableByScope(
-    chain,
-    "savactsavpay",
-    "tokens"
-  );
+  const result = await savWeb.getTableByScope(chain, "savactsavpay", "tokens");
   const availableTokens = [];
   if (result && result.length > 0) {
     for (let i = 0; i < result.length; i++) {

@@ -123,8 +123,8 @@ import { PropType } from "vue";
 import { Entry, PGP_Keys, Seller } from "../Items";
 import { InformSellerData, Token } from "../AntelopeHelpers";
 import { formatDuration } from "../ConverTime";
-import { state } from "../../store/globals";
 import { encrypt } from "../Generator";
+import { savWeb } from "../../store/connect";
 
 export default Vue.defineComponent({
   name: "finished",
@@ -256,7 +256,7 @@ export default Vue.defineComponent({
     // startTimer();
 
     function openTrx() {
-      state.savWeb.openHistory(
+      savWeb.openHistory(
         trxData.value?.token.chain,
         trxData.value?.buyer,
         trxData.value?.seller
