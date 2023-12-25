@@ -115,6 +115,49 @@
               ></q-btn>
             </template>
           </q-select>
+          <div class="q-ma-md">
+            <div class="row q-gutter-sm">
+              <q-input
+                class="col-grow"
+                v-model="contactInput"
+                outlined
+                label="Contact"
+                dense
+                @keyup.enter="addContact"
+              ></q-input>
+              <q-btn
+                class="col-auto q-pl-sm"
+                :class="contactInput.length === 0 ? 'q-pr-sm' : 'q-pr-md'"
+                color="green"
+                icon="add"
+                dense
+                @click="addContact"
+                :label="shortContactInput"
+              ></q-btn>
+            </div>
+            <div>
+              <div class="row q-mt-sm q-gutter-sm" v-for="(c, i) in contacts">
+                <q-btn
+                  v-if="shortContact(c).length > 0"
+                  :key="i"
+                  class="col-auto"
+                  dense
+                  :label="shortContact(c)"
+                  @click="openLinkOrMail(c)"
+                ></q-btn>
+                <q-input disable class="col-grow" v-model="c" dense></q-input>
+                <q-btn
+                  class="col-auto"
+                  color="red"
+                  icon="delete"
+                  dense
+                  @click="contacts.splice(i, 1)"
+                >
+                </q-btn>
+              </div>
+              <q-separator class="q-mt-sm" />
+            </div>
+          </div>
           <q-input
             class="q-ma-md"
             type="textarea"
@@ -154,6 +197,12 @@ import { state } from "../store/globals";
 import { QSelect } from "quasar";
 import { PGP_Keys } from "../Components/Items";
 import { savConnected, savWeb } from "../store/connect";
+import { TokenSymbol, Updateuser } from "../Components/ContractInterfaces";
+import {
+  messengerShortName,
+  openLinkOrMail,
+  urlStartByDomainName,
+} from "../Components/LinkConverter";
 
 export default Vue.defineComponent({
   name: "userPage",
@@ -168,7 +217,7 @@ export default Vue.defineComponent({
       passphrase: "",
     });
     const expander = Vue.ref<number>(-1);
-    const allowedTokens = Vue.ref<Array<string>>([]);
+    const allowedTokens = Vue.ref<Array<Token>>([]);
     const note = Vue.ref<string>("");
     const sellerActive = Vue.ref<boolean>(true);
     const isBanned = Vue.ref<boolean>(false);
@@ -207,7 +256,7 @@ export default Vue.defineComponent({
 
     async function checkTokens() {
       const aTokens = (
-        await state.getAllowedTokens((hasError?: boolean) => {
+        await state.getAvailableTokens((hasError?: boolean) => {
           if (hasError === true) {
             Quasar.Notify.create({
               message: "Error on getting allowed tokens.",
@@ -218,6 +267,7 @@ export default Vue.defineComponent({
           } else {
             setTimeout(() => {
               // setTimeout hack to let showPopup() work // TODO: replace by await Vue.nextTick() and set to end of this function
+              // await Vue.nextTick();
               allowedTokensSelect.value?.showPopup();
             }, 0);
           }
@@ -232,38 +282,56 @@ export default Vue.defineComponent({
     }
 
     function upload() {
-      console.log("TODO: Upload data");
+      console.log("Upload data");
+      const allowed: Array<TokenSymbol> = allowedTokens.value.map((t) => {
+        return {
+          sym: `${t.symbol.precision},${t.symbol.name}`,
+          contr: t.contract,
+          chain: t.chain,
+        };
+      });
+      const data: Updateuser = {
+        user: userName.value,
+        contact: contacts.value,
+        allowed,
+        active: sellerActive.value,
+        pgp: pgpKey.value.pub,
+        note: note.value,
+      };
+      savWeb.transaction({
+        chain: state.contract.chain,
+        contract: state.contract.account,
+        action: state.contract.actions.updateUser,
+        data,
+      });
     }
 
     function deleteUser() {
       console.log("TODO: Delete user");
     }
 
+    function shortContact(c: string) {
+      const short = messengerShortName(urlStartByDomainName(c));
+      return short !== undefined ? short : "";
+    }
+
+    const shortContactInput = Vue.computed<string>(() => {
+      return shortContact(contactInput.value);
+    });
+
+    const contacts = Vue.ref<Array<string>>([]);
+    const contactInput = Vue.ref<string>("");
+    function addContact() {
+      if (contactInput.value.length > 0) {
+        const contact = contactInput.value;
+        contactInput.value = "";
+        contacts.value.push(contact);
+      }
+    }
+
     // TODO: As soon as userName is changed then get the currently selected data of the user:
-    /*       
-    Table name: "user", scope: "contract name" {
-      name user;
-      vector<tokenSymbol> allowed;
-      bool active;
-      uint32_t lastUpdate;
-      list<idAndCategory> items;
-      bool banned;  // Show red warning if true
-      string pgp;   
-      string note;
-    } 
-
-    struct tokenSymbol {
-      symbol sym;
-      name contr;
-      string chain;
-    };
-
-    struct idAndCategory {
-      uint64_t id;
-      name category;
-    };
-      */
-    // TODO: Upload settings
+    // TODO: Test upload
+    // TODO: Delete user action
 
     return {
       userName,
@@ -285,6 +353,12 @@ export default Vue.defineComponent({
       showPgpInput,
       upload,
       deleteUser,
+      shortContact,
+      contactInput,
+      shortContactInput,
+      addContact,
+      contacts,
+      openLinkOrMail,
     };
   },
 });

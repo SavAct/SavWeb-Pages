@@ -65,7 +65,11 @@
             round
             icon="send"
             color="blue"
-            @click="openLink"
+            @click="
+              selectedContect !== undefined
+                ? openLinkOrMail(selectedContect.value)
+                : undefined
+            "
           ></q-btn>
         </template>
       </q-input>
@@ -77,8 +81,11 @@ import RawDataBtn from "../RawDataBtn.vue";
 import { PropType } from "vue";
 import { Seller } from "../Items";
 import { copy } from "../QuasarHelpers";
-import { state } from "../../store/globals";
-import { SavWeb } from "../SavWeb";
+import {
+  messengerShortName,
+  openLinkOrMail,
+  urlStartByDomainName,
+} from "../LinkConverter";
 
 export default Vue.defineComponent({
   name: "buyStep24SendData",
@@ -114,37 +121,12 @@ export default Vue.defineComponent({
     },
   },
   setup(props, context) {
-    function isValidEmail(email: string) {
-      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return regex.test(email);
-    }
-
     const contactOptions = Vue.computed(() => {
       // Get shown name for each contact
       return props.seller?.contact.map((c) => {
-        let label = c.startsWith("https://")
-          ? c.substring(8)
-          : c.startsWith("http://")
-          ? c.substring(7)
-          : c;
-        if (label.startsWith("www.")) {
-          label = label.substring(4);
-        }
-        const found = state.messengers.find((m) => {
-          return label.startsWith(m.link);
-        });
-        if (found) {
-          label = found.name;
-        } else if (isValidEmail(label)) {
-          let s = label.indexOf("@");
-          if (s) {
-            s++;
-            const e = label.indexOf(".", s);
-            if (e) label = label.substring(s, e);
-          }
-        }
+        const sN = messengerShortName(urlStartByDomainName(c));
         return {
-          label,
+          label: sN,
           value: c,
         };
       });
@@ -170,22 +152,6 @@ export default Vue.defineComponent({
       },
     });
 
-    function openLink() {
-      if (selectedContect.value) {
-        let link = selectedContect.value.value;
-        if (!link.startsWith("https://") && !link.startsWith("mailto:")) {
-          if (link.startsWith("http://")) {
-            link = "https://" + link.substring(7);
-          } else if (isValidEmail(link)) {
-            link = "mailto:" + link;
-          } else {
-            link = "https://" + link;
-          }
-        }
-        SavWeb.goTo(link, "_blank");
-      }
-    }
-
     const showSend = Vue.ref(selectedContect.value !== undefined);
     function plopAnimation() {
       showSend.value = false;
@@ -198,7 +164,7 @@ export default Vue.defineComponent({
       copy,
       contactOptions,
       selectedContect,
-      openLink,
+      openLinkOrMail,
       showSend,
     };
   },

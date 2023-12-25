@@ -8,6 +8,8 @@
   ></q-chip>
 </template>
 <script lang="ts">
+import { openLinkOrMail } from "./LinkConverter";
+
 export default Vue.defineComponent({
   name: "userLink",
   props: {
@@ -24,7 +26,7 @@ export default Vue.defineComponent({
   setup(props) {
     return {
       click: () => {
-        window.open(`https://bloks.io/account/${props.user}`, "_blank");
+        openLinkOrMail(`https://bloks.io/account/${props.user}`);
       },
     };
   },

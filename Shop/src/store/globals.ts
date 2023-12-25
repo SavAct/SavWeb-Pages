@@ -30,7 +30,7 @@ const darkStyle = Vue.computed({
 const isGettingAvailableTokens = Vue.ref<boolean>(false);
 let allowedTokens: Array<Token> = [];
 let loadedAllTokensWithError = true;
-async function getAllowedTokens(callback: (hasError?: boolean) => void) {
+async function getAvailableTokens(callback: (hasError?: boolean) => void) {
   if (loadedAllTokensWithError) {
     const aTokens = await get_available_tokens(
       isGettingAvailableTokens,
@@ -145,37 +145,6 @@ const itemsList: Array<Entry> = [
   },
 ];
 
-const messengers = [
-  { name: "Telegram", link: "t.me/" }, // Checked
-  { name: "Simplex", link: "simplex.chat/" }, // Checked
-  { name: "Threema", link: "threema.id/" }, // Checked
-  { name: "Line", link: "line.me/" }, // Checked
-  { name: "Facebook", link: "facebook.com/" }, // Checked
-  { name: "Twitter", link: "twitter.com/" }, // Checked
-  { name: "Instagram", link: "instagram.com/" }, // Checked
-  { name: "WhatsApp", link: "wa.me/" }, // Checked
-  { name: "Discord", link: "discord." },
-  { name: "Signal", link: "signal." },
-  { name: "Keybase", link: "keybase." },
-  { name: "Matrix", link: "matrix." },
-  { name: "XMPP", link: "xmpp." },
-  { name: "IRC", link: "irc." },
-  { name: "Email", link: "mailto" },
-  { name: "Wire", link: "wire." },
-  { name: "WeChat", link: "weixin.qq.com/" },
-  { name: "Viber", link: "viber." },
-  { name: "KakaoTalk", link: "kakao" },
-  { name: "Snapchat", link: "snapchat.com/" },
-  { name: "TikTok", link: "tiktok.com/" },
-  { name: "Reddit", link: "reddit.com/" },
-  { name: "Wickr", link: "wickr.com/" },
-  { name: "Ricochet", link: "ricochet." },
-  { name: "Dust", link: "dust." },
-  { name: "Hushed", link: "hushed." },
-  { name: "CoverMe", link: "coverme." },
-  { name: "GhostChat", link: "ghostchat." },
-];
-
 const allChains = [
   {
     label: "EOS",
@@ -278,12 +247,11 @@ export const state = {
   progress,
   itemsList,
   sellerList,
-  messengers,
   mainFooterRef,
   mainHeaderRef,
   thumbStyle,
   barStyle,
-  getAllowedTokens,
+  getAvailableTokens,
   isGettingAvailableTokens,
   allChains,
 };
