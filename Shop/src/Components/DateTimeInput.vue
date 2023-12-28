@@ -167,7 +167,6 @@ export default Vue.defineComponent({
 
         return false;
       }
-      console.log("---do not consider---");
       return true;
     }
 

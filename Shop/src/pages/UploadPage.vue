@@ -285,10 +285,11 @@ import { countryCodes, getRegion } from "../Components/ConvertRegion";
 import { state } from "../store/globals";
 import { Ref } from "vue";
 import {
-  ActionAddItem,
-  ContractToRegion,
+  AddItem,
+  ToRegion,
 } from "../Components/ContractInterfaces";
 import { savWeb } from "../store/connect";
+import { GetQueryId } from "../Components/queryHelper";
 
 export default Vue.defineComponent({
   name: "uploadPage",
@@ -390,7 +391,7 @@ export default Vue.defineComponent({
         .join("")
         .toLocaleLowerCase();
 
-      let shipTo: Array<ContractToRegion> = [];
+      let shipTo: Array<ToRegion> = [];
       toRegions.value.forEach((r) => {
         const s = shipTo.find((s) => s.t === r.sd && s.p === r.sp);
         if (s === undefined) {
@@ -417,7 +418,7 @@ export default Vue.defineComponent({
         }
       }
 
-      const data: ActionAddItem = {
+      const data: AddItem = {
         seller: seller.value.trim(),
         title: title.value.trim(),
         price: price.value,
@@ -442,10 +443,13 @@ export default Vue.defineComponent({
         data,
       });
 
-      // TODO: extra parameter to edit user table for extra transactions
+      // TODO: Load already uploaded shop by query id and edit user table
 
       // TODO: Create preview page
     }
+
+    const id = GetQueryId();
+    console.log("Upload page query: ", id);
 
     // id: number;
     // imgs: Array<string>;

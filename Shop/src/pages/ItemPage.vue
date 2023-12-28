@@ -170,21 +170,16 @@ import {
   Token,
 } from "../Components/AntelopeHelpers";
 import { getCurrentTokenPrice } from "../Components/ConvertPrices";
-import { route, router } from "../router/simpleRouter";
+import { router } from "../router/simpleRouter";
 import { getRegion } from "../Components/ConvertRegion";
+import { GetQueryId } from "../Components/queryHelper";
 
 export default Vue.defineComponent({
   components: { Gallery, TokenSymbol, UserLink },
   name: "itemPage",
   setup() {
-    console.log("item page query: ", route.query);
-
-    const id =
-      route.query &&
-      "id" in route.query &&
-      (typeof route.query.id == "number" || typeof route.query.id == "string")
-        ? Number(route.query.id)
-        : -1;
+    const id = GetQueryId();
+    console.log("Item page query: ", id);
 
     const entry = Vue.ref<Entry>();
     entry.value = state.itemsList.find((item) => item.id == id);
