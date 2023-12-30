@@ -1,20 +1,12 @@
 <template>
   <q-page class="q-pa-md text-center">
-    <div v-if="!savConnected" class="q-my-md">
-      This page needs to be executed in the
-      <a
-        href="https://savact.app#_browser_"
-        target="_blank"
-        :class="{ 'text-blue': darkStyle }"
-        >SavAct App</a
-      >.<br />You can just drag it into the address of its browser.
-    </div>
     <q-card class="my-card" flat bordered>
       <q-card-actions>
         <q-btn
-          @click="getUserData"
+          @click="getLoginUser()"
           color="primary"
           label="Get your user data"
+          :disable="checkingUserData"
         />
         <div class="q-ml-lg text-secondary">{{ userName }}</div>
         <q-space />
@@ -89,33 +81,34 @@
               ]"
             />
           </div>
-          <q-select
-            class="q-ma-md"
-            v-model="allowedTokens"
-            multiple
-            :options="availableTokens"
-            label="Allowed tokens"
-            outlined
-            :loading="isGettingAvailableTokens"
-            @click="checkTokens"
-            :disable="isGettingAvailableTokens"
-            ref="allowedTokensSelect"
-            use-chips
-            stack-label
-          >
-            <template v-slot:after-options>
-              <!-- <q-separator /> -->
-              <q-btn
-                class="q-ma-sm full-width"
-                color="grey"
-                size="sm"
-                rounded
-                label="Close"
-                @click="allowedTokensSelect?.hidePopup()"
-              ></q-btn>
-            </template>
-          </q-select>
-          <div class="q-ma-md">
+          <div @click="checkTokens()">
+            <q-select
+              class="q-ma-md"
+              v-model="allowedTokens"
+              multiple
+              :options="availableTokens"
+              label="Allowed tokens"
+              outlined
+              :loading="isGettingAvailableTokens"
+              :disable="isGettingAvailableTokens"
+              ref="allowedTokensSelect"
+              use-chips
+              stack-label
+            >
+              <template v-slot:after-options>
+                <!-- <q-separator /> -->
+                <q-btn
+                  class="q-ma-sm full-width"
+                  color="grey"
+                  size="sm"
+                  rounded
+                  label="Close"
+                  @click="allowedTokensSelect?.hidePopup()"
+                ></q-btn>
+              </template>
+            </q-select>
+          </div>
+          <div class="q-mx-md q-my-lg">
             <div class="row q-gutter-sm">
               <q-input
                 class="col-grow"
@@ -133,6 +126,7 @@
                 dense
                 @click="addContact"
                 :label="shortContactInput"
+                :disable="!validContactInput"
               ></q-btn>
             </div>
             <div>
@@ -165,9 +159,40 @@
             label="Note for all customers"
             v-model="note"
           ></q-input>
-          <div class="q-mt-md text-left">
-            TODO: Selling items in categories of:
-          </div>
+        </div>
+      </q-slide-transition>
+    </q-card>
+
+    <q-card class="my-card q-mt-md" flat bordered v-if="items !== undefined">
+      <q-card-actions>
+        <div class="q-ml-sm" @click="expander = expander === 3 ? -1 : 3">
+          Listed items <pann class="text-secondary">{{ items.length }}</pann>
+        </div>
+        <q-space />
+        <q-btn
+          color="grey"
+          round
+          flat
+          dense
+          :icon="expander === 0 ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"
+          @click="expander = expander === 3 ? -1 : 3"
+        />
+      </q-card-actions>
+
+      <q-slide-transition>
+        <div v-show="expander === 3">
+          <q-separator />
+          <q-card-section class="text-left">
+            <q-chip
+              v-for="(c, index) in items"
+              :key="index"
+              :label="formatItem(c)"
+              class="q-ma-sm"
+              color="primary"
+              clickable
+              @click="openItem(c.id)"
+            ></q-chip>
+          </q-card-section>
         </div>
       </q-slide-transition>
     </q-card>
@@ -196,21 +221,49 @@ import SetPgp from "../Components/SetPgp.vue";
 import { state } from "../store/globals";
 import { QSelect } from "quasar";
 import { PGP_Keys } from "../Components/Items";
-import { savConnected, savWeb } from "../store/connect";
-import { TokenSymbol, Updateuser } from "../Components/ContractInterfaces";
+import { savWeb } from "../store/connect";
+import {
+  Deleteuser,
+  IdAndCategory,
+  TokenSymbol,
+  Updateuser,
+  UserTable,
+} from "../Components/ContractInterfaces";
 import {
   messengerShortName,
   openLinkOrMail,
   urlStartByDomainName,
 } from "../Components/LinkConverter";
+import { PublicAccount } from "../Components/SavWeb";
+import {
+  StringToSymbol,
+  getKnownChainId,
+  isSameChain,
+  isTableResultWithEntries,
+} from "../Components/AntelopeHelpers";
+import { router } from "../router/simpleRouter";
 
 export default Vue.defineComponent({
   name: "userPage",
   components: { SetPgp, UserInput },
   setup() {
     const darkStyle = Vue.computed(() => state.darkStyle.value);
-    const userName = Vue.ref<string>("");
-    const userChain = Vue.ref<string>("eos");
+    const _userName = Vue.ref<string>(state.loginUser.value?.name ?? "");
+    const userName = Vue.computed<string>({
+      get: () => _userName.value,
+      set: (v) => {
+        if (_userName.value !== v) {
+          _userName.value = v;
+          getUserData();
+        } else {
+          checkingUserData.value = false;
+        }
+      },
+    });
+    const contractChainId = getKnownChainId(state.contract.chain);
+    const userChain = Vue.ref<string>(
+      contractChainId !== undefined ? contractChainId : "eos"
+    );
     const pgpKey = Vue.ref<PGP_Keys>({
       pub: "",
       pri: "",
@@ -234,27 +287,16 @@ export default Vue.defineComponent({
 
     const availableTokens = Vue.ref<Array<Token>>([]);
 
-    async function getUserData() {
-      userName.value = userName.value.trim();
-      const user =
-        userName.value.length > 0 ? { name: userName.value } : undefined;
-
-      const resultUser = await savWeb.getUser(user, 60000);
-
-      console.log("Received user data", resultUser);
-      if (resultUser !== undefined && resultUser.name !== undefined) {
-        userName.value = resultUser.name;
-        if (resultUser.chain !== undefined) {
-          userChain.value = resultUser.chain;
-        }
-        console.log("User name", resultUser.name, typeof resultUser.name);
-      }
-    }
-
     const allowedTokensSelect = Vue.ref<QSelect | undefined>(undefined);
     const openAllowedTokens = Vue.ref<boolean>(false);
 
+    let tokensChecked = false;
+    let tokensIsChecking = false;
+
     async function checkTokens() {
+      if (tokensChecked === true || tokensIsChecking === true) return;
+      tokensIsChecking = true;
+
       const aTokens = (
         await state.getAvailableTokens((hasError?: boolean) => {
           if (hasError === true) {
@@ -265,11 +307,7 @@ export default Vue.defineComponent({
               position: "top",
             });
           } else {
-            setTimeout(() => {
-              // setTimeout hack to let showPopup() work // TODO: replace by await Vue.nextTick() and set to end of this function
-              // await Vue.nextTick();
-              allowedTokensSelect.value?.showPopup();
-            }, 0);
+            tokensChecked = true;
           }
         })
       )?.map((t) => {
@@ -278,11 +316,70 @@ export default Vue.defineComponent({
           label: t.symbol.name + " " + t.contract + "@" + t.chain,
         };
       });
+
       availableTokens.value = aTokens ? aTokens : [];
+      tokensIsChecking = false;
+
+      if (availableTokens.value.length > 0) {
+        await Vue.nextTick();
+        allowedTokensSelect.value?.showPopup();
+      }
     }
 
     function upload() {
-      console.log("Upload data");
+      // Check user data
+      if (userName.value.length === 0) {
+        Quasar.Notify.create({
+          message: "User name is missing",
+          caption: "Please enter a user name.",
+          type: "negative",
+          position: "top",
+        });
+        return;
+      }
+
+      if (pgpKey.value.pub.length === 0) {
+        Quasar.Notify.create({
+          message: "Public PGP key is missing",
+          caption: "Please enter a public PGP key.",
+          type: "negative",
+          position: "top",
+        });
+        return;
+      } else if (
+        pgpKey.value.fingerprint === undefined ||
+        pgpKey.value.fingerprint.length === 0
+      ) {
+        Quasar.Notify.create({
+          message: "Public PGP key is invalid",
+          caption: "Please enter a valid public PGP key.",
+          type: "negative",
+          position: "top",
+        });
+        return;
+      }
+
+      if (allowedTokens.value.length === 0) {
+        Quasar.Notify.create({
+          message: "No allowed tokens",
+          caption: "Please select at least one token.",
+          type: "negative",
+          position: "top",
+        });
+        return;
+      }
+
+      if (contacts.value.length === 0) {
+        Quasar.Notify.create({
+          message: "No contact",
+          caption:
+            "Please enter at least one contact like an email address or Telegram account (t.me/username).",
+          type: "negative",
+          position: "top",
+        });
+        return;
+      }
+
       const allowed: Array<TokenSymbol> = allowedTokens.value.map((t) => {
         return {
           sym: `${t.symbol.precision},${t.symbol.name}`,
@@ -292,22 +389,79 @@ export default Vue.defineComponent({
       });
       const data: Updateuser = {
         user: userName.value,
-        contact: contacts.value,
+        contact: contacts.value.map((c) => c.trim()),
         allowed,
         active: sellerActive.value,
         pgp: pgpKey.value.pub,
         note: note.value,
       };
+
       savWeb.transaction({
         chain: state.contract.chain,
         contract: state.contract.account,
         action: state.contract.actions.updateUser,
         data,
+        permission: state.loginUser.value?.permission,
       });
     }
 
+    const checkingUserData = Vue.ref<boolean>(false);
+
+    async function getLoginUser(name?: string) {
+      if (checkingUserData.value === true) return;
+      checkingUserData.value = true;
+
+      let user: PublicAccount | undefined = undefined;
+      if (name !== undefined) {
+        name = name.trim();
+        user = name.length > 0 ? { name } : undefined;
+      } else {
+        user = undefined;
+      }
+
+      const resultUser = await savWeb.getUser(user, 60000);
+
+      // Check if chain is the same as the shop contract
+      if (
+        resultUser &&
+        resultUser.chain !== undefined &&
+        isSameChain(resultUser.chain, state.contract.chain) !== true
+      ) {
+        Quasar.Notify.create({
+          message: "Wrong chain",
+          caption: `Please connect the browser with an account on the ${state.contract.chain} chain.`,
+          type: "negative",
+          position: "top",
+        });
+        return;
+      }
+
+      state.loginUser.value = resultUser;
+
+      if (resultUser?.name !== undefined) {
+        if (resultUser.name === userName.value) {
+          // Update user data by button click
+          getUserData();
+        } else {
+          userName.value = resultUser.name;
+          // getUserData will already be executed when userName changes
+        }
+      } else {
+        userName.value = "";
+      }
+    }
+
     function deleteUser() {
-      console.log("TODO: Delete user");
+      const data: Deleteuser = {
+        user: userName.value,
+      };
+      savWeb.transaction({
+        chain: state.contract.chain,
+        contract: state.contract.account,
+        action: state.contract.actions.deleteUser,
+        data,
+        permission: state.loginUser.value?.permission,
+      });
     }
 
     function shortContact(c: string) {
@@ -325,20 +479,118 @@ export default Vue.defineComponent({
       if (contactInput.value.length > 0) {
         const contact = contactInput.value;
         contactInput.value = "";
-        contacts.value.push(contact);
+        contacts.value.push(shortenUrl(contact));
       }
     }
 
-    // TODO: As soon as userName is changed then get the currently selected data of the user:
-    // TODO: Test upload
-    // TODO: Delete user action
+    /**
+     * Remove beginning http(s):// from url. Remove also www. if it starts with the protocol http or https
+     * @param url
+     * @returns
+     */
+    function shortenUrl(url: string) {
+      url = url.trim();
+      if (url.startsWith("www.")) {
+        return url.replace(/^www\./, "");
+      }
+      const l = url.length;
+      url = url.replace(/^https?:\/\//, "").replace(/^http?:\/\//, "");
+      if (l !== url.length) {
+        return url.replace(/^www\./, "");
+      }
+      return url;
+    }
+
+    const validContactInput = Vue.computed<boolean>(() => {
+      if (contactInput.value.length > 0) {
+        // Check if it is a valid known format
+        if (shortContactInput.value.length > 0) {
+          return true;
+        }
+        // Check if it is a valid link
+        const link = shortenUrl(contactInput.value);
+        const dotIndex = link.indexOf(".");
+        if (dotIndex > 0) {
+          const slashIndex = link.indexOf("/", dotIndex);
+          if (slashIndex > 0 && link.length - slashIndex > 1) {
+            return true;
+          }
+        }
+      }
+      return false;
+    });
+
+    const items = Vue.ref<Array<IdAndCategory> | undefined>(undefined);
+
+    async function getUserData() {
+      checkingUserData.value = true;
+      const result = await savWeb.getTableRows({
+        chain: state.contract.chain,
+        code: state.contract.account,
+        scope: state.contract.account,
+        table: state.contract.tables.user,
+        entry: userName.value,
+      });
+
+      if (isTableResultWithEntries(result)) {
+        const user = (result as { rows: Array<UserTable> }).rows[0];
+        if (
+          user.pgp !== undefined &&
+          user.contact !== undefined &&
+          user.allowed !== undefined &&
+          user.note !== undefined &&
+          user.active !== undefined &&
+          user.banned !== undefined
+        ) {
+          // Adopt new global user state
+          state.user = {
+            ...user,
+            active: Boolean(user.active),
+            allowed: user.allowed.map((t: TokenSymbol) => {
+              return {
+                symbol: StringToSymbol(t.sym),
+                contract: t.contr,
+                chain: t.chain,
+              };
+            }),
+          };
+
+          pgpKey.value = {
+            pub: user.pgp,
+            pri: "",
+            passphrase: "",
+          };
+          note.value = user.note;
+          sellerActive.value = Boolean(user.active);
+          isBanned.value = user.banned;
+          contacts.value = user.contact;
+          allowedTokens.value = user.allowed.map((t: TokenSymbol) => {
+            return {
+              label: `${t.sym} ${t.contr}@${t.chain}`,
+              symbol: StringToSymbol(t.sym),
+              contract: t.contr,
+              chain: t.chain,
+            };
+          });
+          items.value = user.items;
+        }
+      }
+      checkingUserData.value = false;
+    }
+
+    function formatItem(item: IdAndCategory) {
+      return `#${item.id} (${item.category})`;
+    }
+
+    function openItem(id: string | number | bigint | undefined) {
+      router.push({ name: "item", query: { id: String(id) } });
+    }
 
     return {
       userName,
       darkStyle,
-      savConnected,
       pgpKey,
-      getUserData,
+      getLoginUser,
       allowedTokensSelect,
       availableTokens,
       allowedTokens,
@@ -356,9 +608,14 @@ export default Vue.defineComponent({
       shortContact,
       contactInput,
       shortContactInput,
+      validContactInput,
       addContact,
       contacts,
       openLinkOrMail,
+      checkingUserData,
+      items,
+      formatItem,
+      openItem,
     };
   },
 });

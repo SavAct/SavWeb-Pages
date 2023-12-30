@@ -429,7 +429,7 @@ export class SavWeb {
 
   /** Get the rows of a table
    * @param chain Chain Id or short name
-   * @param contract Contract account
+   * @param code Contract account
    * @param table Table name
    * @param scope Scope name
    * @param entry Is a single number or an array. As array the first index descipe the lower_bound and the second the upper_bound
@@ -437,20 +437,23 @@ export class SavWeb {
    * @returns A single row if there is only one requested and an array of rows if there is an interval requested
    */
   async getTableRows(
-    chain: string,
-    contract: string,
-    table: string,
-    scope: string,
-    entry?: number | string | Array<number | string>,
+    v: {
+      chain: string;
+      code: string;
+      table: string;
+      scope: string;
+      entry?: number | string | Array<number | string>;
+    },
+
     maxWaitMs = 10000
   ) {
     let lower_bound: undefined | string = undefined;
     let upper_bound: undefined | string = undefined;
-    if (typeof entry == "object") {
-      lower_bound = entry[0].toString();
-      upper_bound = entry[1].toString();
-    } else if (entry !== undefined) {
-      lower_bound = entry.toString();
+    if (typeof v.entry == "object") {
+      lower_bound = v.entry[0].toString();
+      upper_bound = v.entry[1].toString();
+    } else if (v.entry !== undefined) {
+      lower_bound = v.entry.toString();
       upper_bound = lower_bound;
     }
 
@@ -460,12 +463,12 @@ export class SavWeb {
         SavWeb: {
           f: "eosioChainApi",
           id: null, // With value null this parameter will be defined in request id
-          chain,
+          chain: v.chain,
           post: "get_table_rows",
           params: {
-            code: contract,
-            table,
-            scope,
+            code: v.code,
+            table: v.table,
+            scope: v.scope,
             lower_bound,
             upper_bound,
           },
@@ -476,31 +479,24 @@ export class SavWeb {
     )) as GetTableRowsResult | FullRpcError | undefined;
 
     if (result == undefined) {
-      console.error("Cannot get the table from", contract);
+      console.error("Cannot get the table from", v.code);
       return undefined;
     }
 
-    // Return the result
-    if ("rows" in result) {
-      const rows = result.rows;
-      if (rows.length > 0) {
-        return rows;
-      } else {
-        return null;
-      }
-    }
-    return undefined;
+    return result;
   }
 
   async getTableByScope(
-    chain: string,
-    contract: string,
-    table?: string,
-    lower_bound?: string,
-    upper_bound?: string,
-    limit?: number,
-    reverse?: boolean,
-    show_payer?: boolean,
+    v: {
+      chain: string;
+      code: string;
+      table?: string;
+      lower_bound?: string;
+      upper_bound?: string;
+      limit?: number;
+      reverse?: boolean;
+      show_payer?: boolean;
+    },
     maxWaitMs = 10000
   ) {
     // Send request
@@ -509,16 +505,16 @@ export class SavWeb {
         SavWeb: {
           f: "eosioChainApi",
           id: null, // With value null this parameter will be defined in request id
-          chain,
+          chain: v.chain,
           post: "get_table_by_scope",
           params: {
-            code: contract,
-            table,
-            lower_bound,
-            upper_bound,
-            limit,
-            reverse,
-            show_payer,
+            code: v.code,
+            table: v.table,
+            lower_bound: v.lower_bound,
+            upper_bound: v.upper_bound,
+            limit: v.limit,
+            reverse: v.reverse,
+            show_payer: v.show_payer,
           },
           idToken: this.idToken,
         },
@@ -527,7 +523,7 @@ export class SavWeb {
     )) as GetTableByScopeResult | FullRpcError | undefined;
 
     if (result == undefined) {
-      console.error(`Cannot get the scopes from table ${table} of`, contract);
+      console.error(`Cannot get the scopes from table ${v.table} of`, v.code);
       return undefined;
     }
 
@@ -598,7 +594,7 @@ export class SavWeb {
       maxWaitMs
     )) as PublicAccount | undefined;
 
-    // console.log('result on page', result);
+    console.log("result on page", result);
 
     if (typeof result === "object") {
       if ("error" in result) {
@@ -629,14 +625,12 @@ export class SavWeb {
    * @param user
    * @param to
    */
-  openHistory(chain?: string, user?: string, to?: string) {
+  openHistory(v: { chain?: string; user?: string; to?: string }) {
     window.parent.postMessage(
       {
         SavWeb: {
           f: "openHistory",
-          chain,
-          user,
-          to,
+          ...v,
           idToken: this.idToken,
         },
       },
@@ -669,11 +663,13 @@ export class SavWeb {
    * @param maxWaitMs Maximum amount of time to wait until the request should be handled. Default is here 0 for endless
    */
   async payment(
-    chain: string,
-    to: string,
-    pay: string,
-    memo: string,
-    from: string | undefined = undefined,
+    v: {
+      chain: string;
+      to: string;
+      pay: string;
+      memo: string;
+      from?: string | undefined;
+    },
     maxWaitMs: number = 0
   ) {
     // Send request
@@ -683,11 +679,7 @@ export class SavWeb {
           f: "pay",
           id: String(this.requestNumber),
           idToken: this.idToken,
-          chain,
-          to,
-          from,
-          pay,
-          memo,
+          ...v,
         },
       },
       maxWaitMs

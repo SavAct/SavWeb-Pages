@@ -1,6 +1,18 @@
-import { Token } from "../Components/AntelopeHelpers";
+import { AssetSymbol, Token } from "../Components/AntelopeHelpers";
 import { get_available_tokens } from "../Components/AvailableTokens";
+import { UserTable } from "../Components/ContractInterfaces";
 import { Entry, Seller } from "../Components/Items";
+import { PublicAccount } from "../Components/SavWeb";
+
+export interface ExtendedTokenSymbol {
+  symbol: AssetSymbol;
+  contract: string;
+  chain: string;
+}
+
+export interface User extends Omit<UserTable, "allowed"> {
+  allowed: Array<ExtendedTokenSymbol>;
+}
 
 const contract = {
   account: "infiniteshop",
@@ -13,6 +25,18 @@ const contract = {
     updateUser: "updateuser",
     deleteUser: "deleteuser",
     banUser: "ban",
+  },
+  tables: {
+    user: "user",
+    item: "item",
+  },
+};
+
+const savpayContract = {
+  account: "savactsavpay",
+  chain: "eos",
+  tables: {
+    tokens: "tokens",
   },
 };
 
@@ -44,16 +68,17 @@ async function getAvailableTokens(callback: (hasError?: boolean) => void) {
   return allowedTokens;
 }
 
-// Counter clicks transformation in progress which is shown on the home page
-const _progress = Vue.ref<number>(0);
-const progress = Vue.computed({
-  get: () => {
-    return _progress.value;
-  },
-  set: (value) => {
-    // From 0.0 to 1.0 in tenth steps
-    _progress.value = (value % 11) / 10;
-  },
+const loginUser = Vue.ref<PublicAccount | undefined>(undefined);
+const user = Vue.reactive<User>({
+  user: "",
+  contact: [],
+  allowed: [],
+  active: false,
+  lastUpdate: 0,
+  items: [],
+  banned: false,
+  pgp: "",
+  note: "",
 });
 
 // Elements of the main header and footer
@@ -72,6 +97,7 @@ const barStyle: any = {
   opacity: 0.2,
 };
 
+// Example data // TODO: Remove
 const itemsList: Array<Entry> = [
   {
     id: 0,
@@ -145,60 +171,6 @@ const itemsList: Array<Entry> = [
   },
 ];
 
-const allChains = [
-  {
-    label: "EOS",
-    value: "eos",
-    id: "aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906",
-  },
-  {
-    label: "WAX",
-    value: "wax",
-    id: "1064487b3cd1a897ce03ae5b6a865651747e2e152090f99c1d19d44e01aea5a4",
-  },
-  {
-    label: "BEOS",
-    value: "beos",
-    id: "cbef47b0b26d2b8407ec6a6f91284100ec32d288a39d4b4bbd49655f7c484112",
-  },
-  {
-    label: "BOS",
-    value: "bos",
-    id: "d5a3d18fbb3c084e3b1f3fa98c21014b5f3db536cc15d08f9f6479517c6a3d86",
-  },
-
-  {
-    label: "FIO",
-    value: "fio",
-    id: "21dcae42c0182200e93f954a074011f9048a7624c6fe81d3c9541a614a88bd1c",
-  },
-  {
-    label: "Insights",
-    value: "insights",
-    id: "b042025541e25a472bffde2d62edd457b7e70cee943412b1ea0f044f88591664",
-  },
-  {
-    label: "MEET.ONE",
-    value: "meetone",
-    id: "cfe6486a83bad4962f232d48003b1824ab5665c36778141034d75e57b956e422",
-  },
-  {
-    label: "Proton",
-    value: "proton",
-    id: "384da888112027f0321850a169f737c33e53b388aad48b5adace4bab97f437e0",
-  },
-  {
-    label: "Telos",
-    value: "telos",
-    id: "4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11",
-  },
-  {
-    label: "Worbli",
-    value: "worbli",
-    id: "73647cde120091e0a4b85bced2f3cfdb3041e266cbbe95cee59b73235a1b3b6f",
-  },
-];
-
 const sellerList: { [key: string]: Seller } = {
   savact: {
     account: "savact",
@@ -243,8 +215,10 @@ WkrmPMQ2vCNN/vfNRi447wg=
 
 export const state = {
   contract,
+  savpayContract,
+  loginUser,
+  user,
   darkStyle,
-  progress,
   itemsList,
   sellerList,
   mainFooterRef,
@@ -253,5 +227,4 @@ export const state = {
   barStyle,
   getAvailableTokens,
   isGettingAvailableTokens,
-  allChains,
 };

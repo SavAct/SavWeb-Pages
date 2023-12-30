@@ -344,7 +344,6 @@ FrBLSSi9cFyo7kugL3b3Lwo=
     }
 
     return {
-      progress: state.progress,
       darkStyle: state.darkStyle,
       entry,
       getRegions,

@@ -48,7 +48,7 @@ import { PGP_Keys } from "./Items";
 export default Vue.defineComponent({
   name: "tokenSymbol",
   components: { AddPgpBtn },
-  emits: ["update:model-value"],
+  emits: ["update:model-value", "fingerprint"],
   props: {
     modelValue: {
       type: Object as PropType<PGP_Keys>,
@@ -84,10 +84,12 @@ export default Vue.defineComponent({
     const keys = Vue.computed({
       get: () => props.modelValue,
       set: (v) => {
-        console.log("get fingerprint from mV change", v); //-
-
-        context.emit("update:model-value", v);
-        getFingerprint(v.pub);
+        context.emit("update:model-value", {
+          pub: v.pub,
+          pri: v.pri,
+          passphrase: v.passphrase,
+          fingerprint: getFingerprint(v.pub),
+        });
       },
     });
     const hasPGP = Vue.ref<boolean>(false);
@@ -112,8 +114,8 @@ export default Vue.defineComponent({
             pri: "",
             passphrase: "",
             pub: v,
+            fingerprint: getFingerprint(v),
           });
-          getFingerprint(v);
         }
       },
     });
@@ -130,6 +132,7 @@ export default Vue.defineComponent({
           fingerprint.value = "";
         }
       }
+      return fingerprint.value;
     }
 
     Vue.onMounted(() => {

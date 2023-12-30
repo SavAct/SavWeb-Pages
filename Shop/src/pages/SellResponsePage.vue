@@ -279,7 +279,7 @@ export default Vue.defineComponent({
             buyerResponse.value,
             keys.value.pri,
             keys.value.passphrase,
-            ''
+            ""
           );
         }
       } else if (buyerResponse.value.startsWith("{")) {
@@ -310,7 +310,7 @@ export default Vue.defineComponent({
               step.value = 2;
               return;
             }
-           
+
             // TODO: Other responses
           } else {
             console.log("Invalid response");
@@ -359,9 +359,8 @@ export default Vue.defineComponent({
       }
     });
 
-    
-    const encryptedAnswer = Vue.ref<string>('');
-    async function encryptAnswer(){
+    const encryptedAnswer = Vue.ref<string>("");
+    async function encryptAnswer() {
       if (accept.value !== null && userData.value) {
         const encryped = await encrypt(
           rawAnswer.value,
@@ -372,16 +371,15 @@ export default Vue.defineComponent({
         );
         if (typeof encryped === "string") {
           encryptedAnswer.value = encryped;
-          return
+          return;
         }
       }
       encryptedAnswer.value = "";
     }
 
-
     // dev mode
-    if(true){
-      keys.value.pub = `-----BEGIN PGP PUBLIC KEY BLOCK-----
+    if (true) {
+      (keys.value.pub = `-----BEGIN PGP PUBLIC KEY BLOCK-----
 
 xjMEZMwzBBYJKwYBBAHaRw8BAQdA/+/C8lm299s9AZ8YOya+FbbuPFpV3JHr
 V2mbEoQoPz7NAMKMBBAWCgA+BYJkzDMEBAsJBwgJkBQ0wwB7GCsCAxUICgQW
@@ -395,8 +393,8 @@ WkrmPMQ2vCNN/vfNRi447wg=
 =Vfmh
 -----END PGP PUBLIC KEY BLOCK-----
 
-`,
-      keys.value.pri = `-----BEGIN PGP PRIVATE KEY BLOCK-----
+`),
+        (keys.value.pri = `-----BEGIN PGP PRIVATE KEY BLOCK-----
 
 xYYEZMwzBBYJKwYBBAHaRw8BAQdA/+/C8lm299s9AZ8YOya+FbbuPFpV3JHr
 V2mbEoQoPz7+CQMIV/9D7bpVhl3gFklYCb60b2FRBlg1G2DC8BPM3JfWI/2f
@@ -413,11 +411,9 @@ u5XRL2HcPlHRy9I8NuAA/3X4fL7+mLq376j0TcCZ81pK5jzENrwjTf73zUYu
 OO8I
 =pGPL
 -----END PGP PRIVATE KEY BLOCK-----
-`;
-        keys.value.passphrase = 'abc';
+`);
+      keys.value.passphrase = "abc";
     }
-
-
 
     // TODO: Display buyer and memo on last step
     // TODO: Display textarea to enter buyers payment confirmation on last step, change last step wait status to deliver status by setting isPaid = true
@@ -432,11 +428,11 @@ OO8I
         nextLoading.value = false;
         return;
       }
-      if(step.value == 3){
+      if (step.value == 3) {
         nextLoading.value = true;
         await encryptAnswer();
         nextLoading.value = false;
-        step.value++
+        step.value++;
         return;
       }
       if (step.value < 5) step.value++;

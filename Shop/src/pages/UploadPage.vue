@@ -284,10 +284,7 @@ import DateTimeInput from "../Components/DateTimeInput.vue";
 import { countryCodes, getRegion } from "../Components/ConvertRegion";
 import { state } from "../store/globals";
 import { Ref } from "vue";
-import {
-  AddItem,
-  ToRegion,
-} from "../Components/ContractInterfaces";
+import { AddItem, ToRegion } from "../Components/ContractInterfaces";
 import { savWeb } from "../store/connect";
 import { GetQueryId } from "../Components/queryHelper";
 
@@ -443,9 +440,10 @@ export default Vue.defineComponent({
         data,
       });
 
-      // TODO: Load already uploaded shop by query id and edit user table
-
+      // TODO: Store state on leaving this page
       // TODO: Create preview page
+      // TODO: Load already uploaded shop by query id and edit the item table
+      // TODO: If the user is not defined yet, create a new user via the same transaction
     }
 
     const id = GetQueryId();
@@ -456,7 +454,6 @@ export default Vue.defineComponent({
     // to: Array<{ region: string; sp: number; sd: number }>; // Country code, shipping price in USD and shipping duration in seconds after payment. {region: "DE", sp: 5.10, sd: 604800}, regions may be "WW", "EU", "US DE AT",
 
     return {
-      progress: state.progress,
       darkStyle: state.darkStyle,
       seller,
       title,

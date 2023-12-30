@@ -249,12 +249,13 @@ export default Vue.defineComponent({
       await updateTokenPrice();
       const assetStr = `${totalAsset.value} ${props.token.contract}`;
       waitForTrans.value = true;
-      const result = await savWeb.payment(
-        props.token.chain,
-        props.entry.seller,
-        assetStr,
-        memo.value
-      );
+      const result = await savWeb.payment({
+        chain: props.token.chain,
+        to: props.entry.seller,
+        pay: assetStr,
+        memo: memo.value,
+        // TODO: Use SavPay instead of a normal payment
+      });
 
       if (result) {
         let link = "";

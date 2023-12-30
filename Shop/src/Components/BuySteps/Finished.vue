@@ -256,11 +256,11 @@ export default Vue.defineComponent({
     // startTimer();
 
     function openTrx() {
-      savWeb.openHistory(
-        trxData.value?.token.chain,
-        trxData.value?.buyer,
-        trxData.value?.seller
-      );
+      savWeb.openHistory({
+        chain: trxData.value?.token.chain,
+        user: trxData.value?.buyer,
+        to: trxData.value?.seller,
+      });
     }
 
     return {

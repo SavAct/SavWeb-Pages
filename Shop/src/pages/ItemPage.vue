@@ -294,7 +294,6 @@ export default Vue.defineComponent({
     }
 
     return {
-      progress: state.progress,
       darkStyle: state.darkStyle,
       entry,
       imgs,

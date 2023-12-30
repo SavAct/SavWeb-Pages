@@ -81,6 +81,18 @@
         </q-list>
       </q-scroll-area>
     </q-drawer>
+    <q-page-container v-if="!savConnected">
+      <div class="q-ma-md justify-center">
+        This page needs to be executed in the SavAct App.<br />
+        You can just drag this file into the address bar of the
+        <a
+          href="https://savact.app#_browser_"
+          target="_blank"
+          :class="{ 'text-blue': darkStyle }"
+          >SavAct browser</a
+        >.
+      </div>
+    </q-page-container>
     <page-container></page-container>
     <!-- <q-footer
       elevated
@@ -123,6 +135,7 @@ import PageContainer from "../router/PageContainer";
 import { state } from "../store/globals";
 import { route, router } from "../router/simpleRouter";
 import { routes } from "../router/routes";
+import { savConnected } from "../store/connect";
 
 export default Vue.defineComponent({
   name: "MainLayout",
@@ -191,6 +204,7 @@ export default Vue.defineComponent({
       mainHeader,
       mainFooter,
       menuClick,
+      savConnected,
     };
   },
 });

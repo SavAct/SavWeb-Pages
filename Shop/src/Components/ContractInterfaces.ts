@@ -45,12 +45,12 @@ export interface AddItem {
 }
 
 export interface Ban {
-  seller: string;
+  user: string;
   ban: boolean;
 }
 
 export interface Deleteuser {
-  seller: string;
+  user: string;
 }
 
 export interface IdAndCategory {
@@ -91,18 +91,6 @@ export interface Updateuser {
   contact: Array<string>;
   allowed: Array<TokenSymbol>;
   active: boolean;
-  pgp: string;
-  note: string;
-}
-
-export interface UserTable {
-  user: string;
-  contact: Array<string>;
-  allowed: Array<TokenSymbol>;
-  active: boolean;
-  lastUpdate: number;
-  items: Array<IdAndCategory>;
-  banned: boolean;
   pgp: string;
   note: string;
 }

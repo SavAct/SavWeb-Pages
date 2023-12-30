@@ -33,6 +33,10 @@ function VueFileToTs(file: string) {
     throw "This version does not work with style tag in .vue-files";
   }
 
+  if (template !== undefined && template.length > 0 && template.includes("`")) {
+    throw "This version does not work with the backtick sign (`) within <template>. Instead, use the single quote sign (') or use a function within the <script> that uses the backtick.";
+  }
+
   let s = -1;
   if (script !== undefined) {
     // Search for vue.***Component***(***{

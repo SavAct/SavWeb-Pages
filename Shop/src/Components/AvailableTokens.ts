@@ -1,15 +1,25 @@
 import { Ref } from "vue";
-import { StringToSymbol, Token } from "./AntelopeHelpers";
+import {
+  StringToSymbol,
+  Token,
+  isTableResultWithEntries,
+} from "./AntelopeHelpers";
 import { savWeb } from "../store/connect";
+import { state } from "../store/globals";
 
-async function getTokensData(tokenContract: string, chain: string) {
-  const t_data = await savWeb.getTableRows(
+async function getTokensData(
+  tokenContract: string,
+  savpayContract = state.savpayContract
+) {
+  const chain = savpayContract.chain;
+  const result = await savWeb.getTableRows({
     chain,
-    "savactsavpay",
-    "tokens",
-    tokenContract
-  );
-  if (t_data) {
+    code: savpayContract.account,
+    table: savpayContract.tables.tokens,
+    scope: tokenContract,
+  });
+  if (isTableResultWithEntries(result)) {
+    const t_data = (result as { rows: Array<{ token: string }> }).rows;
     let allTokens = [];
     for (let i = 0; i < t_data.length; i++) {
       if (!t_data[i].token) {
@@ -35,15 +45,17 @@ export async function get_available_tokens(
   if (isGetting.value) return;
   isGetting.value = true;
   let noError = true;
-  const chain = "eos";
-  const result = await savWeb.getTableByScope(chain, "savactsavpay", "tokens");
+  const result = await savWeb.getTableByScope({
+    chain: state.savpayContract.chain,
+    code: state.savpayContract.account,
+    table: state.savpayContract.tables.tokens,
+  });
   const availableTokens = [];
   if (result && result.length > 0) {
     for (let i = 0; i < result.length; i++) {
       const tokenContract = result[i];
-      const t = await getTokensData(tokenContract.scope, chain);
+      const t = await getTokensData(tokenContract.scope);
       if (t) {
-        console.log("Token", t);
         availableTokens.push(...t);
       } else {
         noError = false;

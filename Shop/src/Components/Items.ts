@@ -27,4 +27,5 @@ export interface PGP_Keys {
   pub: string;
   pri: string;
   passphrase: string;
+  fingerprint?: string;
 }

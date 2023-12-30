@@ -34,7 +34,7 @@
 <script lang="ts">
 import { savConnected, savWeb } from "../store/connect";
 import { state } from "../store/globals";
-import { checkUserOffline } from "./AntelopeHelpers";
+import { AllChains, checkUserOffline } from "./AntelopeHelpers";
 
 export default Vue.defineComponent({
   name: "userInput",
@@ -112,7 +112,7 @@ export default Vue.defineComponent({
       context.emit("update:model-value", "");
     }
 
-    const chainOptions = state.allChains;
+    const chainOptions = AllChains;
 
     const _selectedChain = Vue.ref<{
       label: string;
@@ -145,6 +145,7 @@ export default Vue.defineComponent({
         context.emit("update:chain", v.value);
       },
     });
+
     return {
       userName,
       nameError,
