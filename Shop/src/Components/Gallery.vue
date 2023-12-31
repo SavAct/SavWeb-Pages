@@ -60,11 +60,11 @@ export default Vue.defineComponent({
   props: {
     srcs: {
       type: Array<string>,
-      requier: true,
+      required: true,
     },
     fileSize: {
       type: Number,
-      requier: false,
+      required: false,
     },
   },
   name: "gallery",

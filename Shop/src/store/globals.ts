@@ -1,6 +1,6 @@
 import { AssetSymbol, Token } from "../Components/AntelopeHelpers";
 import { get_available_tokens } from "../Components/AvailableTokens";
-import { UserTable } from "../Components/ContractInterfaces";
+import { AddItem, UserTable } from "../Components/ContractInterfaces";
 import { Entry, Seller } from "../Components/Items";
 import { PublicAccount } from "../Components/SavWeb";
 
@@ -40,6 +40,12 @@ const savpayContract = {
   },
 };
 
+const defaultValue = {
+  prepDuration: 3600 * 24 * 2 * 1000, // 2 days
+  shipDuration: 3600 * 24 * 5 * 1000, // 5 days
+  expireDuration: 3600 * 24 * 30 * 1000, // 30 days
+};
+
 // Dark style
 const darkStyle = Vue.computed({
   get: () => {
@@ -69,7 +75,7 @@ async function getAvailableTokens(callback: (hasError?: boolean) => void) {
 }
 
 const loginUser = Vue.ref<PublicAccount | undefined>(undefined);
-const user = Vue.reactive<User>({
+const user = Vue.ref<User>({
   user: "",
   contact: [],
   allowed: [],
@@ -80,6 +86,18 @@ const user = Vue.reactive<User>({
   pgp: "",
   note: "",
 });
+
+const defaultUserName = Vue.computed(() => {
+  if (user.value.user === undefined || user.value.user === "") {
+    if (loginUser.value?.name !== undefined) {
+      return loginUser.value?.name;
+    }
+    return "";
+  }
+  return user.value.user;
+});
+
+const uploadPageInputs = Vue.ref<AddItem | undefined>(undefined);
 
 // Elements of the main header and footer
 const mainHeaderRef = Vue.ref<{ $el: HTMLElement } | null>(null);
@@ -218,6 +236,7 @@ export const state = {
   savpayContract,
   loginUser,
   user,
+  defaultUserName,
   darkStyle,
   itemsList,
   sellerList,
@@ -227,4 +246,6 @@ export const state = {
   barStyle,
   getAvailableTokens,
   isGettingAvailableTokens,
+  uploadPageInputs,
+  defaultValue,
 };

@@ -49,7 +49,7 @@ export async function decrypt(
   verifyPublicKey: string
 ): Promise<string> {
   try {
-    const message = await openpgp.readMessage({ armoredMessage: text }); // openpgp.createMessage({ text }); 
+    const message = await openpgp.readMessage({ armoredMessage: text }); // openpgp.createMessage({ text });
     const veryPublicKey =
       verifyPublicKey.length > 0
         ? await openpgp.readKey({
@@ -80,7 +80,6 @@ export async function decrypt(
       });
       try {
         if (veryPublicKey) {
-          console.log("------Decrypted", decrypted); // TODO: Test decription with signature verification
           await decrypted.signatures[0].verified; // throws on invalid signature
           console.log("Signature is valid");
         }

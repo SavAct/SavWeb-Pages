@@ -42,17 +42,17 @@ export default Vue.defineComponent({
   props: {
     modelValue: {
       type: String,
-      requier: true,
+      required: true,
       default: "",
     },
     chain: {
       type: String,
-      requier: false,
+      required: false,
       default: undefined,
     },
     fixChain: {
       type: Boolean,
-      requier: false,
+      required: false,
       default: false,
     },
   },

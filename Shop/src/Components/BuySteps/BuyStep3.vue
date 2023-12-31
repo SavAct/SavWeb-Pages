@@ -110,62 +110,62 @@ export default Vue.defineComponent({
   props: {
     entry: {
       type: Object as PropType<Entry>,
-      requier: true,
+      required: true,
       default: null,
     },
     token: {
       type: Object as PropType<Token>,
-      requier: true,
+      required: true,
       default: null,
     },
     price: {
       type: Number,
-      requier: true,
+      required: true,
       default: 0,
     },
     pieces: {
       type: Number,
-      requier: true,
+      required: true,
       default: 1,
     },
     completed: {
       type: Boolean,
-      requier: false,
+      required: false,
       default: false,
     },
     seller: {
       type: Object as PropType<Seller>,
-      requier: true,
+      required: true,
       default: undefined,
     },
     buyer: {
       type: String,
-      requier: true,
+      required: true,
       default: "",
     },
     response: {
       type: String,
-      requier: false,
+      required: false,
       default: "",
     },
     link: {
       type: String,
-      requier: false,
+      required: false,
       default: "",
     },
     informData: {
       type: String,
-      requier: true,
+      required: true,
       default: "",
     },
     jsonData: {
       type: String,
-      requier: true,
+      required: true,
       default: "",
     },
     buyerKeys: {
       type: Object as PropType<PGP_Keys>,
-      requier: true,
+      required: true,
       default: "",
     },
   },
@@ -327,7 +327,7 @@ export default Vue.defineComponent({
       context.emit("update:jsonData", json);
       let fail = true;
       if (props.seller && typeof props.seller.pgp == "string") {
-        // Ecrypt
+        // Encrypt
         const data = await encrypt(
           json,
           props.seller.pgp,

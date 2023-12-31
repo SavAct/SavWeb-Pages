@@ -8,13 +8,13 @@ const configFileName = ts.findConfigFile(
   "./",
   ts.sys.fileExists,
   "tsconfig.json"
-); // Automatisches Auffinden der tsconfig.json-Datei
+); // Automatic detection of the tsconfig.json file
 
-// Lesen der tsconfig.json-Datei
+// Reading the tsconfig.json file
 const configFile = ts.readConfigFile(configFileName, ts.sys.readFile);
 const configJson = configFile.config;
 
-// Parsen der Compiler-Optionen aus der tsconfig.json
+// Parsing the compiler options from the tsconfig.json
 const parsedConfig = ts.parseJsonConfigFileContent(configJson, ts.sys, "./");
 
 function getVueParts(file: string) {

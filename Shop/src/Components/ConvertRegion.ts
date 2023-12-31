@@ -267,7 +267,7 @@ export const countryCodes = [
   "ZW",
 ];
 
-// Get all availabke country codes, but some Nations are mentioned twice:
+// Get all available country codes, but some Nations are mentioned twice:
 // function getAllCodes(){
 //   const c = 'ABNCDEFGHIJKLMNOPQRSTUVWXYZ';
 //   let codes = ['WW']

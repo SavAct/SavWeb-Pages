@@ -135,7 +135,6 @@ export default Vue.defineComponent({
         new Date(minDate.toISOString().substring(0, 10)).getTime() >
           expiredDate.getTime()
       ) {
-        console.log("---out of range---");
         return false;
       }
 

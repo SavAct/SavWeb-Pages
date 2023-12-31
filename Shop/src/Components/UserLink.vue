@@ -15,11 +15,11 @@ export default Vue.defineComponent({
   props: {
     user: {
       type: String,
-      requier: true,
+      required: true,
     },
     color: {
       type: String,
-      requier: false,
+      required: false,
       default: undefined,
     },
   },

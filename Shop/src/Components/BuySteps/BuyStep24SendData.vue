@@ -96,27 +96,27 @@ export default Vue.defineComponent({
   props: {
     title: {
       type: String,
-      requier: true,
+      required: true,
       default: "",
     },
     raw: {
       type: String,
-      requier: true,
+      required: true,
       default: "",
     },
     encrypted: {
       type: String,
-      requier: true,
+      required: true,
       default: "",
     },
     seller: {
       type: Object as PropType<Seller>,
-      requier: true,
+      required: true,
       default: undefined,
     },
     contact: {
       type: Object as PropType<{ label: string; value: string }>,
-      requier: false,
+      required: false,
       default: undefined,
     },
   },

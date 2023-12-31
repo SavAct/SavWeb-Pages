@@ -4,7 +4,9 @@
     <q-dialog v-model="show">
       <q-card class="bg-teal text-white" style="width: 400px">
         <q-card-section class="row justify-between">
-          <div class="text-h6 text-bold col-auto">Public key of message recipient</div>
+          <div class="text-h6 text-bold col-auto">
+            Public key of message recipient
+          </div>
           <div class="col-grow row justify-end">
             <q-btn
               round
@@ -78,13 +80,13 @@ export default Vue.defineComponent({
   props: {
     rawData: {
       type: String,
-      requier: true,
-      defaut: "",
+      required: true,
+      default: "",
     },
     pubRecipient: {
       type: String,
-      requier: true,
-      defaut: "",
+      required: true,
+      default: "",
     },
   },
   setup(_props) {

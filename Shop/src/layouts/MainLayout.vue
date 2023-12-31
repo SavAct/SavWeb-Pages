@@ -65,7 +65,7 @@
           <menu-route-item
             route-name="user"
             icon="person"
-            text="Profil"
+            text="Profile"
           ></menu-route-item>
           <menu-route-item
             route-name="upload"

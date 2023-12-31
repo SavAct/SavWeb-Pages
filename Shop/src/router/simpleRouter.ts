@@ -52,7 +52,7 @@ const recordIndex = Vue.computed({
       typeof beforeEachRouteChange !== "function" ||
       beforeEachRouteChange(to, from) !== false
     ) {
-      // At first remove the current page and then load it, to force a reaload if the page name keeps the same
+      // At first remove the current page and then load it, to force a reload if the page name keeps the same
       _recordIndex.value = -1;
       setTimeout(() => (_recordIndex.value = value));
     }

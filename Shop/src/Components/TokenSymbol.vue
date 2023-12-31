@@ -19,15 +19,15 @@ export default Vue.defineComponent({
   props: {
     symbol: {
       type: Object as PropType<AssetSymbol>,
-      requier: true,
+      required: true,
     },
     contract: {
       type: String,
-      requier: true,
+      required: true,
     },
     chain: {
       type: String,
-      requier: true,
+      required: true,
     },
   },
   setup() {

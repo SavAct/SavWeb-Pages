@@ -8,12 +8,12 @@ export default Vue.defineComponent({
   props: {
     src: {
       type: String,
-      requier: false,
+      required: false,
       default: "",
     },
     fileSize: {
       type: Number,
-      requier: false,
+      required: false,
     },
   },
   setup(props) {

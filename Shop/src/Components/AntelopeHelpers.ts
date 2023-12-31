@@ -103,8 +103,8 @@ function userValidChars(val: string): boolean | string {
 
 /**
  * Check offline if a account name or public key is valid
- * @param user Accopunt name or public key
- * @returns true if valid else false
+ * @param user Account name or public key
+ * @returns true if valid else false and return an error message
  */
 export function checkUserOffline(user: string) {
   if (user.startsWith("EOS") || user.startsWith("PUB_")) {

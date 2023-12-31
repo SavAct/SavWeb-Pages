@@ -5,7 +5,7 @@ export interface Entry {
   price: number; // float
   units: number; // int
   seller: string;
-  maxTd: number; // Maximum shipping duration in seconds after dilivery
+  maxTd: number; // Maximum shipping duration in seconds after delivery
   to: Array<{ region: string; sp: number; sd: number }>; // Country code, shipping price in USD and shipping duration in seconds after payment. {region: "DE", sp: 5,10, sd: 604800}, regions may be "WW", "EU", "US DE AT",
   exclude_regions: string;
   from_region: string; // "", "NL"

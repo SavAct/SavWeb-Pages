@@ -26,17 +26,17 @@ export default Vue.defineComponent({
   props: {
     routeName: {
       type: String,
-      requier: true,
+      required: true,
       default: "",
     },
     icon: {
       type: String,
-      requier: false,
+      required: false,
       default: "",
     },
     text: {
       type: String,
-      requier: false,
+      required: false,
       default: "",
     },
   },

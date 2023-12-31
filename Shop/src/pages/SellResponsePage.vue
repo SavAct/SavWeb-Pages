@@ -189,7 +189,7 @@
               {{
                 isPaid
                   ? "Send the article to the customer"
-                  : "Wait until the customer made the tranaction and then send the article"
+                  : "Wait until the customer made the transaction and then send the article"
               }}
             </div>
             <div>Click here to check if the customer made the payment</div>
@@ -362,15 +362,15 @@ export default Vue.defineComponent({
     const encryptedAnswer = Vue.ref<string>("");
     async function encryptAnswer() {
       if (accept.value !== null && userData.value) {
-        const encryped = await encrypt(
+        const encrypted = await encrypt(
           rawAnswer.value,
           buyerPubKey.value,
           keys.value.pub,
           keys.value.pri,
           keys.value.passphrase
         );
-        if (typeof encryped === "string") {
-          encryptedAnswer.value = encryped;
+        if (typeof encrypted === "string") {
+          encryptedAnswer.value = encrypted;
           return;
         }
       }

@@ -1,7 +1,7 @@
 <template>
   <q-page class="column">
     <div class="col q-pa-md text-center">
-      <div class="q-my-md">Setup your own marrket</div>
+      <div class="q-my-md">Setup your own market</div>
       <div class="q-mt-lg">Presented by SavAct.</div>
     </div>
     <div class="col-auto">Your market contract</div>

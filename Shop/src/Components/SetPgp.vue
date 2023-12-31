@@ -52,7 +52,7 @@ export default Vue.defineComponent({
   props: {
     modelValue: {
       type: Object as PropType<PGP_Keys>,
-      requier: true,
+      required: true,
       default: {
         pub: "",
         pri: "",
@@ -61,22 +61,22 @@ export default Vue.defineComponent({
     },
     account: {
       type: String,
-      requier: false,
+      required: false,
       default: "",
     },
     card: {
       type: Boolean,
-      requier: false,
+      required: false,
       default: false,
     },
     hideInput: {
       type: Boolean,
-      requier: false,
+      required: false,
       default: false,
     },
     showUploadBtn: {
       type: Boolean,
-      requier: false,
+      required: false,
       default: false,
     },
   },

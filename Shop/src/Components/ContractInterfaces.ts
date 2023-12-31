@@ -21,7 +21,7 @@ export interface ItemTable {
   fromR: string;
   shipTo: Array<ToRegion>;
   excl: string;
-  options: Array<string>;
+  opts: Array<string>;
   descr: string;
   note: string;
   expired: number;

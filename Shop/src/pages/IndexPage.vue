@@ -233,9 +233,9 @@ export default Vue.defineComponent({
     // TODO: Sort option for lowest total price, file name, shipping time and date
 
     /* TODO: Search for items.
-       Search primary for kategories.
+       Search primary for categories.
        -------
-       Search secondary for decisive words in a contract table with this prosedure (This pricedure is too RAM expensive, see below for alternative):
+       Search secondary for decisive words in a contract table with this procedure (This procedure is too RAM expensive, see below for alternative):
        Title is split into a list of decisive words.
        The words are sorted by character.
        Hash of the combination of each word, but by keeping the sorted order of the words. ("c a b" will create the hash of "a b c", "a b", "a", "b" and "c")

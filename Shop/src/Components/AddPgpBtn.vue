@@ -44,7 +44,7 @@
               label-color="white"
               dense
               type="password"
-              label="Repeart Passphrase"
+              label="Repeat Passphrase"
             ></q-input>
           </div>
         </div>
@@ -85,7 +85,7 @@
           v-if="createNew"
           class="q-mt-md"
           v-model="checkSafe"
-          label="I use this key at my own risk. I have stored it at a private and secure place and will remember my pasphrase."
+          label="I use this key at my own risk. I have stored it at a private and secure place and will remember my passphrase."
         ></q-checkbox>
       </q-card-section>
       <q-card-actions align="right" class="bg-white text-teal">
@@ -118,12 +118,12 @@ export default Vue.defineComponent({
   props: {
     createNew: {
       type: Boolean,
-      requier: false,
-      defaut: false,
+      required: false,
+      default: false,
     },
     modelValue: {
       type: Object as PropType<PGP_Keys>,
-      requier: true,
+      required: true,
       default: {
         pub: "",
         pri: "",

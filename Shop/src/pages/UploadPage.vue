@@ -287,25 +287,44 @@ import { Ref } from "vue";
 import { AddItem, ToRegion } from "../Components/ContractInterfaces";
 import { savWeb } from "../store/connect";
 import { GetQueryId } from "../Components/queryHelper";
+import { checkUserOffline } from "../Components/AntelopeHelpers";
 
 export default Vue.defineComponent({
   name: "uploadPage",
   components: { ProImg, DurationInput, DateTimeInput },
   setup() {
-    const $q = Quasar.useQuasar();
-    const seller = Vue.ref<string>("");
-    const title = Vue.ref<string>("");
+    const pIpt = state.uploadPageInputs.value; // Previous input state
+    const seller = Vue.ref<string>(
+      pIpt?.seller !== undefined && pIpt?.seller !== undefined
+        ? pIpt.seller
+        : state.defaultUserName.value
+    );
+    const title = Vue.ref<string>(pIpt?.title ?? "");
     const imageSrc = Vue.ref<string>("");
-    const imgSrcs = Vue.ref<Array<{ id: number; src: string }>>([]);
-
-    const description = Vue.ref<string>("");
-    const hasNote = Vue.ref<boolean>(false);
-    const note = Vue.ref<string>("");
-    const price = Vue.ref<number>(1);
-    // const units = Vue.ref<number>(1);
-    const duration = Vue.ref<number>(3 * 24 * 3600 * 1000);
-    const expired = Vue.ref<number>(Date.now() + 30 * 24 * 3600 * 1000);
-    const options = Vue.ref<Array<Ref<string>>>([]);
+    let imageSrcBiggestId = 0;
+    const imgSrcs = Vue.ref<Array<{ id: number; src: string }>>(
+      pIpt
+        ? pIpt.imgs.map((i) => {
+            return { id: imageSrcBiggestId++, src: i };
+          })
+        : []
+    );
+    const description = Vue.ref<string>(pIpt?.descr ?? "");
+    const hasNote = Vue.ref<boolean>(pIpt ? pIpt.note !== "" : false);
+    const note = Vue.ref<string>(pIpt?.note ?? "");
+    const price = Vue.ref<number>(Number(pIpt?.price) ?? 1);
+    // const units = Vue.ref<number>(1); // TODO: Add units per order to the contract
+    const duration = Vue.ref<number>(
+      pIpt ? pIpt.prepT * 1000 : state.defaultValue.prepDuration
+    );
+    const expired = Vue.ref<number>(
+      pIpt
+        ? pIpt?.expired * 1000
+        : Date.now() + state.defaultValue.expireDuration
+    );
+    const options = Vue.ref<Array<Ref<string>>>(
+      pIpt?.opts.map((o) => Vue.ref<string>(o)) ?? []
+    );
     const tempOptions = Vue.ref<string>("");
 
     function pushOption() {
@@ -314,7 +333,6 @@ export default Vue.defineComponent({
       tempOptions.value = "";
     }
 
-    const category = Vue.ref<string>("");
     const categoryOptions = Vue.ref<Array<string>>([
       "Art",
       "Electronic",
@@ -323,28 +341,92 @@ export default Vue.defineComponent({
       "Vehicles",
       "Clothing",
       "Other",
-    ]); // Got categories from a table that defines all allowed categiories with an uint64.
-    const available = Vue.ref<boolean>(true);
+    ]); // TODO: Got categories from a table that defines all allowed categories with an uint64.
+
+    const category = Vue.ref<string>(
+      pIpt
+        ? categoryOptions.value.find((v) => {
+            return toContractCategory(v) === pIpt.category;
+          }) ?? ""
+        : ""
+    );
+
+    const available = Vue.ref<boolean>(
+      pIpt?.available !== undefined ? pIpt.available : true
+    );
 
     const countries = Vue.ref<Array<{ label: string; value: string }>>(
       countryCodes.map((c) => {
         return { label: getRegion(c) ?? "", value: c };
       })
     );
-    const fromRegion = Vue.ref<{ label: string; value: string }>({
-      label: "",
-      value: "",
-    });
-    const toRegions = Vue.ref<
-      Array<{ label: string; value: string; sp: Ref<number>; sd: Ref<number> }>
-    >([]);
-    const excludeRegions = Vue.ref<Array<{ label: string; value: string }>>([]);
+    const fromRegion = Vue.ref<{ label: string; value: string }>(
+      pIpt?.fromR !== undefined
+        ? {
+            label: getRegion(pIpt.fromR.toLocaleUpperCase()) ?? "",
+            value: pIpt.fromR,
+          }
+        : {
+            label: "",
+            value: "",
+          }
+    );
 
-    let imageSrcBiggestId = 0;
+    const _toRegions = Vue.ref<
+      Array<{
+        label: string; // Region name
+        value: string; // Country code
+        sp: number; // Shipping price
+        sd: number; // Shipping duration
+      }>
+    >([]);
+    if (pIpt && pIpt.shipTo !== undefined) {
+      pIpt.shipTo.map((s) => {
+        const codes = s.rs.toLocaleUpperCase().match(/../g);
+        if (codes) {
+          for (const c of codes) {
+            _toRegions.value.push({
+              label: getRegion(c) ?? "",
+              value: c,
+              sp: s.p,
+              sd: s.t,
+            });
+          }
+        }
+      });
+    }
+    const toRegions = Vue.computed({
+      get: () => {
+        return _toRegions.value;
+      },
+      set: (v) => {
+        _toRegions.value = v.map((r) => {
+          let sd = Number(r.sd);
+          let sp = Number(r.sp);
+          if (Number.isNaN(sd)) sd = state.defaultValue.shipDuration;
+          if (Number.isNaN(sp)) sp = 0;
+
+          return {
+            label: r.label,
+            value: r.value,
+            sp,
+            sd,
+          };
+        });
+      },
+    });
+    const excludeRegions = Vue.ref<Array<{ label: string; value: string }>>(
+      pIpt?.excl !== undefined
+        ? pIpt.excl.match(/../g)?.map((c) => {
+            return { label: getRegion(c.toLocaleUpperCase()) ?? "", value: c };
+          }) ?? []
+        : []
+    );
+
     function addImage() {
-      const trimed = imageSrc.value.trim();
-      if (imgSrcs.value.find((s) => s.src === trimed)) return;
-      imgSrcs.value.push({ id: imageSrcBiggestId++, src: trimed });
+      const trimmed = imageSrc.value.trim();
+      if (imgSrcs.value.find((s) => s.src === trimmed)) return;
+      imgSrcs.value.push({ id: imageSrcBiggestId++, src: trimmed });
       imageSrc.value = "";
     }
 
@@ -362,7 +444,17 @@ export default Vue.defineComponent({
       }
     }
 
-    function send() {
+    interface SettingsError {
+      key: string;
+      message: string;
+      caption: string;
+    }
+
+    function getAndCheckAllSettings(): {
+      data: AddItem;
+      error: Array<SettingsError>;
+    } {
+      let errors: Array<SettingsError> = [];
       let invalidRegion: Array<string> = [];
       for (const exc of excludeRegions.value) {
         for (const to of toRegions.value) {
@@ -371,81 +463,123 @@ export default Vue.defineComponent({
           }
         }
       }
+      let excludeCodes: string;
       if (invalidRegion.length > 0) {
-        $q.notify({
-          position: "top",
+        errors.push({
+          key: "excl",
           message: `Exclude and ship to region overlap`,
           caption: `The following regions are invalid: ${invalidRegion.join(
             ", "
           )}`,
-          type: "negative",
         });
-        return;
+        excludeCodes = "";
+      } else {
+        excludeCodes = excludeRegions.value
+          .map((r) => r.value)
+          .join("")
+          .toLocaleLowerCase();
       }
 
-      let excludeCodes: string = excludeRegions.value
-        .map((r) => r.value)
-        .join("")
-        .toLocaleLowerCase();
-
+      // Add only unique regions
       let shipTo: Array<ToRegion> = [];
-      toRegions.value.forEach((r) => {
-        const s = shipTo.find((s) => s.t === r.sd && s.p === r.sp);
+      for (let r of toRegions.value) {
+        // Normalize region values
+        let sd = Number(r.sd);
+        let sp = Number(r.sp);
+        if (Number.isNaN(sd)) sd = state.defaultValue.shipDuration;
+        if (Number.isNaN(sp)) sp = 0;
+        // Compare with existing region values
+        const s = shipTo.find((s) => s.t === sd && s.p === sp);
         if (s === undefined) {
           shipTo.push({
-            t: r.sd,
-            p: r.sp,
+            t: sd,
+            p: sp,
             rs: r.value.toLocaleLowerCase(),
           });
         } else {
           s.rs += r.value.toLocaleLowerCase();
         }
-      });
+      }
 
-      const opts: Array<string> = options.value.map((o) => o.value.trim());
+      let opts: Array<string> = options.value.map((o) => o.value.trim());
       for (const opt of opts) {
         if (opt.length === 0 || opt.length > 127) {
-          $q.notify({
-            position: "top",
+          errors.push({
+            key: "opts",
             message: `Option length`,
             caption: `Each options must be between 1 and 127 characters long.`,
-            type: "negative",
           });
-          return;
+          opts = [];
         }
       }
 
-      const data: AddItem = {
-        seller: seller.value.trim(),
-        title: title.value.trim(),
-        price: price.value,
-        note: hasNote.value ? note.value : "",
-        descr: description.value,
-        imgs: imgSrcs.value.map((i) => i.src),
-        available: available.value,
-        category: category.value.toLocaleLowerCase().substring(0, 13),
-        fromR: fromRegion.value.value.toLocaleLowerCase(),
-        shipTo,
-        excl: excludeCodes,
-        prepT: Math.floor(duration.value / 1000),
-        expired: Math.floor(expired.value / 1000),
-        opts,
+      let sellerName = seller.value
+        .trim()
+        .substring(0, 13)
+        .replaceAll(" ", ".");
+      return {
+        data: {
+          seller: checkUserOffline(sellerName) === true ? sellerName : "",
+          title: title.value.trim(),
+          price: price.value,
+          note: hasNote.value ? note.value : "",
+          descr: description.value,
+          imgs: imgSrcs.value.map((i) => i.src),
+          available: available.value,
+          category: toContractCategory(category.value),
+          fromR: fromRegion.value.value.toLocaleLowerCase(),
+          shipTo,
+          excl: excludeCodes,
+          prepT: Math.floor(duration.value / 1000),
+          expired: Math.floor(expired.value / 1000),
+          opts,
+        },
+        error: errors,
       };
-      console.log("Transaction additem data", data);
+    }
 
-      savWeb.transaction({
+    function toContractCategory(category: string): string {
+      return category.toLocaleLowerCase().substring(0, 13);
+    }
+
+    async function send() {
+      const settings = getAndCheckAllSettings();
+      if (settings.error.length > 0) {
+        Quasar.Notify.create({
+          message: settings.error[0].message,
+          caption: settings.error[0].caption,
+          color: "red",
+          position: "top",
+        });
+        return;
+      }
+
+      console.log("Transaction additem data", settings.data);
+
+      const result = await savWeb.transaction({
         chain: state.contract.chain,
         contract: state.contract.account,
         action: state.contract.actions.addItem,
-        data,
+        data: settings.data,
       });
 
-      // TODO: Store state on leaving this page
+      if (result !== undefined) {
+        state.uploadPageInputs.value = undefined;
+        // TODO: Redirect to items page with wait for transaction query
+      }
+
       // TODO: Create preview page
-      // TODO: Load already uploaded shop by query id and edit the item table
-      // TODO: If the user is not defined yet, create a new user via the same transaction
+      // TODO: If the user is not defined yet, goto user input page
     }
 
+    Vue.onBeforeUnmount(() => {
+      const settings = getAndCheckAllSettings();
+      state.uploadPageInputs.value = {
+        ...settings.data,
+      };
+    });
+
+    // TODO: Load already uploaded shop by query id and edit the item table
     const id = GetQueryId();
     console.log("Upload page query: ", id);
 

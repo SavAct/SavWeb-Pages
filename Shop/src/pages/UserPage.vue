@@ -166,7 +166,7 @@
     <q-card class="my-card q-mt-md" flat bordered v-if="items !== undefined">
       <q-card-actions>
         <div class="q-ml-sm" @click="expander = expander === 3 ? -1 : 3">
-          Listed items <pann class="text-secondary">{{ items.length }}</pann>
+          Listed items: <span class="text-secondary">{{ items.length }}</span>
         </div>
         <q-space />
         <q-btn
@@ -248,7 +248,7 @@ export default Vue.defineComponent({
   components: { SetPgp, UserInput },
   setup() {
     const darkStyle = Vue.computed(() => state.darkStyle.value);
-    const _userName = Vue.ref<string>(state.loginUser.value?.name ?? "");
+    const _userName = Vue.ref<string>(state.defaultUserName.value);
     const userName = Vue.computed<string>({
       get: () => _userName.value,
       set: (v) => {
@@ -543,7 +543,7 @@ export default Vue.defineComponent({
           user.banned !== undefined
         ) {
           // Adopt new global user state
-          state.user = {
+          state.user.value = {
             ...user,
             active: Boolean(user.active),
             allowed: user.allowed.map((t: TokenSymbol) => {

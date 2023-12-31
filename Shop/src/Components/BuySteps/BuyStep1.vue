@@ -75,12 +75,12 @@ export default Vue.defineComponent({
   props: {
     buyerName: {
       type: String,
-      requier: true,
+      required: true,
       default: "",
     },
     buyerKeys: {
       type: Object as PropType<PGP_Keys>,
-      requier: true,
+      required: true,
       default: {
         pub: "",
         pri: "",
@@ -89,41 +89,41 @@ export default Vue.defineComponent({
     },
     address: {
       type: Object as PropType<Address>,
-      requier: true,
+      required: true,
       default: "",
     },
     token: {
       type: Object as PropType<Token>,
-      requier: true,
+      required: true,
     },
     encrypt: {
       type: Boolean,
-      requier: true,
+      required: true,
       default: false,
     },
     seller: {
       type: Object as PropType<Seller>,
-      requier: true,
+      required: true,
       default: undefined,
     },
     id: {
       type: Number,
-      requier: true,
+      required: true,
       default: -1,
     },
     pieces: {
       type: Number,
-      requier: true,
+      required: true,
       default: 0,
     },
     buyerData: {
       type: String,
-      requier: true,
+      required: true,
       default: "",
     },
     jsonData: {
       type: String,
-      requier: true,
+      required: true,
       default: "",
     },
   },
