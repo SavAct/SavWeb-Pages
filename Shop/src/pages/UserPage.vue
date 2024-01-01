@@ -44,10 +44,16 @@
           You are banned as seller!
         </div>
         <div class="q-ml-sm" v-else @click="expander = expander === 1 ? -1 : 1">
-          Settings as seller
+          I am a seller
         </div>
+        <q-toggle
+          class="q-ml-sm"
+          v-model="isSeller"
+          :label="isSeller ? 'Yes' : 'No'"
+        />
         <q-space />
         <q-btn
+          v-if="isSeller"
           color="grey"
           round
           flat
@@ -62,24 +68,16 @@
           <q-separator />
 
           <div class="row q-ma-md">
-            <div class="col-auto q-mr-md text-h6">
+            <div class="col-auto q-mr-md flex flex-center">
               I am available at the moment
             </div>
-            <q-btn-toggle
-              class="col-auto"
-              v-model="sellerActive"
-              spread
-              no-caps
-              rounded
-              unelevated
-              toggle-color="primary"
-              color="grey-8"
-              text-color="white"
-              :options="[
-                { label: 'Yes', value: true },
-                { label: 'No', value: false },
-              ]"
-            />
+            <div class="flex flex-center">
+              <q-toggle
+                class="col-auto"
+                v-model="sellerActive"
+                :label="sellerActive ? 'Yes' : 'No'"
+              />
+            </div>
           </div>
           <div @click="checkTokens()">
             <q-select
@@ -274,6 +272,16 @@ export default Vue.defineComponent({
     const note = Vue.ref<string>("");
     const sellerActive = Vue.ref<boolean>(true);
     const isBanned = Vue.ref<boolean>(false);
+    const _isSeller = Vue.ref<boolean>(false);
+    const isSeller = Vue.computed<boolean>({
+      get: () => _isSeller.value,
+      set: (v) => {
+        if (_isSeller.value !== v) {
+          _isSeller.value = v;
+          expander.value = v ? 1 : -1;
+        }
+      },
+    });
     const showPgpInput = Vue.computed<boolean>(() => {
       return pgpKey && pgpKey.value.pub.length > 0;
     });
@@ -359,7 +367,7 @@ export default Vue.defineComponent({
         return;
       }
 
-      if (allowedTokens.value.length === 0) {
+      if (isSeller.value && allowedTokens.value.length === 0) {
         Quasar.Notify.create({
           message: "No allowed tokens",
           caption: "Please select at least one token.",
@@ -369,7 +377,7 @@ export default Vue.defineComponent({
         return;
       }
 
-      if (contacts.value.length === 0) {
+      if (isSeller.value && contacts.value.length === 0) {
         Quasar.Notify.create({
           message: "No contact",
           caption:
@@ -380,20 +388,23 @@ export default Vue.defineComponent({
         return;
       }
 
-      const allowed: Array<TokenSymbol> = allowedTokens.value.map((t) => {
-        return {
-          sym: `${t.symbol.precision},${t.symbol.name}`,
-          contr: t.contract,
-          chain: t.chain,
-        };
-      });
+      const allowed: Array<TokenSymbol> = isSeller.value
+        ? allowedTokens.value.map((t) => {
+            return {
+              sym: `${t.symbol.precision},${t.symbol.name}`,
+              contr: t.contract,
+              chain: t.chain,
+            };
+          })
+        : [];
+
       const data: Updateuser = {
         user: userName.value,
         contact: contacts.value.map((c) => c.trim()),
         allowed,
-        active: sellerActive.value,
+        active: isSeller.value ? sellerActive.value : false,
         pgp: pgpKey.value.pub,
-        note: note.value,
+        note: isSeller.value ? note.value : "",
       };
 
       savWeb.transaction({
@@ -616,6 +627,7 @@ export default Vue.defineComponent({
       items,
       formatItem,
       openItem,
+      isSeller,
     };
   },
 });
