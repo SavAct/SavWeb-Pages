@@ -225,7 +225,6 @@ import {
   IdAndCategory,
   TokenSymbol,
   Updateuser,
-  UserTable,
 } from "../Components/ContractInterfaces";
 import {
   messengerShortName,
@@ -237,9 +236,9 @@ import {
   StringToSymbol,
   getKnownChainId,
   isSameChain,
-  isTableResultWithEntries,
 } from "../Components/AntelopeHelpers";
 import { router } from "../router/simpleRouter";
+import { getUserDataToState } from "../Components/SaleContractRequests";
 
 export default Vue.defineComponent({
   name: "userPage",
@@ -426,12 +425,9 @@ export default Vue.defineComponent({
       if (name !== undefined) {
         name = name.trim();
         user = name.length > 0 ? { name } : undefined;
-      } else {
-        user = undefined;
       }
 
       const resultUser = await savWeb.getUser(user, 60000);
-
       // Check if chain is the same as the shop contract
       if (
         resultUser &&
@@ -444,6 +440,7 @@ export default Vue.defineComponent({
           type: "negative",
           position: "top",
         });
+        checkingUserData.value = false;
         return;
       }
 
@@ -535,57 +532,36 @@ export default Vue.defineComponent({
 
     async function getUserData() {
       checkingUserData.value = true;
-      const result = await savWeb.getTableRows({
-        chain: state.contract.chain,
-        code: state.contract.account,
-        scope: state.contract.account,
-        table: state.contract.tables.user,
-        entry: userName.value,
-      });
-
-      if (isTableResultWithEntries(result)) {
-        const user = (result as { rows: Array<UserTable> }).rows[0];
-        if (
-          user.pgp !== undefined &&
-          user.contact !== undefined &&
-          user.allowed !== undefined &&
-          user.note !== undefined &&
-          user.active !== undefined &&
-          user.banned !== undefined
-        ) {
-          // Adopt new global user state
-          state.user.value = {
-            ...user,
-            active: Boolean(user.active),
-            allowed: user.allowed.map((t: TokenSymbol) => {
-              return {
-                symbol: StringToSymbol(t.sym),
-                contract: t.contr,
-                chain: t.chain,
-              };
-            }),
+      const foundUser = await getUserDataToState(userName.value);
+      if (foundUser) {
+        pgpKey.value = {
+          pub: state.user.value.pgp,
+          pri: "",
+          passphrase: "",
+        };
+        note.value = state.user.value.note;
+        sellerActive.value = Boolean(state.user.value.active);
+        isBanned.value = state.user.value.banned;
+        contacts.value = state.user.value.contact;
+        allowedTokens.value = state.user.value.allowed.map((t) => {
+          return {
+            label: `${t.symbol.name} ${t.contract}@${t.chain}`,
+            symbol: StringToSymbol(t.symbol.name),
+            contract: t.contract,
+            chain: t.chain,
           };
+        });
+        items.value = state.user.value.items;
 
-          pgpKey.value = {
-            pub: user.pgp,
-            pri: "",
-            passphrase: "",
-          };
-          note.value = user.note;
-          sellerActive.value = Boolean(user.active);
-          isBanned.value = user.banned;
-          contacts.value = user.contact;
-          allowedTokens.value = user.allowed.map((t: TokenSymbol) => {
-            return {
-              label: `${t.sym} ${t.contr}@${t.chain}`,
-              symbol: StringToSymbol(t.sym),
-              contract: t.contr,
-              chain: t.chain,
-            };
-          });
-          items.value = user.items;
-        }
+        // Set isSeller but use _isSeller instead to avoid opening the seller settings
+        _isSeller.value =
+          sellerActive.value === true ||
+          items.value.length > 0 ||
+          allowedTokens.value.length > 0 ||
+          contacts.value.length > 0 ||
+          note.value.length > 0;
       }
+
       checkingUserData.value = false;
     }
 

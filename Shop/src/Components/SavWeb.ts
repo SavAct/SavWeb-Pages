@@ -581,6 +581,8 @@ export class SavWeb {
     user: PublicAccount | undefined = undefined,
     maxWaitMs: number = 10000
   ) {
+    console.log("----------request", user);
+
     // Send request
     const result = (await this.request(
       {

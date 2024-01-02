@@ -16,7 +16,7 @@ export interface User extends Omit<UserTable, "allowed"> {
 
 const contract = {
   account: "infiniteshop",
-  chain: "eos",
+  chain: "lamington",
   actions: {
     addItem: "additem",
     removeItem: "removeitem",
@@ -34,7 +34,7 @@ const contract = {
 
 const savpayContract = {
   account: "savactsavpay",
-  chain: "eos",
+  chain: "lamington",
   tables: {
     tokens: "tokens",
   },

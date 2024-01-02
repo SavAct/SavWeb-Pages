@@ -553,6 +553,41 @@ export default Vue.defineComponent({
         });
         return;
       }
+      // Check if user exists
+      if (settings.data.seller !== state.loginUser.value) {
+        const userExists = await savWeb.checkName(
+          state.contract.chain,
+          settings.data.seller
+        );
+        if (userExists !== true) {
+          Quasar.Notify.create({
+            message:
+              userExists === false
+                ? "Could not find the user name"
+                : "User does not exist on blockchain",
+            caption:
+              userExists === false
+                ? `Create an user account on ${state.contract.chain} first.`
+                : undefined,
+            color: "red",
+            position: "top",
+          });
+          return;
+        }
+      }
+      // Check if user is in contract table
+
+      // Quasar.Dialog.create({
+      //     title: "User does not exist",
+      //     message: "Do you want to create the user?",
+      //     cancel: true,
+      //     persistent: true,
+      //     ok: {
+      //       label: "Create",
+      //       color: "primary",
+      //     },
+      //   })
+      //     .onOk(() => {
 
       console.log("Transaction additem data", settings.data);
 
