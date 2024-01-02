@@ -1,3 +1,6 @@
+import { savWeb } from "../store/connect";
+import { state } from "../store/globals";
+
 export interface AssetSymbol {
   precision: number;
   name: string;
@@ -118,6 +121,40 @@ export function checkUserOffline(user: string) {
     }
   }
   return false;
+}
+
+/**
+ * Check if a account name is valid
+ * @param userName User account name
+ * @param useErrMsg Show error message if user name is invalid
+ * @param chain Chain name, id or label
+ * @returns true if valid else false, undefined or return an error message
+ */
+export async function checkUserOnline(
+  userName: string,
+  useErrMsg: boolean = true,
+  chain: string = state.contract.chain
+) {
+  // Check if user exists
+  if (userName === state.loginUser.value) {
+    return true;
+  }
+  const userExists = await savWeb.checkName(chain, userName);
+  if (userExists !== true && useErrMsg === true) {
+    Quasar.Notify.create({
+      message:
+        userExists === false
+          ? "Could not find the user name"
+          : "User does not exist on blockchain",
+      caption:
+        userExists === false
+          ? `Create an user account on ${chain} first.`
+          : undefined,
+      color: "red",
+      position: "top",
+    });
+  }
+  return userExists;
 }
 
 /**

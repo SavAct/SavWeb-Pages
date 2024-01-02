@@ -262,16 +262,32 @@
 
       <q-card class="q-mt-md q-mb-md">
         <q-card-section>
-          <q-input v-model="seller" label="Seller account name" outlined>
-            <template v-slot:after>
+          <div
+            class="row justify-between"
+            :class="$q.screen.gt.sm ? 'q-gutter-sm' : 'q-gutter-y-md'"
+          >
+            <div class="col-sm-grow col-12">
+              <q-input v-model="seller" label="Seller account name" outlined />
+            </div>
+            <div class="col-auto flex flex-center">
+              <q-btn
+                @click="showPreview"
+                label="Preview"
+                color="primary"
+                icon-right="preview"
+                size="md"
+              />
+            </div>
+            <div class="col-auto flex flex-center">
               <q-btn
                 @click="send"
                 label="Send"
                 color="primary"
                 icon-right="send"
+                size="md"
               />
-            </template>
-          </q-input>
+            </div>
+          </div>
         </q-card-section>
       </q-card>
     </div>
@@ -287,7 +303,12 @@ import { Ref } from "vue";
 import { AddItem, ToRegion } from "../Components/ContractInterfaces";
 import { savWeb } from "../store/connect";
 import { GetQueryId } from "../Components/queryHelper";
-import { checkUserOffline } from "../Components/AntelopeHelpers";
+import {
+  checkUserOffline,
+  checkUserOnline,
+} from "../Components/AntelopeHelpers";
+import { getUserDataToState } from "../Components/SaleContractRequests";
+import { router } from "../router/simpleRouter";
 
 export default Vue.defineComponent({
   name: "uploadPage",
@@ -553,43 +574,29 @@ export default Vue.defineComponent({
         });
         return;
       }
-      // Check if user exists
-      if (settings.data.seller !== state.loginUser.value) {
-        const userExists = await savWeb.checkName(
-          state.contract.chain,
-          settings.data.seller
-        );
-        if (userExists !== true) {
-          Quasar.Notify.create({
-            message:
-              userExists === false
-                ? "Could not find the user name"
-                : "User does not exist on blockchain",
-            caption:
-              userExists === false
-                ? `Create an user account on ${state.contract.chain} first.`
-                : undefined,
-            color: "red",
-            position: "top",
-          });
-          return;
-        }
+      // Check if user exists and handle error messages
+      if (!(await checkUserOnline(seller.value))) {
+        return;
       }
+
       // Check if user is in contract table
-
-      // Quasar.Dialog.create({
-      //     title: "User does not exist",
-      //     message: "Do you want to create the user?",
-      //     cancel: true,
-      //     persistent: true,
-      //     ok: {
-      //       label: "Create",
-      //       color: "primary",
-      //     },
-      //   })
-      //     .onOk(() => {
-
-      console.log("Transaction additem data", settings.data);
+      if (!(await getUserDataToState(seller.value))) {
+        Quasar.Dialog.create({
+          title: "Seller settings are not set",
+          message:
+            "Provide contact details in order for your customers to contact you in a secure way.",
+          cancel: true,
+          persistent: true,
+          ok: {
+            label: "Yes",
+            color: "primary",
+          },
+        }).onOk(() => {
+          // Go to user page
+          router.push({ name: "user", query: { request: true } });
+        });
+        return;
+      }
 
       const result = await savWeb.transaction({
         chain: state.contract.chain,
@@ -601,11 +608,33 @@ export default Vue.defineComponent({
       if (result !== undefined) {
         state.uploadPageInputs.value = undefined;
         // TODO: Redirect to items page with wait for transaction query
+        router.push({
+          name: "item",
+          query: { settings: settings, wait: true },
+        });
+        return;
       }
-
-      // TODO: Create preview page
-      // TODO: If the user is not defined yet, goto user input page
     }
+
+    // TODO: Create preview page
+    function showPreview() {
+      const settings = getAndCheckAllSettings();
+      if (settings.error) {
+        Quasar.Notify.create({
+          message: settings.error[0].message,
+          caption: settings.error[0].caption,
+          color: "red",
+          position: "top",
+        });
+        return;
+      }
+      router.push({
+        name: "item",
+        query: { settings: settings, wait: true },
+      });
+    }
+
+    // TODO: If the user is not defined yet, goto user input page
 
     Vue.onBeforeUnmount(() => {
       const settings = getAndCheckAllSettings();
@@ -650,6 +679,7 @@ export default Vue.defineComponent({
       addImage,
       moveStringOneFieldBefore,
       moveStringOneFieldAfter,
+      showPreview,
     };
   },
 });

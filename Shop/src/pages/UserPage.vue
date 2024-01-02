@@ -239,6 +239,7 @@ import {
 } from "../Components/AntelopeHelpers";
 import { router } from "../router/simpleRouter";
 import { getUserDataToState } from "../Components/SaleContractRequests";
+import { HasQueryRequest } from "../Components/queryHelper";
 
 export default Vue.defineComponent({
   name: "userPage",
@@ -333,7 +334,7 @@ export default Vue.defineComponent({
       }
     }
 
-    function upload() {
+    async function upload() {
       // Check user data
       if (userName.value.length === 0) {
         Quasar.Notify.create({
@@ -406,13 +407,19 @@ export default Vue.defineComponent({
         note: isSeller.value ? note.value : "",
       };
 
-      savWeb.transaction({
+      const result = await savWeb.transaction({
         chain: state.contract.chain,
         contract: state.contract.account,
         action: state.contract.actions.updateUser,
         data,
         permission: state.loginUser.value?.permission,
       });
+
+      if (result !== undefined) {
+        if (HasQueryRequest()) {
+          router.back();
+        }
+      }
     }
 
     const checkingUserData = Vue.ref<boolean>(false);
