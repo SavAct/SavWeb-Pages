@@ -16,7 +16,7 @@ export interface ItemTable {
   available: boolean;
   title: string;
   imgs: Array<string>;
-  price: number | string | bigint;
+  pp: Array<PiecesPrice>;
   prepT: number;
   fromR: string;
   shipTo: Array<ToRegion>;
@@ -29,10 +29,10 @@ export interface ItemTable {
 
 export interface AddItem {
   seller: string;
-  category: string;
+  category: number | string | bigint;
   title: string;
   imgs: Array<string>;
-  price: number | string | bigint;
+  pp: Array<PiecesPrice>;
   prepT: number;
   fromR: string;
   excl: string;
@@ -55,23 +55,28 @@ export interface Deleteuser {
 
 export interface IdAndCategory {
   id: number | string | bigint;
-  category: string;
+  category: number | string | bigint;
+}
+
+export interface PiecesPrice {
+  p: number | string | bigint;
+  pcs: number;
 }
 
 export interface Itemstate {
   id: number | string | bigint;
-  category: string;
+  category: number | string | bigint;
   available: boolean;
   expired: number;
 }
 
 export interface Removeitem {
   id: number | string | bigint;
-  category: string;
+  category: number | string | bigint;
 }
 
 export interface Rmexpired {
-  category: string;
+  category: number | string | bigint;
 }
 
 export interface ToRegion {

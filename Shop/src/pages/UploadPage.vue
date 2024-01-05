@@ -9,12 +9,11 @@
             label="Title"
             outlined
           ></q-input>
-          <q-select
+          <category-input
             class="q-mb-sm"
             v-model="category"
-            outlined
-            :options="categoryOptions"
             label="Category"
+            outlined
           />
           <q-input
             v-model="description"
@@ -88,7 +87,7 @@
 
           <div>
             <q-input
-              class="q-mt-md"
+              class="q-mt-md q-mb-sm"
               v-model="tempOptions"
               label="Add Option"
               outlined
@@ -117,7 +116,7 @@
 
             <div v-for="(opt, o_index) in options" :key="o_index">
               <q-input
-                class="q-mt-md"
+                class="q-mt-sm"
                 v-model="opt.value"
                 :maxlength="127"
                 :label="'Option ' + (o_index + 1)"
@@ -138,25 +137,24 @@
       </q-card>
       <q-card class="q-mt-md">
         <q-card-section class="row justify-between">
-          <!-- <div class="col-5 col-sm-2">
-            <q-input
-              v-model="units"
-              label="Units per order"
-              type="number"
-              outlined
-            ></q-input>
-          </div> -->
-          <div class="col-sm-5 col-12 q-mb-sm">
-            <q-input
-              v-model="price"
-              label="Price without shipping"
-              type="number"
-              outlined
-              min="0"
-            >
-              <template v-slot:append>USD</template>
-            </q-input>
-          </div>
+          <price-and-unit
+            class="col-12 col-sm-6 q-mb-sm"
+            v-for="(entry, index) in pp"
+            :key="index"
+            v-model="entry.value"
+            @remove="pp.splice(index, 1)"
+            :rm-btn="pp.length != 1"
+          />
+          <q-btn
+            class="col-12 q-mt-sm"
+            size="sm"
+            dense
+            rounded
+            color="primary"
+            icon="add"
+            @click="addPriceWithUnit"
+          >
+          </q-btn>
         </q-card-section>
       </q-card>
 
@@ -297,6 +295,8 @@
 import ProImg from "../Components/ProImg.vue";
 import DurationInput from "../Components/DurationInput.vue";
 import DateTimeInput from "../Components/DateTimeInput.vue";
+import PriceAndUnit from "../Components/PriceAndUnit.vue";
+import CategoryInput from "../Components/CategoryInput.vue";
 import { countryCodes, getRegion } from "../Components/ConvertRegion";
 import { state } from "../store/globals";
 import { Ref } from "vue";
@@ -312,7 +312,13 @@ import { router } from "../router/simpleRouter";
 
 export default Vue.defineComponent({
   name: "uploadPage",
-  components: { ProImg, DurationInput, DateTimeInput },
+  components: {
+    ProImg,
+    DurationInput,
+    DateTimeInput,
+    PriceAndUnit,
+    CategoryInput,
+  },
   setup() {
     const pIpt = state.uploadPageInputs.value; // Previous input state
     const seller = Vue.ref<string>(
@@ -330,11 +336,30 @@ export default Vue.defineComponent({
           })
         : []
     );
+    const category = Vue.ref<bigint | undefined>(
+      pIpt?.category !== undefined && BigInt(pIpt.category) != 0n
+        ? BigInt(pIpt.category)
+        : undefined
+    );
     const description = Vue.ref<string>(pIpt?.descr ?? "");
     const hasNote = Vue.ref<boolean>(pIpt ? pIpt.note !== "" : false);
     const note = Vue.ref<string>(pIpt?.note ?? "");
-    const price = Vue.ref<number>(Number(pIpt?.price) ?? 1);
-    // const units = Vue.ref<number>(1); // TODO: Add units per order to the contract
+
+    const pp = Vue.ref<Array<Ref<{ p: number; pcs: number }>>>(
+      pIpt?.pp?.map((v) => {
+        return Vue.ref({ p: Number(v.p), pcs: Number(v.pcs) });
+      }) ?? [Vue.ref({ p: 0, pcs: 1 })]
+    );
+
+    function addPriceWithUnit() {
+      const lastEntry = pp.value.length - 1;
+      const priceBefore =
+        pp.value[lastEntry].value.pcs <= 0 ? 1 : pp.value[lastEntry].value.pcs;
+      const pieces = priceBefore + 1;
+      const price = (pp.value[lastEntry].value.p * pieces) / priceBefore;
+      pp.value.push(Vue.ref({ p: price, pcs: pieces }));
+    }
+
     const duration = Vue.ref<number>(
       pIpt ? pIpt.prepT * 1000 : state.defaultValue.prepDuration
     );
@@ -353,24 +378,6 @@ export default Vue.defineComponent({
       options.value.push(Vue.ref<string>(tempOptions.value));
       tempOptions.value = "";
     }
-
-    const categoryOptions = Vue.ref<Array<string>>([
-      "Art",
-      "Electronic",
-      "Software",
-      "House",
-      "Vehicles",
-      "Clothing",
-      "Other",
-    ]); // TODO: Got categories from a table that defines all allowed categories with an uint64.
-
-    const category = Vue.ref<string>(
-      pIpt
-        ? categoryOptions.value.find((v) => {
-            return toContractCategory(v) === pIpt.category;
-          }) ?? ""
-        : ""
-    );
 
     const available = Vue.ref<boolean>(
       pIpt?.available !== undefined ? pIpt.available : true
@@ -534,6 +541,14 @@ export default Vue.defineComponent({
         }
       }
 
+      if (category.value === undefined) {
+        errors.push({
+          key: "category",
+          message: `Category not set`,
+          caption: `Please select a category.`,
+        });
+      }
+
       let sellerName = seller.value
         .trim()
         .substring(0, 13)
@@ -542,12 +557,14 @@ export default Vue.defineComponent({
         data: {
           seller: checkUserOffline(sellerName) === true ? sellerName : "",
           title: title.value.trim(),
-          price: price.value,
+          pp: pp.value.map((p) => {
+            return { p: p.value.p, pcs: p.value.pcs };
+          }),
           note: hasNote.value ? note.value : "",
           descr: description.value,
           imgs: imgSrcs.value.map((i) => i.src),
           available: available.value,
-          category: toContractCategory(category.value),
+          category: category.value === undefined ? 0n : BigInt(category.value),
           fromR: fromRegion.value.value.toLocaleLowerCase(),
           shipTo,
           excl: excludeCodes,
@@ -557,10 +574,6 @@ export default Vue.defineComponent({
         },
         error: errors,
       };
-    }
-
-    function toContractCategory(category: string): string {
-      return category.toLocaleLowerCase().substring(0, 13);
     }
 
     async function send() {
@@ -659,8 +672,7 @@ export default Vue.defineComponent({
       options,
       tempOptions,
       pushOption,
-      price,
-      // units,
+      pp,
       duration,
       expired,
       send,
@@ -669,7 +681,6 @@ export default Vue.defineComponent({
       available,
       fromRegion,
       category,
-      categoryOptions,
       getRegion,
       countries,
       toRegions,
@@ -680,6 +691,7 @@ export default Vue.defineComponent({
       moveStringOneFieldBefore,
       moveStringOneFieldAfter,
       showPreview,
+      addPriceWithUnit,
     };
   },
 });

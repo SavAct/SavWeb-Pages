@@ -41,6 +41,7 @@ const savpayContract = {
 };
 
 const defaultValue = {
+  startPage: "upload", //"home";
   prepDuration: 3600 * 24 * 2 * 1000, // 2 days
   shipDuration: 3600 * 24 * 5 * 1000, // 5 days
   expireDuration: 3600 * 24 * 30 * 1000, // 30 days

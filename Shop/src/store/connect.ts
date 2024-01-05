@@ -2,8 +2,6 @@ import { PageIni, SavWeb } from "../Components/SavWeb";
 import { router } from "../router/simpleRouter";
 import { state } from "./globals";
 
-const defaultPage = "home";
-
 function resolvePage(pIni: PageIni) {
   let pageName: string;
   const paths = (
@@ -22,7 +20,7 @@ function resolvePage(pIni: PageIni) {
   console.log("resolvePage", pageName, pIni.query);
 
   router.push({
-    name: pageName.length > 0 ? pageName : defaultPage,
+    name: pageName.length > 0 ? pageName : state.defaultValue.startPage,
     query: pIni.query,
   });
 }
