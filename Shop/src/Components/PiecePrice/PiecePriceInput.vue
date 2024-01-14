@@ -16,10 +16,21 @@
       type="number"
       min="0"
       outlined
+      :hint="
+        Math.round((modelValue.p * 100) / modelValue.pcs) / 100 +
+        ' USD per piece'
+      "
+      bottom-slots
     >
       <template v-slot:append>USD</template>
       <template v-slot:after v-if="rmBtn">
-        <q-btn icon="clear" color="red" @click="emitRemove"></q-btn>
+        <q-btn
+          size="sm"
+          dense
+          icon="clear"
+          color="red"
+          @click="emitRemove"
+        ></q-btn>
       </template>
     </q-input>
   </div>
@@ -28,7 +39,7 @@
 import { PropType } from "vue";
 
 export default Vue.defineComponent({
-  name: "priceAndUnit",
+  name: "piecePriceInput",
   props: {
     modelValue: {
       type: Object as PropType<{ p: number; pcs: number }>,
@@ -38,10 +49,14 @@ export default Vue.defineComponent({
       type: Boolean,
       default: true,
     },
+    from: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup(props, context) {
     const priceInputLabel = Vue.computed(() => {
-      return `Price for ${props.modelValue.pcs} ${
+      return `Price ${props.from ? "from" : "for"} ${props.modelValue.pcs} ${
         props.modelValue.pcs > 1 ? "pieces" : "piece"
       }`;
     });

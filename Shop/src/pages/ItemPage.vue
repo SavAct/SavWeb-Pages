@@ -1,7 +1,15 @@
 <template>
   <q-page class="column">
+    <q-btn
+      v-if="isPreview"
+      class="bg-grey-8 text-white"
+      label="Close Preview"
+      color="white"
+      outline
+      @click="goBack()"
+    ></q-btn>
     <div class="col q-pa-md">
-      <div class="text-h5">{{ entry?.title }}</div>
+      <div class="text-h5">{{ item?.title }}</div>
       <div class="q-mt-md row">
         <gallery
           class="col-12 col-md-6"
@@ -12,44 +20,49 @@
         <div
           class="col-12 col-md-6"
           :class="$q.screen.lt.md ? 'q-pt-md' : ''"
-          v-if="entry"
+          v-if="item"
         >
           <div class="q-px-md">
+            <piece-price-select
+              class="q-mb-sm"
+              label="Price option"
+              :pp="item.pp"
+              v-model="piecesPrice"
+            ></piece-price-select>
             <div>
               Price:
               <q-chip
                 icon="attach_money"
-                :label="entry.price + ' USD'"
+                :label="piecesPrice.p + ' USD'"
               ></q-chip>
-              Units per ordered piece:
-              <q-chip :label="entry.units"></q-chip>
+              Pieces per order:
+              <q-chip :label="piecesPrice.pcs"></q-chip>
               Price per unit:
               <q-chip
-                :label="(entry.price / entry.units).toString() + ' USD'"
+                :label="(piecesPrice.p / piecesPrice.pcs).toString() + ' USD'"
               ></q-chip>
             </div>
 
             <div class="q-my-sm">
               <span>
                 From
-                <user-link class="col-auto" :user="entry.seller"></user-link>
+                <user-link class="col-auto" :user="item.seller"></user-link>
               </span>
-              <span v-if="entry.from_region.length > 0"
-                >in<q-chip :label="getRegion(entry.from_region)"></q-chip
-                >to</span
+              <span v-if="item.fromR.length > 0"
+                >in<q-chip :label="getRegion(item.fromR)"></q-chip>to</span
               ><span v-else>To</span>
               <q-chip
-                v-for="(to, index) in entry.to"
+                v-for="(to, index) in item.shipTo"
                 :key="index"
-                :label="getRegion(to.region)"
+                :label="getRegion(to.rs)"
                 text-color="green"
                 clickable
                 @click="regionClick(index)"
               ></q-chip>
-              <span v-if="entry.exclude_regions">
+              <span v-if="item.excl">
                 but especially not to
                 <q-chip
-                  v-for="(ex, index) in entry.exclude_regions.split(' ')"
+                  v-for="(ex, index) in item.excl.split(' ')"
                   :key="index"
                   text-color="red"
                   :label="getRegion(ex)"
@@ -61,7 +74,7 @@
               <div>Accept payments of</div>
 
               <token-symbol
-                v-for="(token, index) in entry.accept"
+                v-for="(token, index) in accepted"
                 :key="index"
                 :symbol="StringToSymbol(token.symbol)"
                 :contract="token.contract"
@@ -74,10 +87,10 @@
           </div>
           <div :class="{ 'q-mx-md': $q.screen.gt.sm }">
             <q-separator class="q-my-md" />
-            <div v-if="entry.note">
+            <div v-if="item.note">
               <div>
                 <div class="text-h5">Sellers note</div>
-                <div>{{ entry.note }}</div>
+                <div>{{ item.note }}</div>
               </div>
               <q-separator class="q-my-md" />
             </div>
@@ -150,9 +163,9 @@
         </div>
       </div>
       <q-separator class="q-my-md" />
-      <div v-if="entry && entry?.description.length > 0">
+      <div v-if="item && item?.descr.length > 0">
         <div class="text-h5">Description</div>
-        <div>{{ entry?.description }}</div>
+        <div>{{ item?.descr }}</div>
       </div>
     </div>
   </q-page>
@@ -161,7 +174,7 @@
 import Gallery from "../Components/Gallery.vue";
 import TokenSymbol from "../Components/TokenSymbol.vue";
 import UserLink from "../Components/UserLink.vue";
-import { Entry } from "../Components/Items";
+import PiecePriceSelect from "../Components/PiecePrice/PiecePriceSelect.vue";
 import { state } from "../store/globals";
 import {
   Asset,
@@ -172,37 +185,53 @@ import {
 import { getCurrentTokenPrice } from "../Components/ConvertPrices";
 import { router } from "../router/simpleRouter";
 import { getRegion } from "../Components/ConvertRegion";
-import { GetQueryId } from "../Components/queryHelper";
+import {
+  GetQueryId,
+  GetQueryMode,
+  ItemPageMode,
+} from "../Components/queryHelper";
+import { ItemTable } from "../Components/ContractInterfaces";
 
 export default Vue.defineComponent({
-  components: { Gallery, TokenSymbol, UserLink },
+  components: { Gallery, TokenSymbol, UserLink, PiecePriceSelect },
   name: "itemPage",
   setup() {
     const id = GetQueryId();
     console.log("Item page query: ", id);
+    // TODO: Handle wait and preview mode
+    // TODO: Load item from RAM table
+    const mode = GetQueryMode();
+    console.log("Item page mode: ", mode);
 
-    const entry = Vue.ref<Entry>();
-    entry.value = state.itemsList.find((item) => item.id == id);
+    const item = Vue.ref<ItemTable>();
+    item.value = state.itemsList.find((item) => item.id == id);
 
-    const imgs = Vue.computed(() => entry.value?.imgs);
-    const seller = entry.value
-      ? state.sellerList[entry.value.seller]
-      : undefined;
+    const imgs = Vue.computed(() => item.value?.imgs);
+    const seller = item.value ? state.sellerList[item.value.seller] : undefined;
 
     const sRegion = Vue.ref<{ value: string; label: string | undefined }>();
     const availableTo = Vue.computed(() => {
-      if (entry.value !== undefined) {
-        const en = entry.value;
-        return en.to
+      if (item.value !== undefined) {
+        const en = item.value;
+        return en.shipTo
           .filter((a) => {
-            return !en.exclude_regions.split(" ").includes(a.region);
+            return !en.excl.split(" ").includes(a.rs);
           })
           .map((rto) => {
-            return { value: rto.region, label: getRegion(rto.region) };
+            return { value: rto.rs, label: getRegion(rto.rs) };
           });
       }
       return undefined;
     });
+
+    const piecesPrice = Vue.ref<{ p: number; pcs: number }>({
+      p: 0,
+      pcs: 0,
+    });
+
+    const accepted = Vue.ref<
+      Array<{ symbol: string; contract: string; chain: string }>
+    >([]); // TODO: Load from RAM table
 
     const sToken = Vue.ref<{
       value: Token;
@@ -210,8 +239,8 @@ export default Vue.defineComponent({
     }>();
 
     const acceptToken = Vue.computed(() => {
-      if (entry.value !== undefined) {
-        return entry.value.accept.map((token) => {
+      if (item.value !== undefined) {
+        return accepted.value.map((token) => {
           const sym = StringToSymbol(token.symbol);
           return {
             value: {
@@ -227,10 +256,10 @@ export default Vue.defineComponent({
     });
 
     const totalPrice = Vue.computed(() => {
-      if (entry.value && sRegion.value) {
-        const to = entry.value.to.find((a) => a.region == sRegion.value?.value);
+      if (item.value && sRegion.value) {
+        const to = item.value.shipTo.find((a) => a.rs == sRegion.value?.value);
         if (to !== undefined) {
-          const p = to.sp + entry.value.price;
+          const p = to.p + piecesPrice.value.p;
           setTotalToken(p);
           return p;
         }
@@ -280,11 +309,11 @@ export default Vue.defineComponent({
     }
 
     function buyClick() {
-      if (entry.value && sRegion.value && sToken.value) {
+      if (item.value && sRegion.value && sToken.value) {
         router.push({
           name: "buy",
           query: {
-            id: entry.value.id,
+            id: item.value.id,
             region: sRegion.value.value,
             token: sToken.value.value,
             pieces: pieces.value,
@@ -293,9 +322,41 @@ export default Vue.defineComponent({
       }
     }
 
+    Vue.onMounted(async () => {
+      switch (mode) {
+        case ItemPageMode.Preview:
+          const settings = state.uploadPageInputs.value;
+          if (settings) {
+            item.value = {
+              id: 0,
+              ...settings,
+            };
+          }
+          break;
+        case ItemPageMode.Wait:
+          // TODO: Wait for item to be added to RAM table
+          break;
+      }
+
+      // TODO: Check seller accepted token from RAM table
+      //accept: settings.accept,
+    });
+
+    // TODO: Show Category, Options, total Price
+
+    function goBack() {
+      if (!router.back()) {
+        Quasar.Notify.create({
+          type: "negative",
+          message: "No page to go back to",
+          position: "top",
+        });
+      }
+    }
+
     return {
       darkStyle: state.darkStyle,
-      entry,
+      item,
       imgs,
       getRegion,
       seller,
@@ -310,6 +371,10 @@ export default Vue.defineComponent({
       regionClick,
       buyClick,
       pieces,
+      piecesPrice,
+      accepted,
+      goBack,
+      isPreview: mode == ItemPageMode.Preview,
     };
   },
 });

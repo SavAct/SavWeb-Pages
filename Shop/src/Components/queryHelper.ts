@@ -8,6 +8,24 @@ export function GetQueryId() {
     : -1;
 }
 
+export enum ItemPageMode {
+  Standard = 0,
+  Preview = 1, // Preview the item with inconsistent data
+  Wait = 2, // Wait for the item to be created in RAM table
+}
+
+export function GetQueryMode() {
+  if (
+    route.query &&
+    "mode" in route.query &&
+    (route.query.mode === ItemPageMode.Preview ||
+      route.query.mode === ItemPageMode.Wait)
+  ) {
+    return route.query.mode as ItemPageMode;
+  }
+  return ItemPageMode.Standard;
+}
+
 export function HasQueryRequest() {
   if (route.query && "request" in route.query)
     return route.query.request == true;

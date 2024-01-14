@@ -1,3 +1,4 @@
+// TODO: Replace with contact interface
 export interface Entry {
   id: number;
   title: string;
@@ -15,6 +16,7 @@ export interface Entry {
   note: string;
 }
 
+// TODO: Replace with contract interface
 export interface Seller {
   account: string;
   available: boolean;

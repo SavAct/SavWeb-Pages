@@ -136,25 +136,8 @@
         </q-card-section>
       </q-card>
       <q-card class="q-mt-md">
-        <q-card-section class="row justify-between">
-          <price-and-unit
-            class="col-12 col-sm-6 q-mb-sm"
-            v-for="(entry, index) in pp"
-            :key="index"
-            v-model="entry.value"
-            @remove="pp.splice(index, 1)"
-            :rm-btn="pp.length != 1"
-          />
-          <q-btn
-            class="col-12 q-mt-sm"
-            size="sm"
-            dense
-            rounded
-            color="primary"
-            icon="add"
-            @click="addPriceWithUnit"
-          >
-          </q-btn>
+        <q-card-section>
+          <price-options-input v-model="pp" />
         </q-card-section>
       </q-card>
 
@@ -262,7 +245,7 @@
         <q-card-section>
           <div
             class="row justify-between"
-            :class="$q.screen.gt.sm ? 'q-gutter-sm' : 'q-gutter-y-md'"
+            :class="$q.screen.lt.sm ? 'q-gutter-sm' : 'q-gutter-x-md'"
           >
             <div class="col-sm-grow col-12">
               <q-input v-model="seller" label="Seller account name" outlined />
@@ -295,14 +278,18 @@
 import ProImg from "../Components/ProImg.vue";
 import DurationInput from "../Components/DurationInput.vue";
 import DateTimeInput from "../Components/DateTimeInput.vue";
-import PriceAndUnit from "../Components/PriceAndUnit.vue";
 import CategoryInput from "../Components/CategoryInput.vue";
+import PriceOptionsInput from "../Components/PiecePrice/PriceOptionsInput.vue";
 import { countryCodes, getRegion } from "../Components/ConvertRegion";
 import { state } from "../store/globals";
 import { Ref } from "vue";
-import { AddItem, ToRegion } from "../Components/ContractInterfaces";
+import {
+  AddItem,
+  PiecesPrice,
+  ToRegion,
+} from "../Components/ContractInterfaces";
 import { savWeb } from "../store/connect";
-import { GetQueryId } from "../Components/queryHelper";
+import { GetQueryId, ItemPageMode } from "../Components/queryHelper";
 import {
   checkUserOffline,
   checkUserOnline,
@@ -316,8 +303,8 @@ export default Vue.defineComponent({
     ProImg,
     DurationInput,
     DateTimeInput,
-    PriceAndUnit,
     CategoryInput,
+    PriceOptionsInput,
   },
   setup() {
     const pIpt = state.uploadPageInputs.value; // Previous input state
@@ -345,20 +332,7 @@ export default Vue.defineComponent({
     const hasNote = Vue.ref<boolean>(pIpt ? pIpt.note !== "" : false);
     const note = Vue.ref<string>(pIpt?.note ?? "");
 
-    const pp = Vue.ref<Array<Ref<{ p: number; pcs: number }>>>(
-      pIpt?.pp?.map((v) => {
-        return Vue.ref({ p: Number(v.p), pcs: Number(v.pcs) });
-      }) ?? [Vue.ref({ p: 0, pcs: 1 })]
-    );
-
-    function addPriceWithUnit() {
-      const lastEntry = pp.value.length - 1;
-      const priceBefore =
-        pp.value[lastEntry].value.pcs <= 0 ? 1 : pp.value[lastEntry].value.pcs;
-      const pieces = priceBefore + 1;
-      const price = (pp.value[lastEntry].value.p * pieces) / priceBefore;
-      pp.value.push(Vue.ref({ p: price, pcs: pieces }));
-    }
+    const pp = Vue.ref<Array<PiecesPrice>>(pIpt?.pp ?? []);
 
     const duration = Vue.ref<number>(
       pIpt ? pIpt.prepT * 1000 : state.defaultValue.prepDuration
@@ -549,6 +523,31 @@ export default Vue.defineComponent({
         });
       }
 
+      if (!pp.value || pp.value.length === 0) {
+        errors.push({
+          key: "pp",
+          message: `Price options not set`,
+          caption: `Please add at least one price option.`,
+        });
+      } else if (pp.value.length > 1) {
+        // Check all of pp if a pcs number is already defined
+        for (let i = 0; i < pp.value.length; i++) {
+          for (let k = i + 1; k < pp.value.length; k++) {
+            console.log("check pcs", pp.value[i].pcs, pp.value[k].pcs);
+
+            if (Number(pp.value[i].pcs) === Number(pp.value[k].pcs)) {
+              Quasar.Notify.create({
+                message: "Invalid pieces number",
+                caption: `Pieces number ${pp.value[k].pcs} is defined several times and will be removed.`,
+                color: "warning",
+                position: "top",
+              });
+              pp.value.splice(k, 1);
+            }
+          }
+        }
+      }
+
       let sellerName = seller.value
         .trim()
         .substring(0, 13)
@@ -557,9 +556,7 @@ export default Vue.defineComponent({
         data: {
           seller: checkUserOffline(sellerName) === true ? sellerName : "",
           title: title.value.trim(),
-          pp: pp.value.map((p) => {
-            return { p: p.value.p, pcs: p.value.pcs };
-          }),
+          pp: pp.value,
           note: hasNote.value ? note.value : "",
           descr: description.value,
           imgs: imgSrcs.value.map((i) => i.src),
@@ -610,6 +607,7 @@ export default Vue.defineComponent({
         });
         return;
       }
+      settings.data.category = settings.data.category.toString();
 
       const result = await savWeb.transaction({
         chain: state.contract.chain,
@@ -620,34 +618,21 @@ export default Vue.defineComponent({
 
       if (result !== undefined) {
         state.uploadPageInputs.value = undefined;
-        // TODO: Redirect to items page with wait for transaction query
         router.push({
           name: "item",
-          query: { settings: settings, wait: true },
+          query: { settings: settings, mode: ItemPageMode.Wait },
         });
         return;
       }
     }
 
-    // TODO: Create preview page
     function showPreview() {
       const settings = getAndCheckAllSettings();
-      if (settings.error) {
-        Quasar.Notify.create({
-          message: settings.error[0].message,
-          caption: settings.error[0].caption,
-          color: "red",
-          position: "top",
-        });
-        return;
-      }
       router.push({
         name: "item",
-        query: { settings: settings, wait: true },
+        query: { settings: settings, mode: ItemPageMode.Preview },
       });
     }
-
-    // TODO: If the user is not defined yet, goto user input page
 
     Vue.onBeforeUnmount(() => {
       const settings = getAndCheckAllSettings();
@@ -659,10 +644,6 @@ export default Vue.defineComponent({
     // TODO: Load already uploaded shop by query id and edit the item table
     const id = GetQueryId();
     console.log("Upload page query: ", id);
-
-    // id: number;
-    // imgs: Array<string>;
-    // to: Array<{ region: string; sp: number; sd: number }>; // Country code, shipping price in USD and shipping duration in seconds after payment. {region: "DE", sp: 5.10, sd: 604800}, regions may be "WW", "EU", "US DE AT",
 
     return {
       darkStyle: state.darkStyle,
@@ -691,7 +672,6 @@ export default Vue.defineComponent({
       moveStringOneFieldBefore,
       moveStringOneFieldAfter,
       showPreview,
-      addPriceWithUnit,
     };
   },
 });

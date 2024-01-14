@@ -139,6 +139,15 @@ export async function checkUserOnline(
   if (userName === state.loginUser.value) {
     return true;
   }
+  if (userName.trim().length == 0) {
+    Quasar.Notify.create({
+      message: "Please enter a valid user name",
+      caption: `If you do not have one create an user account on ${chain} first.`,
+      color: "red",
+      position: "top",
+    });
+    return false;
+  }
   const userExists = await savWeb.checkName(chain, userName);
   if (userExists !== true && useErrMsg === true) {
     Quasar.Notify.create({

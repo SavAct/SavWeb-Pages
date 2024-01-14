@@ -60,7 +60,7 @@ export default Vue.defineComponent({
   props: {
     srcs: {
       type: Array<string>,
-      required: true,
+      required: false,
     },
     fileSize: {
       type: Number,

@@ -1,7 +1,11 @@
 import { AssetSymbol, Token } from "../Components/AntelopeHelpers";
 import { get_available_tokens } from "../Components/AvailableTokens";
-import { AddItem, UserTable } from "../Components/ContractInterfaces";
-import { Entry, Seller } from "../Components/Items";
+import {
+  AddItem,
+  ItemTable,
+  UserTable,
+} from "../Components/ContractInterfaces";
+import { Seller } from "../Components/Items";
 import { PublicAccount } from "../Components/SavWeb";
 
 export interface ExtendedTokenSymbol {
@@ -117,7 +121,7 @@ const barStyle: any = {
 };
 
 // Example data // TODO: Remove
-const itemsList: Array<Entry> = [
+const itemsList: Array<ItemTable> = [
   {
     id: 0,
     title: "Cheap planet with great landscapes",
@@ -126,67 +130,76 @@ const itemsList: Array<Entry> = [
       "https://cdn.quasar.dev/img/parallax1.jpg",
       "https://cdn.quasar.dev/img/parallax2.jpg",
     ],
-    price: 13.23,
-    units: 3,
+    pp: [{ p: 13.23, pcs: 1 }],
     seller: "yearofthesav",
-    maxTd: 3600 * 24 * 14,
-    to: [{ region: "EU", sp: 5.35, sd: 3600 * 24 * 14 }],
-    exclude_regions: "DE",
-    from_region: "NL",
-    accept: [{ symbol: "4,EOS", contract: "eosio.token", chain: "eos" }],
+    shipTo: [{ rs: "EU", p: 5.35, t: 3600 * 24 * 14 }],
+    excl: "DE",
+    fromR: "NL",
+    // accept: [{ symbol: "4,EOS", contract: "eosio.token", chain: "eos" }],
     available: true,
-    description: "This is a very good planet",
+    descr: "This is a very good planet",
     note: "Write me before you send the token!",
+    expired: Date.now() + 3600 * 24 * 30,
+    opts: ["blue", "red"],
+    prepT: 3600 * 24 * 2,
   },
   {
     id: 1,
     title: "Quasar with ionic beams",
     imgs: ["https://cdn.quasar.dev/img/quasar.jpg"],
-    price: 2.55,
-    units: 2,
+    pp: [
+      { p: 13.23, pcs: 1 },
+      { p: 20, pcs: 2 },
+    ],
     seller: "savact",
-    maxTd: 3600 * 24 * 7,
-    to: [
-      { region: "DE", sp: 2.1, sd: 3600 * 24 },
-      { region: "AT", sp: 4.23, sd: 3600 * 24 * 2 },
+    shipTo: [
+      { rs: "DE", p: 2.1, t: 3600 * 24 },
+      { rs: "AT", p: 4.23, t: 3600 * 24 * 2 },
     ],
-    exclude_regions: "NL",
-    from_region: "EU",
-    accept: [
-      { symbol: "4,EOS", contract: "eosio.token", chain: "eos" },
-      { symbol: "8,WAX", contract: "eosio.token", chain: "wax" },
-    ],
+    excl: "NL",
+    fromR: "EU",
+    // accept: [
+    //   { symbol: "4,EOS", contract: "eosio.token", chain: "eos" },
+    //   { symbol: "8,WAX", contract: "eosio.token", chain: "wax" },
+    // ],
     available: true,
-    description: "This is a very good\nQuasar<br>with long ionic beams",
+    descr: "This is a very good\nQuasar<br>with long ionic beams",
     note: "",
+    opts: ["big", "bigger", "biggest"],
+    prepT: 3600 * 24 * 2,
+    expired: Date.now() + 3600 * 24 * 30,
   },
   {
     id: 2,
-    title: "Cute cat or pinguin for half price",
+    title: "Cute cat or penguin for half price",
     imgs: [
       "https://cdn.quasar.dev/img/linux-avatar.png",
       "https://cdn.quasar.dev/img/cat.jpg", // Too big to load
       "https://cdn.quasar.dev/empty/not-found.png", // 404
       "https://savact.com/wp-content/uploads/2021/12/003-observatory2.png", // Blocked by server to load via script
     ],
-    price: 2.55,
-    units: 1,
+    pp: [
+      { p: 2.55, pcs: 5 },
+      { p: 1, pcs: 2 },
+    ],
     seller: "savactsavact",
-    maxTd: 3600 * 24 * 7,
-    to: [
-      { region: "DE", sp: 2.1, sd: 3600 * 24 },
-      { region: "US", sp: 4.23, sd: 3600 * 24 * 2 },
+    shipTo: [
+      { rs: "DE", p: 2.1, t: 3600 * 24 },
+      { rs: "US", p: 4.23, t: 3600 * 24 * 2 },
     ],
-    exclude_regions: "CN",
-    from_region: "EU",
-    accept: [
-      { symbol: "4,EOS", contract: "eosio.token", chain: "eos" },
-      { symbol: "8,WAX", contract: "eosio.token", chain: "wax" },
-    ],
+    excl: "CN",
+    fromR: "EU",
+    // accept: [
+    //   { symbol: "4,EOS", contract: "eosio.token", chain: "eos" },
+    //   { symbol: "8,WAX", contract: "eosio.token", chain: "wax" },
+    // ],
     available: true,
-    description:
+    descr:
       "This animals are very cute. The price is infinite, half of it is still infinite. But I can send you a picture for a payable amount.",
     note: "I do not send pictures to zoophilia dogs",
+    opts: ["cat", "penguin"],
+    prepT: 3600 * 24 * 4,
+    expired: Date.now() + 3600 * 24 * 30,
   },
 ];
 
