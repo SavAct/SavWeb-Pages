@@ -22,7 +22,7 @@
     "typescript": "^5.0.2",
     "vite": "^5.0.3",
     "vite-plugin-minify": "^1.5.2",
-    "vite-plugin-singlefile": "^0.13.3",
+    "vite-plugin-singlefile": "^1.0.0",
     "vue": "^3.2.47",
     "xxhash-wasm": "^1.0.2"
   },

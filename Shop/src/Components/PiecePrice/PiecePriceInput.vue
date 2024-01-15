@@ -17,8 +17,7 @@
       min="0"
       outlined
       :hint="
-        Math.round((modelValue.p * 100) / modelValue.pcs) / 100 +
-        ' USD per piece'
+        (Number(modelValue.p) / modelValue.pcs).toFixed(2) + ' USD per piece'
       "
       bottom-slots
     >

@@ -26,23 +26,10 @@
             <piece-price-select
               class="q-mb-sm"
               label="Price option"
-              :pp="item.pp"
+              :pps="item.pp"
+              v-model:pieces="pieces"
               v-model="piecesPrice"
             ></piece-price-select>
-            <div>
-              Price:
-              <q-chip
-                icon="attach_money"
-                :label="piecesPrice.p + ' USD'"
-              ></q-chip>
-              Pieces per order:
-              <q-chip :label="piecesPrice.pcs"></q-chip>
-              Price per unit:
-              <q-chip
-                :label="(piecesPrice.p / piecesPrice.pcs).toString() + ' USD'"
-              ></q-chip>
-            </div>
-
             <div class="q-my-sm">
               <span>
                 From
@@ -115,22 +102,28 @@
                 class="q-my-sm"
               ></q-select>
 
-              <q-input
-                label="Pieces"
-                type="number"
-                v-model="pieces"
-                outlined
-                dense
-                class="q-mb-md"
-                min="1"
-                step="1"
-              ></q-input>
-
-              <div v-if="totalPrice" class="col-12">
-                Total price:
-                <q-chip :label="totalPrice?.toString() + ' USD'"></q-chip>
-                <q-chip v-if="sRegion && sToken" :label="totalTokenStr">
-                </q-chip>
+              <div class="row justify-between q-col-gutter-x-sm">
+                <div v-if="price" class="col-auto">
+                  Price:
+                  <q-chip :label="price?.toFixed(2) + ' USD'"></q-chip>
+                </div>
+                <div v-if="shipPrice !== undefined" class="col-auto">
+                  Shipping:
+                  <q-chip
+                    :label="
+                      'within ' +
+                      shipDuration +
+                      ' for ' +
+                      shipPrice?.toFixed(2) +
+                      ' USD'
+                    "
+                  ></q-chip>
+                </div>
+                <div v-if="totalPrice" class="col-auto">
+                  Total price:
+                  <q-chip :label="totalPrice?.toFixed(2) + ' USD'"></q-chip>
+                  <q-chip v-if="sToken" :label="totalTokenStr"> </q-chip>
+                </div>
               </div>
 
               <div v-if="seller" class="row">
@@ -255,14 +248,36 @@ export default Vue.defineComponent({
       return undefined;
     });
 
+    const price = Vue.computed(() => {
+      return (piecesPrice.value.p * pieces.value) / piecesPrice.value.pcs;
+    });
+
+    const shiptTo = Vue.computed(() => {
+      if (item.value !== undefined) {
+        return item.value.shipTo.find((a) => a.rs == sRegion.value?.value);
+      }
+      return undefined;
+    });
+
+    const shipDuration = Vue.computed(() => {
+      if (shiptTo.value !== undefined) {
+        return Number(shiptTo.value.t) / 3600 / 24 + " days";
+      }
+      return undefined;
+    });
+
+    const shipPrice = Vue.computed(() => {
+      if (shiptTo.value !== undefined) {
+        return Number(shiptTo.value.p);
+      }
+      return undefined;
+    });
+
     const totalPrice = Vue.computed(() => {
-      if (item.value && sRegion.value) {
-        const to = item.value.shipTo.find((a) => a.rs == sRegion.value?.value);
-        if (to !== undefined) {
-          const p = to.p + piecesPrice.value.p;
-          setTotalToken(p);
-          return p;
-        }
+      if (shipPrice.value !== undefined && price.value !== undefined) {
+        const p = shipPrice.value + price.value;
+        setTotalToken(p);
+        return p;
       }
       totalToken.value = undefined;
       return undefined;
@@ -291,7 +306,7 @@ export default Vue.defineComponent({
     const pieces = Vue.computed({
       get: () => _pieces.value,
       set: (v) => {
-        if (v > 0) {
+        if (Number(v) > 0) {
           _pieces.value = Math.round(v);
         }
       },
@@ -372,6 +387,9 @@ export default Vue.defineComponent({
       buyClick,
       pieces,
       piecesPrice,
+      price,
+      shipPrice,
+      shipDuration,
       accepted,
       goBack,
       isPreview: mode == ItemPageMode.Preview,

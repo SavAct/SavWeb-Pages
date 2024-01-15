@@ -533,8 +533,6 @@ export default Vue.defineComponent({
         // Check all of pp if a pcs number is already defined
         for (let i = 0; i < pp.value.length; i++) {
           for (let k = i + 1; k < pp.value.length; k++) {
-            console.log("check pcs", pp.value[i].pcs, pp.value[k].pcs);
-
             if (Number(pp.value[i].pcs) === Number(pp.value[k].pcs)) {
               Quasar.Notify.create({
                 message: "Invalid pieces number",
