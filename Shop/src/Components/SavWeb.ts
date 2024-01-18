@@ -719,6 +719,8 @@ export class SavWeb {
     },
     maxWaitMs: number = 0
   ) {
+    console.log("Send request", trxData);
+
     // Send request
     const result = (await this.request(
       {

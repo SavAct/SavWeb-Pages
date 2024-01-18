@@ -60,7 +60,7 @@ export const categories: Array<Category> = [
     name: "Home & Garden",
     index: 4,
     child: [
-      { index: 1, name: "Home Décor", child: [] },
+      { index: 1, name: "Home Decor", child: [] },
       { index: 2, name: "Yard, Garden & Outdoor Living Items", child: [] },
       { index: 3, name: "Kitchen, Dining & Bar Supplies", child: [] },
       { index: 4, name: "Tools & Workshop Equipment", child: [] },
@@ -72,7 +72,7 @@ export const categories: Array<Category> = [
       { index: 10, name: "Lamps, Lighting & Ceiling Fans", child: [] },
       { index: 11, name: "Food & Beverages", child: [] },
       { index: 12, name: "Surveillance & Smart Home Electronics", child: [] },
-      { index: 13, name: "Holiday & Seasonal Décor", child: [] },
+      { index: 13, name: "Holiday & Seasonal Decor", child: [] },
       {
         index: 14,
         name: "Bathroom Fixtures, Accessories & Supplies",
@@ -303,7 +303,7 @@ export const categories: Array<Category> = [
 //   { name: "Vintage & Antique Jewelry", index: 10, id: 218987531880890370n },
 //   { name: "Stamps", index: 11, id: 219269006857601020n },
 //   { name: "Home & Garden", index: 4, id: 291326600895528960n },
-//   { name: "Home Décor", index: 1, id: 288511851128422400n },
+//   { name: "Home Decor", index: 1, id: 288511851128422400n },
 //   {
 //     name: "Yard, Garden & Outdoor Living Items",
 //     index: 2,
@@ -614,7 +614,7 @@ export const categoryPathsById: { [id: string]: string } = {
   "218706056904179712": "Collectibles & Art / Entertainment Memorabilia",
   "219269006857601024": "Collectibles & Art / Stamps",
   "291326600895528960": "Home & Garden / Food & Beverages",
-  "288511851128422400": "Home & Garden / Home Décor",
+  "288511851128422400": "Home & Garden / Home Decor",
   "288793326105133056": "Home & Garden / Yard, Garden & Outdoor Living Items",
   "289074801081843712": "Home & Garden / Kitchen, Dining & Bar Supplies",
   "289356276058554368": "Home & Garden / Tools & Workshop Equipment",
@@ -625,7 +625,7 @@ export const categoryPathsById: { [id: string]: string } = {
   "290763650942107648": "Home & Garden / Bedding",
   "291045125918818304": "Home & Garden / Lamps, Lighting & Ceiling Fans",
   "291608075872239616": "Home & Garden / Surveillance & Smart Home Electronics",
-  "291889550848950272": "Home & Garden / Holiday & Seasonal Décor",
+  "291889550848950272": "Home & Garden / Holiday & Seasonal Decor",
   "292171025825660928":
     "Home & Garden / Bathroom Fixtures, Accessories & Supplies",
   "292452500802371584": "Home & Garden / Greeting Cards & Party Supplies",

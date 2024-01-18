@@ -80,13 +80,6 @@
           </div>
           <div :class="{ 'q-mx-md': $q.screen.gt.sm }">
             <q-separator class="q-my-md" />
-            <div v-if="item.note">
-              <div>
-                <div class="text-h5">Sellers note</div>
-                <div>{{ item.note }}</div>
-              </div>
-              <q-separator class="q-my-md" />
-            </div>
             <div>
               <q-select
                 outlined
@@ -167,6 +160,13 @@
       <div v-if="item && item?.descr.length > 0">
         <div class="text-h5">Description</div>
         <div>{{ item?.descr }}</div>
+      </div>
+      <div v-if="item?.note">
+        <q-separator class="q-my-md" />
+        <div>
+          <div class="text-h5">Sellers note</div>
+          <div>{{ item.note }}</div>
+        </div>
       </div>
     </div>
   </q-page>
@@ -412,7 +412,7 @@ export default Vue.defineComponent({
           break;
         case ItemPageMode.Standard:
           let id_category = GetQueryIdAndCategory(); // TODO: Set to constant after testing
-          id_category = { id: 0, category: 16318631278n }; // TODO: Remove after testing
+          id_category = { id: 0, category: 290482175965396992n }; // TODO: Remove after testing
           if (
             id_category?.id === undefined ||
             id_category?.id == -1 ||

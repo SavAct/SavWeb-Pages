@@ -5,7 +5,6 @@ import {
   ItemTable,
   UserTable,
 } from "../Components/ContractInterfaces";
-import { Seller } from "../Components/Items";
 import { PublicAccount } from "../Components/SavWeb";
 import { savWeb } from "./connect";
 

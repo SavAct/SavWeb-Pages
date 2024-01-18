@@ -323,11 +323,13 @@ export default Vue.defineComponent({
           })
         : []
     );
+
     const category = Vue.ref<bigint | undefined>(
       pIpt?.category !== undefined && BigInt(pIpt.category) != 0n
         ? BigInt(pIpt.category)
         : undefined
     );
+
     const description = Vue.ref<string>(pIpt?.descr ?? "");
     const hasNote = Vue.ref<boolean>(pIpt ? pIpt.note !== "" : false);
     const note = Vue.ref<string>(pIpt?.note ?? "");
@@ -515,7 +517,10 @@ export default Vue.defineComponent({
         }
       }
 
-      if (category.value === undefined) {
+      if (
+        category.value === undefined ||
+        category.value < BigInt("0x0100000000000000") // First byte of category must be bigger than 0x00 to prevent conflicts in Antelope API requests with numbers as Antelope names
+      ) {
         errors.push({
           key: "category",
           message: `Category not set`,
@@ -554,7 +559,7 @@ export default Vue.defineComponent({
         data: {
           seller: checkUserOffline(sellerName) === true ? sellerName : "",
           title: title.value.trim(),
-          pp: pp.value,
+          pp: deepCopy(pp.value),
           note: hasNote.value ? note.value : "",
           descr: description.value,
           imgs: imgSrcs.value.map((i) => i.src),
@@ -569,6 +574,10 @@ export default Vue.defineComponent({
         },
         error: errors,
       };
+    }
+
+    function deepCopy<T>(obj: T): T {
+      return JSON.parse(JSON.stringify(obj));
     }
 
     async function send() {
@@ -642,7 +651,7 @@ export default Vue.defineComponent({
     // TODO: Load already uploaded shop by query id and edit the item table
     const id_category = GetQueryIdAndCategory();
     const id = id_category?.id;
-    if (id_category?.category !== undefined) {
+    if (id_category?.category !== undefined && id_category?.category !== 0n) {
       category.value = id_category.category;
     }
     console.log("Item page query: ", id, category.value);
