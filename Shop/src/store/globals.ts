@@ -7,6 +7,7 @@ import {
 } from "../Components/ContractInterfaces";
 import { Seller } from "../Components/Items";
 import { PublicAccount } from "../Components/SavWeb";
+import { savWeb } from "./connect";
 
 export interface ExtendedTokenSymbol {
   symbol: AssetSymbol;
@@ -18,7 +19,25 @@ export interface User extends Omit<UserTable, "allowed"> {
   allowed: Array<ExtendedTokenSymbol>;
 }
 
-const contract = {
+export interface MarketContract {
+  account: string;
+  chain: string;
+  actions: {
+    addItem: string;
+    removeItem: string;
+    removeExpired: string;
+    updateItemState: string;
+    updateUser: string;
+    deleteUser: string;
+    banUser: string;
+  };
+  tables: {
+    user: string;
+    item: string;
+  };
+}
+
+const contract: MarketContract = {
   account: "infiniteshop",
   chain: "lamington",
   actions: {
@@ -45,7 +64,7 @@ const savpayContract = {
 };
 
 const defaultValue = {
-  startPage: "upload", //"home";
+  startPage: "item", //"home";
   prepDuration: 3600 * 24 * 2 * 1000, // 2 days
   shipDuration: 3600 * 24 * 5 * 1000, // 5 days
   expireDuration: 3600 * 24 * 30 * 1000, // 30 days
@@ -60,6 +79,62 @@ const darkStyle = Vue.computed({
     Quasar.Dark.set(value);
   },
 });
+
+/**
+ * Get the key for the article cache
+ * @param data Article data
+ * @returns key
+ */
+function getArticleKey(
+  data: {
+    id: number;
+    category: string | bigint | number;
+  } & MarketContract
+) {
+  return `${data.id}_${String(BigInt(data.category))}_${data.chain}_${data.account}`;
+}
+
+// Articles
+const article = new Map<string, { time: number; entry: ItemTable }>();
+
+/**
+ * Get article from cache or blockchain
+ * @param id Article data
+ * @param forceUpdate Update the cache for this article
+ * @param chain Chain name
+ * @param code Contract account
+ * @param table Table name
+ * @returns Article otherwise undefined
+ */
+async function getArticle(
+  data: {
+    id: number;
+    category: string | bigint | number;
+  } & MarketContract,
+  forceUpdate = false
+) {
+  const key = getArticleKey(data);
+  const art = article.get(key);
+  if (!forceUpdate && art !== undefined && art.time + 1800000 > Date.now()) {
+    // Update at least after 30 minutes
+    return art;
+  } else {
+    const category = BigInt(data.category);
+    const result = await savWeb.getTableRows({
+      chain: data.chain,
+      code: data.account,
+      table: data.tables.item,
+      scope: String(category),
+      entry: data.id,
+    });
+    if (result && "rows" in result && result.rows.length > 0) {
+      const art = result.rows[0];
+      article.set(key, { time: Date.now(), entry: art });
+      return art;
+    }
+  }
+  return undefined;
+}
 
 // Allowed tokens
 const isGettingAvailableTokens = Vue.ref<boolean>(false);
@@ -203,25 +278,40 @@ const itemsList: Array<ItemTable> = [
   },
 ];
 
-const sellerList: { [key: string]: Seller } = {
+const sellerList: { [key: string]: UserTable } = {
   savact: {
-    account: "savact",
-    available: false,
-    toDate: 1689150279,
+    user: "savact",
+    active: false,
+    banned: false,
+    items: [],
+    note: "I am a very good seller",
+    allowed: [
+      { sym: "4,EOS", contr: "eosio.token", chain: "eos" },
+      { sym: "4,SAVACT", contr: "savactsavpay", chain: "lamington" },
+    ],
+    lastUpdate: 1689150279,
     contact: ["test1@test1.com", "t.me/test1"],
     pgp: "PGP KEY---------------PGP END",
   },
   savactsavact: {
-    account: "savactsavact",
-    available: true,
-    toDate: 1679150279,
+    user: "savactsavact",
+    active: false,
+    banned: false,
+    items: [],
+    note: "I am an inactive seller",
+    allowed: [],
+    lastUpdate: 1679150279,
     contact: ["test2@test2.com", "t.me/test2"],
     pgp: `PGP KEY---------------PGP END`,
   },
   yearofthesav: {
-    account: "yearofthesav",
-    available: true,
-    toDate: 1679826294,
+    user: "yearofthesav",
+    active: true,
+    banned: true,
+    items: [],
+    note: "I am a banned seller",
+    allowed: [],
+    lastUpdate: 1679826294,
     contact: [
       "test3@test3.com",
       "t.me/test3",
@@ -262,4 +352,5 @@ export const state = {
   isGettingAvailableTokens,
   uploadPageInputs,
   defaultValue,
+  getArticle,
 };

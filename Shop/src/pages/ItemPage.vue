@@ -1,5 +1,11 @@
 <template>
   <q-page class="column">
+    <q-inner-loading
+      :showing="loadTryPercentage != 100"
+      :label="loadTryPercentage + '%'"
+      label-class="text-teal"
+      style="z-index: 99; background-color: #000000a0"
+    />
     <q-btn
       v-if="isPreview"
       class="bg-grey-8 text-white"
@@ -127,20 +133,22 @@
               </div>
 
               <div v-if="seller" class="row">
-                <div v-if="!seller.available" class="text-red text-h5 q-mt-sm">
+                <div v-if="!seller.active" class="text-red text-h5 q-mt-sm">
                   The seller is&nbsp;<span
-                    v-if="seller.toDate < Date.now() / 1000"
+                    v-if="seller.lastUpdate < Date.now() / 1000"
                     >not available.</span
                   ><span v-else
                     >not available until&nbsp;<span class="text-bold">{{
-                      new Date(seller.toDate * 1000).toUTCString().substring(5)
+                      new Date(seller.lastUpdate * 1000)
+                        .toUTCString()
+                        .substring(5)
                     }}</span></span
                   >
                 </div>
                 <q-btn
                   v-else
                   :disable="
-                    !seller.available ||
+                    !seller.active ||
                     typeof totalPrice != 'number' ||
                     !sToken?.value
                   "
@@ -168,7 +176,7 @@ import Gallery from "../Components/Gallery.vue";
 import TokenSymbol from "../Components/TokenSymbol.vue";
 import UserLink from "../Components/UserLink.vue";
 import PiecePriceSelect from "../Components/PiecePrice/PiecePriceSelect.vue";
-import { state } from "../store/globals";
+import { MarketContract, state } from "../store/globals";
 import {
   Asset,
   AssetToString,
@@ -179,7 +187,7 @@ import { getCurrentTokenPrice } from "../Components/ConvertPrices";
 import { router } from "../router/simpleRouter";
 import { getRegion } from "../Components/ConvertRegion";
 import {
-  GetQueryId,
+  GetQueryIdAndCategory,
   GetQueryMode,
   ItemPageMode,
 } from "../Components/queryHelper";
@@ -189,15 +197,15 @@ export default Vue.defineComponent({
   components: { Gallery, TokenSymbol, UserLink, PiecePriceSelect },
   name: "itemPage",
   setup() {
-    const id = GetQueryId();
-    console.log("Item page query: ", id);
-    // TODO: Handle wait and preview mode
+    // TODO: Handle wait mode
     // TODO: Load item from RAM table
+    // TODO: Load seller from RAM table
     const mode = GetQueryMode();
     console.log("Item page mode: ", mode);
 
+    const id = Vue.ref<number>();
+    const category = Vue.ref<bigint>();
     const item = Vue.ref<ItemTable>();
-    item.value = state.itemsList.find((item) => item.id == id);
 
     const imgs = Vue.computed(() => item.value?.imgs);
     const seller = item.value ? state.sellerList[item.value.seller] : undefined;
@@ -337,6 +345,57 @@ export default Vue.defineComponent({
       }
     }
 
+    const loadMaxTries = Vue.ref<number>(1);
+    const loadTries = Vue.ref<number>(0);
+    const loadTryPercentage = Vue.computed(() => {
+      if (loadMaxTries.value > 0) {
+        return Math.round(
+          ((loadMaxTries.value - loadTries.value) / loadMaxTries.value) * 100
+        );
+      }
+      return 0;
+    });
+
+    function setItemFromTable(
+      data: { id: number; category: bigint } & MarketContract,
+      maxTries = 2,
+      waitTime = 1000
+    ) {
+      loadMaxTries.value = maxTries;
+      void requestItemFromTable(data, maxTries, waitTime);
+    }
+
+    async function requestItemFromTable(
+      data: { id: number; category: bigint } & MarketContract,
+      maxTries: number,
+      waitTime: number
+    ) {
+      loadTries.value = maxTries;
+
+      if (maxTries <= 0) {
+        // Stop trying
+        Quasar.Notify.create({
+          type: "negative",
+          message: "Item not found",
+          position: "top",
+        });
+        loadTries.value = 0;
+        return;
+      }
+
+      const article = await state.getArticle(data);
+      if (article) {
+        item.value = article;
+        loadTries.value = 0;
+        return;
+      } else {
+        // Try again
+        setTimeout(() => {
+          requestItemFromTable(data, maxTries - 1, waitTime);
+        }, waitTime);
+      }
+    }
+
     Vue.onMounted(async () => {
       switch (mode) {
         case ItemPageMode.Preview:
@@ -349,7 +408,23 @@ export default Vue.defineComponent({
           }
           break;
         case ItemPageMode.Wait:
-          // TODO: Wait for item to be added to RAM table
+          // TODO: Wait for item to be added to RAM table. Find it without knowing the id in sellers table entry items.
+          break;
+        case ItemPageMode.Standard:
+          let id_category = GetQueryIdAndCategory(); // TODO: Set to constant after testing
+          id_category = { id: 0, category: 16318631278n }; // TODO: Remove after testing
+          if (
+            id_category?.id === undefined ||
+            id_category?.id == -1 ||
+            id_category?.category === undefined
+          ) {
+            // If no id or category is given, go back. Go to index page if not possible
+            if (!router.back()) {
+              router.push({ name: "home" });
+            }
+            return;
+          }
+          setItemFromTable({ ...id_category, ...state.contract });
           break;
       }
 
@@ -357,7 +432,8 @@ export default Vue.defineComponent({
       //accept: settings.accept,
     });
 
-    // TODO: Show Category, Options, total Price
+    // TODO: Link for more items on the same category
+    // TODO: Link to seller items
 
     function goBack() {
       if (!router.back()) {
@@ -393,6 +469,9 @@ export default Vue.defineComponent({
       accepted,
       goBack,
       isPreview: mode == ItemPageMode.Preview,
+      loadTryPercentage,
+      id,
+      category,
     };
   },
 });

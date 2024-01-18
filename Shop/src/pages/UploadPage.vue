@@ -289,7 +289,7 @@ import {
   ToRegion,
 } from "../Components/ContractInterfaces";
 import { savWeb } from "../store/connect";
-import { GetQueryId, ItemPageMode } from "../Components/queryHelper";
+import { GetQueryIdAndCategory, ItemPageMode } from "../Components/queryHelper";
 import {
   checkUserOffline,
   checkUserOnline,
@@ -640,8 +640,12 @@ export default Vue.defineComponent({
     });
 
     // TODO: Load already uploaded shop by query id and edit the item table
-    const id = GetQueryId();
-    console.log("Upload page query: ", id);
+    const id_category = GetQueryIdAndCategory();
+    const id = id_category?.id;
+    if (id_category?.category !== undefined) {
+      category.value = id_category.category;
+    }
+    console.log("Item page query: ", id, category.value);
 
     return {
       darkStyle: state.darkStyle,

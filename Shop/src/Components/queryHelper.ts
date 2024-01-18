@@ -1,11 +1,22 @@
 import { route } from "../router/simpleRouter";
 
-export function GetQueryId() {
-  return route.query &&
-    "id" in route.query &&
-    (typeof route.query.id == "number" || typeof route.query.id == "string")
-    ? Number(route.query.id)
-    : -1;
+export function GetQueryIdAndCategory() {
+  if (route.query) {
+    const id =
+      "id" in route.query &&
+      (typeof route.query.id == "number" || typeof route.query.id == "string")
+        ? Number(route.query.id)
+        : -1;
+    const category =
+      "category" in route.query &&
+      (typeof route.query.category == "number" ||
+        typeof route.query.category == "string" ||
+        typeof route.query.category == "bigint")
+        ? BigInt(route.query.category)
+        : 0n;
+    return { id, category };
+  }
+  return undefined;
 }
 
 export enum ItemPageMode {
