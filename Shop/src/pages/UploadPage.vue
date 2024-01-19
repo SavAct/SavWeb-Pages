@@ -269,6 +269,26 @@
               />
             </div>
           </div>
+          <div
+            v-if="id !== undefined && id >= 0"
+            class="row q-col-gutter-x-md q-mt-md"
+          >
+            <div class="col-auto">
+              <q-btn
+                @click="deleteEntry"
+                label="Delete entry"
+                color="red"
+                icon-right="delete"
+                size="md"
+                :disable="isDeleting"
+                :loading="isDeleting"
+              />
+            </div>
+            <div class="col-auto">
+              Id:
+              {{ id }}
+            </div>
+          </div>
         </q-card-section>
       </q-card>
     </div>
@@ -285,7 +305,9 @@ import { state } from "../store/globals";
 import { Ref } from "vue";
 import {
   AddItem,
+  ItemTable,
   PiecesPrice,
+  Removeitem,
   ToRegion,
 } from "../Components/ContractInterfaces";
 import { savWeb } from "../store/connect";
@@ -296,6 +318,7 @@ import {
 } from "../Components/AntelopeHelpers";
 import { getUserDataToState } from "../Components/SaleContractRequests";
 import { router } from "../router/simpleRouter";
+import { LoadFromContract } from "../Components/MarketContractHandle";
 
 export default Vue.defineComponent({
   name: "uploadPage",
@@ -329,6 +352,7 @@ export default Vue.defineComponent({
         ? BigInt(pIpt.category)
         : undefined
     );
+    const id = Vue.ref<number | bigint | undefined>(undefined);
 
     const description = Vue.ref<string>(pIpt?.descr ?? "");
     const hasNote = Vue.ref<boolean>(pIpt ? pIpt.note !== "" : false);
@@ -367,7 +391,7 @@ export default Vue.defineComponent({
     const fromRegion = Vue.ref<{ label: string; value: string }>(
       pIpt?.fromR !== undefined
         ? {
-            label: getRegion(pIpt.fromR.toLocaleUpperCase()) ?? "",
+            label: getRegion(pIpt.fromR.toUpperCase()) ?? "",
             value: pIpt.fromR,
           }
         : {
@@ -386,7 +410,7 @@ export default Vue.defineComponent({
     >([]);
     if (pIpt && pIpt.shipTo !== undefined) {
       pIpt.shipTo.map((s) => {
-        const codes = s.rs.toLocaleUpperCase().match(/../g);
+        const codes = s.rs.toUpperCase().match(/../g);
         if (codes) {
           for (const c of codes) {
             _toRegions.value.push({
@@ -422,7 +446,7 @@ export default Vue.defineComponent({
     const excludeRegions = Vue.ref<Array<{ label: string; value: string }>>(
       pIpt?.excl !== undefined
         ? pIpt.excl.match(/../g)?.map((c) => {
-            return { label: getRegion(c.toLocaleUpperCase()) ?? "", value: c };
+            return { label: getRegion(c.toUpperCase()) ?? "", value: c };
           }) ?? []
         : []
     );
@@ -481,7 +505,7 @@ export default Vue.defineComponent({
         excludeCodes = excludeRegions.value
           .map((r) => r.value)
           .join("")
-          .toLocaleLowerCase();
+          .toLowerCase();
       }
 
       // Add only unique regions
@@ -498,10 +522,10 @@ export default Vue.defineComponent({
           shipTo.push({
             t: sd,
             p: sp,
-            rs: r.value.toLocaleLowerCase(),
+            rs: r.value.toLowerCase(),
           });
         } else {
-          s.rs += r.value.toLocaleLowerCase();
+          s.rs += r.value.toLowerCase();
         }
       }
 
@@ -565,7 +589,7 @@ export default Vue.defineComponent({
           imgs: imgSrcs.value.map((i) => i.src),
           available: available.value,
           category: category.value === undefined ? 0n : BigInt(category.value),
-          fromR: fromRegion.value.value.toLocaleLowerCase(),
+          fromR: fromRegion.value.value.toLowerCase(),
           shipTo,
           excl: excludeCodes,
           prepT: Math.floor(duration.value / 1000),
@@ -648,13 +672,107 @@ export default Vue.defineComponent({
       };
     });
 
-    // TODO: Load already uploaded shop by query id and edit the item table
-    const id_category = GetQueryIdAndCategory();
-    const id = id_category?.id;
-    if (id_category?.category !== undefined && id_category?.category !== 0n) {
-      category.value = id_category.category;
+    function overrideSettings(settings: ItemTable) {
+      seller.value = settings.seller;
+      title.value = settings.title;
+      description.value = settings.descr;
+      options.value = settings.opts.map((o) => Vue.ref<string>(o));
+      pp.value = settings.pp;
+      duration.value = settings.prepT * 1000;
+      expired.value = settings.expired * 1000;
+      available.value = settings.available;
+      fromRegion.value = {
+        label: getRegion(settings.fromR?.toUpperCase()) ?? "",
+        value: settings.fromR,
+      };
+      excludeRegions.value =
+        settings.excl
+          .match(/../g)
+          ?.map((c) => {
+            return { label: getRegion(c.toUpperCase()) ?? "", value: c };
+          })
+          .filter((r) => r.label !== "") ?? [];
+      toRegions.value = settings.shipTo.map((s) => {
+        const codes = s.rs.toUpperCase().match(/../g);
+        if (codes) {
+          for (const c of codes) {
+            return {
+              label: getRegion(c) ?? "",
+              value: c,
+              sp: s.p,
+              sd: s.t,
+            };
+          }
+        }
+        return {
+          label: "",
+          value: "",
+          sp: 0,
+          sd: 0,
+        };
+      });
+      note.value = settings.note;
+      hasNote.value = settings.note !== "";
+      imgSrcs.value = settings.imgs.map((i) => {
+        return { id: imageSrcBiggestId++, src: i };
+      });
     }
-    console.log("Item page query: ", id, category.value);
+
+    Vue.onMounted(() => {
+      // Load already uploaded shop by query id and category
+      const id_category = GetQueryIdAndCategory();
+      if (id_category?.category !== undefined && id_category?.category !== 0n) {
+        id.value = id_category.id;
+        category.value = id_category.category;
+
+        (async () => {
+          const settings = await new LoadFromContract().loadItem({
+            ...id_category,
+            ...state.contract,
+          });
+          if (settings) {
+            overrideSettings(settings);
+          } else {
+            // No entry found
+            Quasar.Notify.create({
+              type: "negative",
+              message: "Item not found",
+              position: "top",
+            });
+          }
+        })();
+      }
+    });
+
+    const isDeleting = Vue.ref<boolean>(false);
+    async function deleteEntry() {
+      if (id !== undefined) {
+        isDeleting.value = true;
+
+        const data: Removeitem = {
+          id: String(id.value),
+          category: String(category.value),
+        };
+
+        const result = await savWeb.transaction({
+          chain: state.contract.chain,
+          contract: state.contract.account,
+          action: state.contract.actions.removeItem,
+          data,
+        });
+
+        if (result !== undefined) {
+          Quasar.Notify.create({
+            type: "positive",
+            message: "Item deleted",
+            position: "top",
+          });
+          router.push({ name: "user", query: { user: seller.value } });
+        }
+
+        isDeleting.value = false;
+      }
+    }
 
     return {
       darkStyle: state.darkStyle,
@@ -683,6 +801,9 @@ export default Vue.defineComponent({
       moveStringOneFieldBefore,
       moveStringOneFieldAfter,
       showPreview,
+      deleteEntry,
+      isDeleting,
+      id,
     };
   },
 });

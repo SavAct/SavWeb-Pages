@@ -111,12 +111,12 @@ async function getArticle(
     category: string | bigint | number;
   } & MarketContract,
   forceUpdate = false
-) {
+): Promise<ItemTable | undefined> {
   const key = getArticleKey(data);
   const art = article.get(key);
   if (!forceUpdate && art !== undefined && art.time + 1800000 > Date.now()) {
     // Update at least after 30 minutes
-    return art;
+    return art.entry;
   } else {
     const category = BigInt(data.category);
     const result = await savWeb.getTableRows({

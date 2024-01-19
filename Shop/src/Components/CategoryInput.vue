@@ -28,18 +28,18 @@ export default Vue.defineComponent({
   },
   emits: ["update:modelValue"],
   setup(props, context) {
-    const _category = Vue.ref<{ value: bigint; label: string } | undefined>(
-      props.modelValue !== undefined
-        ? {
-            value: props.modelValue,
-            label: categoryPathsById[String(props.modelValue)],
-          }
-        : undefined
-    );
+    // const _category = Vue.ref<{ value: bigint; label: string } | undefined>(
+
+    // );
     const category = Vue.computed({
-      get: () => _category.value,
+      get: () =>
+        props.modelValue !== undefined
+          ? {
+              value: props.modelValue,
+              label: categoryPathsById[String(props.modelValue)],
+            }
+          : undefined,
       set: (value) => {
-        _category.value = value;
         context.emit("update:modelValue", value?.value);
       },
     });

@@ -85,15 +85,9 @@ export default Vue.defineComponent({
     PiecePriceInput,
   },
   setup(props, context) {
-    const mVOptions = GetParamsFromTablePricePiece(props.modelValue);
-
-    const pp = Vue.ref<Array<Ref<{ p: number; pcs: number }>>>(
-      mVOptions.piecePrices.length > 0
-        ? mVOptions.piecePrices.map((v) => {
-            return Vue.ref({ p: Number(v.p), pcs: Number(v.pcs) });
-          })
-        : [Vue.ref({ p: 0, pcs: 1 })]
-    );
+    const pp = Vue.ref<Array<Ref<{ p: number; pcs: number }>>>([
+      Vue.ref({ p: 0, pcs: 1 }),
+    ]);
 
     const options = [
       { label: "One", value: PriceOption.One },
@@ -101,7 +95,7 @@ export default Vue.defineComponent({
       { label: "Only predefined", value: PriceOption.Predefined },
     ];
 
-    const option = Vue.ref<PriceOption>(mVOptions.priceOption);
+    const option = Vue.ref<PriceOption>(PriceOption.One);
 
     const isOnlyOne = Vue.computed(() => {
       return option.value === PriceOption.One;
@@ -111,10 +105,8 @@ export default Vue.defineComponent({
       return option.value === PriceOption.Multiple;
     });
 
-    const isMaxPcs = Vue.ref<boolean>(mVOptions.maxPieces !== undefined);
-    const maxPcs = Vue.ref<number>(
-      mVOptions.maxPieces ? mVOptions.maxPieces : 2
-    );
+    const isMaxPcs = Vue.ref<boolean>(false);
+    const maxPcs = Vue.ref<number>(2);
 
     Vue.watch(
       () => isMaxPcs.value,
@@ -161,6 +153,8 @@ export default Vue.defineComponent({
       );
     }
 
+    let newValue: Array<PiecesPrice> = [];
+
     function update() {
       if (isMaxPcs.value) {
         const max = getMaxPcsFromOptions();
@@ -175,7 +169,7 @@ export default Vue.defineComponent({
         }
       }
 
-      let newValue = pp.value.map((v) => {
+      newValue = pp.value.map((v) => {
         return { p: v.value.p, pcs: v.value.pcs };
       });
 
@@ -229,6 +223,29 @@ export default Vue.defineComponent({
           return "(Only predefined piece numbers are purchasable)";
       }
     });
+
+    Vue.watch(
+      () => props.modelValue,
+      () => {
+        if (JSON.stringify(newValue) == JSON.stringify(props.modelValue)) {
+          return;
+        }
+        const mVOptions = GetParamsFromTablePricePiece(props.modelValue);
+        pp.value =
+          mVOptions.piecePrices.length > 0
+            ? mVOptions.piecePrices.map((v) => {
+                return Vue.ref({ p: Number(v.p), pcs: Number(v.pcs) });
+              })
+            : [Vue.ref({ p: 0, pcs: 1 })];
+
+        option.value = mVOptions.priceOption
+          ? mVOptions.priceOption
+          : PriceOption.One;
+        isMaxPcs.value = mVOptions.maxPieces !== undefined;
+        maxPcs.value = mVOptions.maxPieces ? mVOptions.maxPieces : 2;
+      },
+      { deep: true, immediate: true }
+    );
 
     return {
       addPriceWithUnit,

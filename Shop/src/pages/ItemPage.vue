@@ -1,5 +1,5 @@
 <template>
-  <q-page class="column">
+  <q-page class="column full-width">
     <q-inner-loading
       :showing="loadTryPercentage != 100"
       :label="loadTryPercentage + '%'"
@@ -14,12 +14,28 @@
       outline
       @click="goBack()"
     ></q-btn>
-    <div class="col q-pa-md">
-      <div class="text-h5">{{ item?.title }}</div>
+    <div class="col q-pa-md full-width">
+      <div class="row full-width">
+        <div class="col text-h5 q-pr-sm no-text-overflow">
+          {{ item?.title }}
+          <q-tooltip anchor="top middle" style="word-wrap: break-word">{{
+            item?.title
+          }}</q-tooltip>
+        </div>
+        <div class="col-auto">
+          <q-btn
+            icon="settings"
+            size="sm"
+            round
+            v-if="!isPreview"
+            @click="openSettings()"
+          ></q-btn>
+        </div>
+      </div>
       <div class="q-mt-md row">
         <gallery
           class="col-12 col-md-6"
-          height="400px"
+          :height="$q.screen.lt.sm ? '250px' : '400px'"
           :srcs="imgs"
           :file-size="2117632"
         ></gallery>
@@ -42,23 +58,26 @@
                 <user-link class="col-auto" :user="item.seller"></user-link>
               </span>
               <span v-if="item.fromR.length > 0"
-                >in<q-chip :label="getRegion(item.fromR)"></q-chip>to</span
+                >in<q-chip :label="getRegion(item.fromR.toUpperCase())"></q-chip
+                >to</span
               ><span v-else>To</span>
-              <q-chip
-                v-for="(to, index) in item.shipTo"
-                :key="index"
-                :label="getRegion(to.rs)"
-                text-color="green"
-                clickable
-                @click="regionClick(index)"
-              ></q-chip>
+              <span class="q-mr-sm">
+                <q-chip
+                  v-for="(to, index) in item.shipTo"
+                  :key="index"
+                  :label="getRegion(to.rs.toUpperCase())"
+                  text-color="green"
+                  clickable
+                  @click="regionClick(index)"
+                ></q-chip>
+              </span>
               <span v-if="item.excl">
                 but especially not to
                 <q-chip
                   v-for="(ex, index) in item.excl.split(' ')"
                   :key="index"
                   text-color="red"
-                  :label="getRegion(ex)"
+                  :label="getRegion(ex.toUpperCase())"
                   icon="do_not_disturb"
                 ></q-chip>
               </span>
@@ -158,13 +177,13 @@
       </div>
       <q-separator class="q-my-md" />
       <div v-if="item && item?.descr.length > 0">
-        <div class="text-h5">Description</div>
+        <div class="text-h5 no-text-overflow">Description</div>
         <div>{{ item?.descr }}</div>
       </div>
       <div v-if="item?.note">
         <q-separator class="q-my-md" />
         <div>
-          <div class="text-h5">Sellers note</div>
+          <div class="text-h5 no-text-overflow">Sellers note</div>
           <div>{{ item.note }}</div>
         </div>
       </div>
@@ -176,7 +195,7 @@ import Gallery from "../Components/Gallery.vue";
 import TokenSymbol from "../Components/TokenSymbol.vue";
 import UserLink from "../Components/UserLink.vue";
 import PiecePriceSelect from "../Components/PiecePrice/PiecePriceSelect.vue";
-import { MarketContract, state } from "../store/globals";
+import { state } from "../store/globals";
 import {
   Asset,
   AssetToString,
@@ -192,13 +211,13 @@ import {
   ItemPageMode,
 } from "../Components/queryHelper";
 import { ItemTable } from "../Components/ContractInterfaces";
+import { LoadFromContract } from "../Components/MarketContractHandle";
 
 export default Vue.defineComponent({
   components: { Gallery, TokenSymbol, UserLink, PiecePriceSelect },
   name: "itemPage",
   setup() {
     // TODO: Handle wait mode
-    // TODO: Load item from RAM table
     // TODO: Load seller from RAM table
     const mode = GetQueryMode();
     console.log("Item page mode: ", mode);
@@ -219,7 +238,7 @@ export default Vue.defineComponent({
             return !en.excl.split(" ").includes(a.rs);
           })
           .map((rto) => {
-            return { value: rto.rs, label: getRegion(rto.rs) };
+            return { value: rto.rs, label: getRegion(rto.rs.toUpperCase()) };
           });
       }
       return undefined;
@@ -356,46 +375,6 @@ export default Vue.defineComponent({
       return 0;
     });
 
-    function setItemFromTable(
-      data: { id: number; category: bigint } & MarketContract,
-      maxTries = 2,
-      waitTime = 1000
-    ) {
-      loadMaxTries.value = maxTries;
-      void requestItemFromTable(data, maxTries, waitTime);
-    }
-
-    async function requestItemFromTable(
-      data: { id: number; category: bigint } & MarketContract,
-      maxTries: number,
-      waitTime: number
-    ) {
-      loadTries.value = maxTries;
-
-      if (maxTries <= 0) {
-        // Stop trying
-        Quasar.Notify.create({
-          type: "negative",
-          message: "Item not found",
-          position: "top",
-        });
-        loadTries.value = 0;
-        return;
-      }
-
-      const article = await state.getArticle(data);
-      if (article) {
-        item.value = article;
-        loadTries.value = 0;
-        return;
-      } else {
-        // Try again
-        setTimeout(() => {
-          requestItemFromTable(data, maxTries - 1, waitTime);
-        }, waitTime);
-      }
-    }
-
     Vue.onMounted(async () => {
       switch (mode) {
         case ItemPageMode.Preview:
@@ -412,7 +391,7 @@ export default Vue.defineComponent({
           break;
         case ItemPageMode.Standard:
           let id_category = GetQueryIdAndCategory(); // TODO: Set to constant after testing
-          id_category = { id: 0, category: 290482175965396992n }; // TODO: Remove after testing
+          id_category = { id: 1, category: 290482175965396992n }; // TODO: Remove after testing
           if (
             id_category?.id === undefined ||
             id_category?.id == -1 ||
@@ -424,7 +403,26 @@ export default Vue.defineComponent({
             }
             return;
           }
-          setItemFromTable({ ...id_category, ...state.contract });
+          id.value = id_category.id;
+          category.value = id_category.category;
+
+          (async () => {
+            item.value = await new LoadFromContract(
+              loadMaxTries,
+              loadTries
+            ).loadItem({
+              ...id_category,
+              ...state.contract,
+            });
+            if (!item.value) {
+              // No entry found
+              Quasar.Notify.create({
+                type: "negative",
+                message: "Item not found",
+                position: "top",
+              });
+            }
+          })();
           break;
       }
 
@@ -443,6 +441,13 @@ export default Vue.defineComponent({
           position: "top",
         });
       }
+    }
+
+    function openSettings() {
+      router.push({
+        name: "upload",
+        query: { id: id.value, category: category.value },
+      });
     }
 
     return {
@@ -472,6 +477,7 @@ export default Vue.defineComponent({
       loadTryPercentage,
       id,
       category,
+      openSettings,
     };
   },
 });
