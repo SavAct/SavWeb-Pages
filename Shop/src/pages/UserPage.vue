@@ -239,14 +239,17 @@ import {
 } from "../Components/AntelopeHelpers";
 import { router } from "../router/simpleRouter";
 import { getUserDataToState } from "../Components/SaleContractRequests";
-import { HasQueryRequest } from "../Components/queryHelper";
+import { HasQueryRequest, HasQueryUserName } from "../Components/queryHelper";
 
 export default Vue.defineComponent({
   name: "userPage",
   components: { SetPgp, UserInput },
   setup() {
+    const queryUser = HasQueryUserName();
     const darkStyle = Vue.computed(() => state.darkStyle.value);
-    const _userName = Vue.ref<string>(state.defaultUserName.value);
+    const _userName = Vue.ref<string>(
+      queryUser !== false ? queryUser : state.defaultUserName.value
+    );
     const userName = Vue.computed<string>({
       get: () => _userName.value,
       set: (v) => {

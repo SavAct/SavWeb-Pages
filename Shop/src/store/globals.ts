@@ -93,8 +93,20 @@ function getArticleKey(
   return `${data.id}_${String(BigInt(data.category))}_${data.chain}_${data.account}`;
 }
 
+/**
+ * Get the key for the article cache
+ * @param data Article data
+ * @returns key
+ */
+function getSellerKey(seller: string, marketContract: MarketContract) {
+  return `${seller}_${marketContract.account}_${marketContract.chain}`;
+}
+
 // Articles
 const article = new Map<string, { time: number; entry: ItemTable }>();
+
+// Sellers
+const sellerEntry = new Map<string, { time: number; entry: UserTable }>();
 
 /**
  * Get article from cache or blockchain
@@ -130,6 +142,38 @@ async function getArticle(
       const art = result.rows[0];
       article.set(key, { time: Date.now(), entry: art });
       return art;
+    }
+  }
+  return undefined;
+}
+
+async function getSeller(
+  seller: string,
+  marketContract: MarketContract,
+  forceUpdate = false
+): Promise<UserTable | undefined> {
+  const key = getSellerKey(seller, marketContract);
+  const seUser = sellerEntry.get(key);
+
+  if (
+    !forceUpdate &&
+    seUser !== undefined &&
+    seUser.time + 1800000 > Date.now()
+  ) {
+    // Update at least after 30 minutes
+    return seUser.entry;
+  } else {
+    const result = await savWeb.getTableRows({
+      chain: marketContract.chain,
+      code: marketContract.account,
+      table: marketContract.tables.user,
+      scope: marketContract.account,
+      entry: seller,
+    });
+    if (result && "rows" in result && result.rows.length > 0) {
+      const user = result.rows[0];
+      sellerEntry.set(key, { time: Date.now(), entry: user });
+      return user;
     }
   }
   return undefined;
@@ -352,4 +396,5 @@ export const state = {
   uploadPageInputs,
   defaultValue,
   getArticle,
+  getSeller,
 };

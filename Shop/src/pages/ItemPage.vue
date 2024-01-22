@@ -41,65 +41,83 @@
         ></gallery>
         <div
           class="col-12 col-md-6"
-          :class="$q.screen.lt.md ? 'q-pt-md' : ''"
+          :class="$q.screen.lt.md ? 'q-pt-md' : 'q-pl-md'"
           v-if="item"
         >
-          <div class="q-px-md">
-            <piece-price-select
-              class="q-mb-sm"
-              label="Price option"
-              :pps="item.pp"
-              v-model:pieces="pieces"
-              v-model="piecesPrice"
-            ></piece-price-select>
-            <div class="q-my-sm">
-              <span>
-                From
-                <user-link class="col-auto" :user="item.seller"></user-link>
-              </span>
-              <span v-if="item.fromR.length > 0"
-                >in<q-chip :label="getRegion(item.fromR.toUpperCase())"></q-chip
-                >to</span
-              ><span v-else>To</span>
-              <span class="q-mr-sm">
-                <q-chip
-                  v-for="(to, index) in item.shipTo"
-                  :key="index"
-                  :label="getRegion(to.rs.toUpperCase())"
-                  text-color="green"
-                  clickable
-                  @click="regionClick(index)"
-                ></q-chip>
-              </span>
-              <span v-if="item.excl">
-                but especially not to
-                <q-chip
-                  v-for="(ex, index) in item.excl.split(' ')"
-                  :key="index"
-                  text-color="red"
-                  :label="getRegion(ex.toUpperCase())"
-                  icon="do_not_disturb"
-                ></q-chip>
-              </span>
-            </div>
-            <div>
-              <div>Accept payments of</div>
+          <q-card>
+            <q-card-section>
+              <div class="q-mb-sm">
+                <span>
+                  <user-link
+                    :color="chipBgColor()"
+                    class="col-auto"
+                    :user="item.seller"
+                  ></user-link>
+                </span>
+                <span v-if="item.fromR.length > 0"
+                  >from<q-chip
+                    :color="chipBgColor()"
+                    :label="getRegion(item.fromR.toUpperCase())"
+                  ></q-chip></span
+                ><span>ships to</span>
+                <span class="q-mr-sm">
+                  <q-chip
+                    v-for="(to, index) in item.shipTo"
+                    :key="index"
+                    :style="chipBorderStyle(to.rs === sRegion?.value)"
+                    :color="chipBgColor(to.rs === sRegion?.value)"
+                    :label="getRegion(to.rs.toUpperCase())"
+                    text-color="green"
+                    clickable
+                    @click="regionClick(index)"
+                  ></q-chip>
+                </span>
+                <div v-if="item.excl">
+                  <q-chip
+                    v-for="(ex, index) in item.excl.split(' ')"
+                    :key="index"
+                    :color="chipBgColor()"
+                    text-color="red"
+                    :label="getRegion(ex.toUpperCase())"
+                    icon="do_not_disturb"
+                  ></q-chip>
+                </div>
+              </div>
+              <div>
+                <div>Accept payments of</div>
 
-              <token-symbol
-                v-for="(token, index) in accepted"
-                :key="index"
-                :symbol="StringToSymbol(token.symbol)"
-                :contract="token.contract"
-                :chain="token.chain"
-                size="18px"
-                clickable
-                @click="tokenClick(index)"
-              ></token-symbol>
-            </div>
-          </div>
-          <div :class="{ 'q-mx-md': $q.screen.gt.sm }">
-            <q-separator class="q-my-md" />
-            <div>
+                <token-symbol
+                  v-for="(token, index) in acceptToken"
+                  :key="index"
+                  :style="chipBorderStyle(token.label === sToken?.label)"
+                  :color="chipBgColor(token.label === sToken?.label)"
+                  :symbol="token.value.symbol"
+                  :contract="token.value.contract"
+                  :chain="token.value.chain"
+                  size="18px"
+                  clickable
+                  @click="tokenClick(index)"
+                ></token-symbol>
+              </div>
+
+              <div>
+                <div>Options</div>
+
+                <q-chip
+                  v-for="(opt, index) in item?.opts"
+                  :key="index"
+                  :label="opt"
+                  :style="chipBorderStyle(option === opt)"
+                  :color="chipBgColor(option === opt)"
+                  clickable
+                  @click="optClick(index)"
+                ></q-chip>
+              </div>
+            </q-card-section>
+          </q-card>
+          <!-- <q-separator class="q-my-md" /> -->
+          <q-card class="q-mt-md">
+            <q-card-section>
               <q-select
                 outlined
                 v-model="sRegion"
@@ -117,17 +135,40 @@
                 label="Token you want to pay with"
                 dense
                 color="green"
+                class="q-mt-sm"
+              ></q-select>
+
+              <q-select
+                v-if="item?.opts && item.opts.length > 0"
+                outlined
+                v-model="option"
+                :options="item.opts"
+                label="Select an option"
+                dense
+                color="green"
                 class="q-my-sm"
               ></q-select>
+
+              <piece-price-select
+                class="q-mb-sm"
+                label="Price option"
+                :pps="item.pp"
+                v-model:pieces="pieces"
+                v-model="piecesPrice"
+              ></piece-price-select>
 
               <div class="row justify-between q-col-gutter-x-sm">
                 <div v-if="price" class="col-auto">
                   Price:
-                  <q-chip :label="price?.toFixed(2) + ' USD'"></q-chip>
+                  <q-chip
+                    :color="chipBgColor()"
+                    :label="price?.toFixed(2) + ' USD'"
+                  ></q-chip>
                 </div>
                 <div v-if="shipPrice !== undefined" class="col-auto">
                   Shipping:
                   <q-chip
+                    :color="chipBgColor()"
                     :label="
                       'within ' +
                       shipDuration +
@@ -139,11 +180,19 @@
                 </div>
                 <div v-if="totalPrice" class="col-auto">
                   Total price:
-                  <q-chip :label="totalPrice?.toFixed(2) + ' USD'"></q-chip>
-                  <q-chip v-if="sToken" :label="totalTokenStr"> </q-chip>
+                  <q-chip
+                    :color="chipBgColor()"
+                    :label="totalPrice?.toFixed(2) + ' USD'"
+                  ></q-chip>
+                  <q-chip
+                    v-if="sToken"
+                    :color="chipBgColor()"
+                    :label="totalTokenStr"
+                  >
+                  </q-chip>
                 </div>
               </div>
-
+              <q-spinner-grid v-if="loadingSeller" class="q-mt-md" />
               <div v-if="seller" class="row">
                 <div v-if="!seller.active" class="text-red text-h5 q-mt-sm">
                   The seller is&nbsp;<span
@@ -171,8 +220,8 @@
                   @click="buyClick"
                 ></q-btn>
               </div>
-            </div>
-          </div>
+            </q-card-section>
+          </q-card>
         </div>
       </div>
       <q-separator class="q-my-md" />
@@ -183,7 +232,7 @@
       <div v-if="item?.note">
         <q-separator class="q-my-md" />
         <div>
-          <div class="text-h5 no-text-overflow">Sellers note</div>
+          <div class="text-h5 no-text-overflow">Note</div>
           <div>{{ item.note }}</div>
         </div>
       </div>
@@ -210,7 +259,7 @@ import {
   GetQueryMode,
   ItemPageMode,
 } from "../Components/queryHelper";
-import { ItemTable } from "../Components/ContractInterfaces";
+import { ItemTable, UserTable } from "../Components/ContractInterfaces";
 import { LoadFromContract } from "../Components/MarketContractHandle";
 
 export default Vue.defineComponent({
@@ -218,7 +267,10 @@ export default Vue.defineComponent({
   name: "itemPage",
   setup() {
     // TODO: Handle wait mode
-    // TODO: Load seller from RAM table
+    // TODO: Link to find more items on the same category
+    // TODO: Link to all of sellers items
+    // Show and select options
+
     const mode = GetQueryMode();
     console.log("Item page mode: ", mode);
 
@@ -227,7 +279,9 @@ export default Vue.defineComponent({
     const item = Vue.ref<ItemTable>();
 
     const imgs = Vue.computed(() => item.value?.imgs);
-    const seller = item.value ? state.sellerList[item.value.seller] : undefined;
+    const seller = Vue.ref<UserTable | undefined>(undefined);
+
+    const loadingSeller = Vue.ref<boolean>(false);
 
     const sRegion = Vue.ref<{ value: string; label: string | undefined }>();
     const availableTo = Vue.computed(() => {
@@ -249,26 +303,22 @@ export default Vue.defineComponent({
       pcs: 0,
     });
 
-    const accepted = Vue.ref<
-      Array<{ symbol: string; contract: string; chain: string }>
-    >([]); // TODO: Load from RAM table
-
     const sToken = Vue.ref<{
       value: Token;
       label: string;
     }>();
 
     const acceptToken = Vue.computed(() => {
-      if (item.value !== undefined) {
-        return accepted.value.map((token) => {
-          const sym = StringToSymbol(token.symbol);
+      if (seller.value?.allowed !== undefined) {
+        return seller.value.allowed.map((token) => {
+          const sym = StringToSymbol(token.sym);
           return {
             value: {
-              symbol: StringToSymbol(token.symbol),
-              contract: token.contract,
+              symbol: StringToSymbol(token.sym),
+              contract: token.contr,
               chain: token.chain,
             },
-            label: `${sym.name} (${token.contract} on ${token.chain})`,
+            label: `${sym.name} (${token.contr} on ${token.chain})`,
           };
         });
       }
@@ -369,11 +419,25 @@ export default Vue.defineComponent({
     const loadTryPercentage = Vue.computed(() => {
       if (loadMaxTries.value > 0) {
         return Math.round(
-          ((loadMaxTries.value - loadTries.value) / loadMaxTries.value) * 100
+          (1 - (loadMaxTries.value - loadTries.value) / loadMaxTries.value) *
+            100
         );
       }
-      return 0;
+
+      return 100;
     });
+
+    async function getSellerByItem() {
+      if (
+        item.value &&
+        item.value.seller !== undefined &&
+        item.value.seller.length > 0
+      ) {
+        loadingSeller.value = true;
+        seller.value = await state.getSeller(item.value.seller, state.contract);
+        loadingSeller.value = false;
+      }
+    }
 
     Vue.onMounted(async () => {
       switch (mode) {
@@ -384,14 +448,17 @@ export default Vue.defineComponent({
               id: 0,
               ...settings,
             };
+            getSellerByItem();
           }
           break;
         case ItemPageMode.Wait:
+          const settingsNoId = state.uploadPageInputs.value;
           // TODO: Wait for item to be added to RAM table. Find it without knowing the id in sellers table entry items.
+          router.push({ name: "user", query: { user: settingsNoId?.seller } });
           break;
         case ItemPageMode.Standard:
           let id_category = GetQueryIdAndCategory(); // TODO: Set to constant after testing
-          id_category = { id: 1, category: 290482175965396992n }; // TODO: Remove after testing
+          id_category = { id: 2, category: 144396663052566528n }; // TODO: Remove after testing
           if (
             id_category?.id === undefined ||
             id_category?.id == -1 ||
@@ -421,17 +488,13 @@ export default Vue.defineComponent({
                 message: "Item not found",
                 position: "top",
               });
+            } else {
+              getSellerByItem();
             }
           })();
           break;
       }
-
-      // TODO: Check seller accepted token from RAM table
-      //accept: settings.accept,
     });
-
-    // TODO: Link for more items on the same category
-    // TODO: Link to seller items
 
     function goBack() {
       if (!router.back()) {
@@ -450,8 +513,40 @@ export default Vue.defineComponent({
       });
     }
 
+    const option = Vue.ref<string | undefined>();
+
+    function optClick(index: number) {
+      console.log("optClick", index);
+
+      if (item.value && index < item.value.opts.length) {
+        option.value = item.value.opts[index];
+      }
+    }
+
+    function chipBgColor(selected = false) {
+      return state.darkStyle.value
+        ? selected
+          ? "grey-10"
+          : "grey-9"
+        : selected
+          ? "grey-1"
+          : "";
+    }
+
+    function chipBorderStyle(selected = false) {
+      return state.darkStyle.value
+        ? selected
+          ? "border: 1px solid #333333"
+          : ""
+        : selected
+          ? "border: 1px solid #aaaaaa"
+          : "";
+    }
+
     return {
       darkStyle: state.darkStyle,
+      chipBgColor,
+      chipBorderStyle,
       item,
       imgs,
       getRegion,
@@ -471,13 +566,15 @@ export default Vue.defineComponent({
       price,
       shipPrice,
       shipDuration,
-      accepted,
       goBack,
       isPreview: mode == ItemPageMode.Preview,
       loadTryPercentage,
       id,
       category,
       openSettings,
+      loadingSeller,
+      optClick,
+      option,
     };
   },
 });

@@ -161,6 +161,7 @@
             label="From region"
             outlined
             :options="countries"
+            clearable
           >
           </q-select>
           <div class="q-mt-md">
@@ -171,6 +172,7 @@
               label="Ship to regions"
               outlined
               label-color="green"
+              clearable
             />
             <q-select
               class="q-mt-sm"
@@ -180,6 +182,7 @@
               label="Explicit exclude regions"
               outlined
               label-color="red"
+              clearable
             />
             <duration-input
               class="q-mt-md"
@@ -388,16 +391,13 @@ export default Vue.defineComponent({
         return { label: getRegion(c) ?? "", value: c };
       })
     );
-    const fromRegion = Vue.ref<{ label: string; value: string }>(
+    const fromRegion = Vue.ref<{ label: string; value: string } | undefined>(
       pIpt?.fromR !== undefined
         ? {
             label: getRegion(pIpt.fromR.toUpperCase()) ?? "",
             value: pIpt.fromR,
           }
-        : {
-            label: "",
-            value: "",
-          }
+        : undefined
     );
 
     const _toRegions = Vue.ref<
@@ -589,7 +589,7 @@ export default Vue.defineComponent({
           imgs: imgSrcs.value.map((i) => i.src),
           available: available.value,
           category: category.value === undefined ? 0n : BigInt(category.value),
-          fromR: fromRegion.value.value.toLowerCase(),
+          fromR: fromRegion.value ? fromRegion.value.value.toLowerCase() : "",
           shipTo,
           excl: excludeCodes,
           prepT: Math.floor(duration.value / 1000),

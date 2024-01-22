@@ -5,10 +5,10 @@ import { ItemTable } from "./ContractInterfaces";
 export class LoadFromContract {
   constructor(
     public loadMaxTries: Ref<number> = Vue.ref(1),
-    public loadTries: Ref<number> = Vue.ref(0)
+    public loadTries: Ref<number> = Vue.ref(-1)
   ) {
     loadMaxTries.value = 1;
-    loadTries.value = 0;
+    loadTries.value = -1;
   }
 
   /**
@@ -20,23 +20,24 @@ export class LoadFromContract {
    */
   public async loadItem(
     data: { id: number; category: bigint } & MarketContract,
-    maxTries = 2,
+    maxTries = 3,
     waitTime = 1000
   ) {
-    this.loadTries.value = maxTries;
+    this.loadMaxTries.value = maxTries;
+    this.loadTries.value = 0;
 
     for (let i = 0; i < maxTries; i++) {
       const article = await state.getArticle(data);
       if (article) {
-        this.loadTries.value = 0;
+        this.loadMaxTries.value = this.loadTries.value;
         return article as ItemTable;
       } else {
         // Wait before trying again
+        this.loadTries.value++;
         await new Promise((resolve) => setTimeout(resolve, waitTime));
       }
     }
 
-    this.loadTries.value = 0;
     return undefined;
   }
 }

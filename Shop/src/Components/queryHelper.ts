@@ -42,3 +42,8 @@ export function HasQueryRequest() {
     return route.query.request == true;
   return false;
 }
+
+export function HasQueryUserName() {
+  if (route.query && "user" in route.query) return String(route.query.user);
+  return false;
+}

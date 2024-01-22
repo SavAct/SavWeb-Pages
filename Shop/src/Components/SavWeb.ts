@@ -37,6 +37,12 @@ export interface PaymentResult {
   data: unknown;
 }
 
+export interface TransactionResult {
+  f: "trxResult";
+  id: string;
+  success: boolean;
+}
+
 export interface GetFileResult {
   f: "getFileResult";
   id: string;
@@ -66,7 +72,8 @@ export interface BrowserAction {
     | GetFileResult
     | VerifyIdResult
     | EosioChainApiResult
-    | GetUserResult;
+    | GetUserResult
+    | TransactionResult;
 }
 
 export interface GoTo {
@@ -345,6 +352,14 @@ export class SavWeb {
               this.requestResult[parentMsg.id] = undefined;
             }
             break;
+          case "trxResult":
+            const t = (parentMsg as TransactionResult).success;
+            if (t) {
+              this.requestResult[parentMsg.id] = t;
+            } else {
+              this.requestResult[parentMsg.id] = undefined;
+            }
+            break;
         }
       }
     }
@@ -565,8 +580,6 @@ export class SavWeb {
       maxWaitMs
     )) as string[] | FullRpcError | undefined;
 
-    // console.log('result on page', result);
-
     if (typeof result === "object") {
       if ("error" in result) {
         return undefined;
@@ -732,17 +745,10 @@ export class SavWeb {
         },
       },
       maxWaitMs
-    )) as string[] | FullRpcError | undefined | PaymentResult;
+    )) as string[] | FullRpcError | undefined | TransactionResult;
 
     console.log("result on page", result);
 
-    if (typeof result == "object") {
-      if ("error" in result) {
-        return undefined;
-      }
-      return result;
-    }
-
-    return undefined;
+    return result;
   }
 }
