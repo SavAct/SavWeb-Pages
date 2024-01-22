@@ -14,7 +14,7 @@
       outline
       @click="goBack()"
     ></q-btn>
-    <div class="col q-pa-md full-width">
+    <div class="q-pa-md full-width">
       <div class="row full-width">
         <div class="col text-h5 q-pr-sm no-text-overflow">
           {{ item?.title }}
@@ -32,34 +32,97 @@
           ></q-btn>
         </div>
       </div>
+
+      <q-card
+        v-if="(!$q.screen.gt.sm || !hasImgs) && item"
+        class="q-mt-sm q-mb-sm"
+      >
+        <q-card-section class="text-right row justify-between q-py-sm">
+          <span class="col-auto">
+            <user-link
+              :color="chipBgColor()"
+              class="col-auto"
+              :user="item.seller"
+            ></user-link>
+          </span>
+          <span class="col-auto" v-if="item.fromR.length > 0">
+            <span class="q-pr-sm">from</span>
+            <q-chip
+              :color="chipBgColor()"
+              :label="getRegion(item.fromR.toUpperCase())"
+            ></q-chip
+          ></span>
+        </q-card-section>
+      </q-card>
+
       <div class="q-mt-md row">
-        <gallery
-          class="col-12 col-md-6"
-          :height="$q.screen.lt.sm ? '250px' : '400px'"
-          :srcs="imgs"
-          :file-size="2117632"
-        ></gallery>
+        <div class="col-12" :class="hasImgs ? 'col-md-6' : ''">
+          <gallery
+            v-if="hasImgs"
+            :height="$q.screen.lt.sm ? '250px' : '400px'"
+            :srcs="imgs"
+            :file-size="2117632"
+          ></gallery>
+          <!-- <q-separator class="q-my-md" /> -->
+
+          <q-card :class="hasImgs ? 'q-mt-lg' : 'q-mt-sm'">
+            <q-card-section class="row items-center">
+              <div class="col-auto q-pb-sm">Options</div>
+              <div class="col-grow text-right">
+                <q-chip
+                  v-for="(opt, index) in item?.opts"
+                  :key="index"
+                  :label="opt"
+                  :style="chipBorderStyle(option === opt)"
+                  :color="chipBgColor(option === opt)"
+                  clickable
+                  @click="optClick(index)"
+                ></q-chip>
+              </div>
+              <q-select
+                v-if="showComboboxes && item?.opts && item.opts.length > 0"
+                outlined
+                v-model="option"
+                :options="item.opts"
+                label="Select an option"
+                dense
+                color="green"
+                class="q-my-sm col-12"
+              ></q-select>
+            </q-card-section>
+          </q-card>
+        </div>
         <div
-          class="col-12 col-md-6"
-          :class="$q.screen.lt.md ? 'q-pt-md' : 'q-pl-md'"
+          class="col-12"
+          :class="{
+            'q-pl-md': !$q.screen.lt.md && hasImgs,
+            'col-md-6': hasImgs,
+          }"
           v-if="item"
         >
-          <q-card>
-            <q-card-section>
-              <div class="q-mb-sm">
-                <span>
-                  <user-link
-                    :color="chipBgColor()"
-                    class="col-auto"
-                    :user="item.seller"
-                  ></user-link>
-                </span>
-                <span v-if="item.fromR.length > 0"
-                  >from<q-chip
-                    :color="chipBgColor()"
-                    :label="getRegion(item.fromR.toUpperCase())"
-                  ></q-chip></span
-                ><span>ships to</span>
+          <q-card v-if="$q.screen.gt.sm && hasImgs">
+            <q-card-section class="text-right row justify-between q-py-sm">
+              <span class="col-auto">
+                <user-link
+                  :color="chipBgColor()"
+                  class="col-auto"
+                  :user="item.seller"
+                ></user-link>
+              </span>
+              <span class="col-auto" v-if="item.fromR.length > 0">
+                <span class="q-pr-sm">from</span>
+                <q-chip
+                  :color="chipBgColor()"
+                  :label="getRegion(item.fromR.toUpperCase())"
+                ></q-chip
+              ></span>
+            </q-card-section>
+          </q-card>
+
+          <q-card class="q-mt-lg">
+            <q-card-section class="row items-center">
+              <div class="col-auto q-pb-sm">Ship to</div>
+              <div class="col-grow text-right">
                 <span class="q-mr-sm">
                   <q-chip
                     v-for="(to, index) in item.shipTo"
@@ -72,7 +135,7 @@
                     @click="regionClick(index)"
                   ></q-chip>
                 </span>
-                <div v-if="item.excl">
+                <span v-if="item.excl">
                   <q-chip
                     v-for="(ex, index) in item.excl.split(' ')"
                     :key="index"
@@ -81,11 +144,25 @@
                     :label="getRegion(ex.toUpperCase())"
                     icon="do_not_disturb"
                   ></q-chip>
-                </div>
+                </span>
               </div>
-              <div>
-                <div>Accept payments of</div>
+              <q-select
+                v-if="showComboboxes"
+                outlined
+                v-model="sRegion"
+                :options="availableTo"
+                label="Select your region"
+                dense
+                color="green"
+                class="q-mt-sm col-12"
+              ></q-select>
+            </q-card-section>
+          </q-card>
 
+          <q-card class="q-mt-lg">
+            <q-card-section class="row items-center">
+              <div class="col-auto q-pb-sm">Accept payments of</div>
+              <div class="col-grow text-right">
                 <token-symbol
                   v-for="(token, index) in acceptToken"
                   :key="index"
@@ -99,56 +176,21 @@
                   @click="tokenClick(index)"
                 ></token-symbol>
               </div>
-
-              <div>
-                <div>Options</div>
-
-                <q-chip
-                  v-for="(opt, index) in item?.opts"
-                  :key="index"
-                  :label="opt"
-                  :style="chipBorderStyle(option === opt)"
-                  :color="chipBgColor(option === opt)"
-                  clickable
-                  @click="optClick(index)"
-                ></q-chip>
-              </div>
-            </q-card-section>
-          </q-card>
-          <!-- <q-separator class="q-my-md" /> -->
-          <q-card class="q-mt-md">
-            <q-card-section>
               <q-select
-                outlined
-                v-model="sRegion"
-                :options="availableTo"
-                label="Select your region"
-                dense
-                color="green"
-                class="q-mt-sm"
-              ></q-select>
-
-              <q-select
+                v-if="showComboboxes"
                 outlined
                 v-model="sToken"
                 :options="acceptToken"
                 label="Token you want to pay with"
                 dense
                 color="green"
-                class="q-mt-sm"
+                class="q-mt-sm col-12"
               ></q-select>
+            </q-card-section>
+          </q-card>
 
-              <q-select
-                v-if="item?.opts && item.opts.length > 0"
-                outlined
-                v-model="option"
-                :options="item.opts"
-                label="Select an option"
-                dense
-                color="green"
-                class="q-my-sm"
-              ></q-select>
-
+          <q-card class="q-mt-lg">
+            <q-card-section>
               <piece-price-select
                 class="q-mb-sm"
                 label="Price option"
@@ -192,9 +234,13 @@
                   </q-chip>
                 </div>
               </div>
-              <q-spinner-grid v-if="loadingSeller" class="q-mt-md" />
+            </q-card-section>
+          </q-card>
+          <q-card class="q-mt-lg">
+            <q-card-section>
+              <q-spinner-grid v-if="loadingSeller" />
               <div v-if="seller" class="row">
-                <div v-if="!seller.active" class="text-red text-h5 q-mt-sm">
+                <div v-if="!seller.active" class="text-red text-h5">
                   The seller is&nbsp;<span
                     v-if="seller.lastUpdate < Date.now() / 1000"
                     >not available.</span
@@ -224,7 +270,8 @@
           </q-card>
         </div>
       </div>
-      <q-separator class="q-my-md" />
+
+      <q-separator class="q-my-lg" />
       <div v-if="item && item?.descr.length > 0">
         <div class="text-h5 no-text-overflow">Description</div>
         <div>{{ item?.descr }}</div>
@@ -270,6 +317,8 @@ export default Vue.defineComponent({
     // TODO: Link to find more items on the same category
     // TODO: Link to all of sellers items
     // Show and select options
+
+    const showComboboxes = Vue.ref<boolean>(false); // TODO: Settings to switch this design option
 
     const mode = GetQueryMode();
     console.log("Item page mode: ", mode);
@@ -542,6 +591,9 @@ export default Vue.defineComponent({
           ? "border: 1px solid #aaaaaa"
           : "";
     }
+    const hasImgs = Vue.computed(() => {
+      return imgs.value && imgs.value.length > 0;
+    });
 
     return {
       darkStyle: state.darkStyle,
@@ -549,6 +601,7 @@ export default Vue.defineComponent({
       chipBorderStyle,
       item,
       imgs,
+      hasImgs,
       getRegion,
       seller,
       StringToSymbol,
@@ -575,6 +628,7 @@ export default Vue.defineComponent({
       loadingSeller,
       optClick,
       option,
+      showComboboxes,
     };
   },
 });

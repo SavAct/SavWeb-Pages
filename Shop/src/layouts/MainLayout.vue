@@ -2,7 +2,7 @@
   <q-layout view="hHh Lpr lff">
     <q-header
       bordered
-      :class="darkStyle ? 'bg-dark' : 'bg-indigo-10'"
+      :class="darkStyle ? 'bg-dark' : 'bg-grey-10'"
       ref="mainHeader"
     >
       <q-toolbar>
