@@ -188,7 +188,7 @@
               class="q-ma-sm"
               color="primary"
               clickable
-              @click="openItem(c.id)"
+              @click="openItem(c.id, c.category)"
             ></q-chip>
           </q-card-section>
         </div>
@@ -579,8 +579,14 @@ export default Vue.defineComponent({
       return `#${item.id} (${item.category})`;
     }
 
-    function openItem(id: string | number | bigint | undefined) {
-      router.push({ name: "item", query: { id: String(id) } });
+    function openItem(
+      id: string | number | bigint | undefined,
+      category: number | bigint | string
+    ) {
+      router.push({
+        name: "item",
+        query: { id: String(id), category: String(category) },
+      });
     }
 
     return {

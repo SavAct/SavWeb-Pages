@@ -65,7 +65,10 @@
           ></gallery>
           <!-- <q-separator class="q-my-md" /> -->
 
-          <q-card :class="hasImgs ? 'q-mt-lg' : 'q-mt-sm'">
+          <q-card
+            v-if="showComboboxes && item?.opts && item.opts.length > 0"
+            :class="hasImgs ? 'q-mt-lg' : 'q-mt-sm'"
+          >
             <q-card-section class="row items-center">
               <div class="col-auto q-pb-sm">Options</div>
               <div class="col-grow text-right">
@@ -80,7 +83,6 @@
                 ></q-chip>
               </div>
               <q-select
-                v-if="showComboboxes && item?.opts && item.opts.length > 0"
                 outlined
                 v-model="option"
                 :options="item.opts"
@@ -316,7 +318,6 @@ export default Vue.defineComponent({
     // TODO: Handle wait mode
     // TODO: Link to find more items on the same category
     // TODO: Link to all of sellers items
-    // Show and select options
 
     const showComboboxes = Vue.ref<boolean>(false); // TODO: Settings to switch this design option
 
@@ -506,12 +507,11 @@ export default Vue.defineComponent({
           router.push({ name: "user", query: { user: settingsNoId?.seller } });
           break;
         case ItemPageMode.Standard:
-          let id_category = GetQueryIdAndCategory(); // TODO: Set to constant after testing
-          id_category = { id: 2, category: 144396663052566528n }; // TODO: Remove after testing
+          const id_category = GetQueryIdAndCategory();
           if (
             id_category?.id === undefined ||
-            id_category?.id == -1 ||
-            id_category?.category === undefined
+            id_category.id == -1 ||
+            id_category.category === undefined
           ) {
             // If no id or category is given, go back. Go to index page if not possible
             if (!router.back()) {

@@ -47,27 +47,29 @@ const recordIndex = Vue.computed({
   },
   set: (value) => {
     const from = router.currentRoute();
-    const to = record[recordIndex.value];
+    const to = record[value];
+    console.log("set", value, from, to);
+
     if (
       typeof beforeEachRouteChange !== "function" ||
       beforeEachRouteChange(to, from) !== false
     ) {
       // At first remove the current page and then load it, to force a reload if the page name keeps the same
       _recordIndex.value = -1;
-      setTimeout(() => (_recordIndex.value = value));
+      setTimeout(() => (_recordIndex.value = value), 0);
     }
-    async () => {
+    (async () => {
       if (typeof afterEachRouteChange == "function") {
         afterEachRouteChange(to, from);
       }
-    };
+    })();
   },
 });
 
 const record = new Array<RouteLocation>();
 
 function getQueryFromString(query_str: string): { [key: string]: any } {
-  // TODO: parse query and hash
+  // TODO: parse also hash
   const sq = query_str.split("&");
   const query: { [key: string]: any } = {};
   for (let q of sq) {
@@ -190,7 +192,7 @@ export const router = {
     afterEachRouteChange = guard;
   },
   beforeEach: (guard: NavigationHook) => {
-    afterEachRouteChange = guard;
+    beforeEachRouteChange = guard;
   },
   getRoutes: () => {
     return [...record];

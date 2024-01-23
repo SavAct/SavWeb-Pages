@@ -79,7 +79,7 @@ export interface BrowserAction {
 export interface GoTo {
   f: "go";
   to: string; // URL of a file on blockchain
-  target?: "_blank" | "_self";
+  target?: "_blank" | "_self" | null; // null if just the address should show different content after the domain
 }
 
 export interface GetFile {
@@ -594,8 +594,6 @@ export class SavWeb {
     user: PublicAccount | undefined = undefined,
     maxWaitMs: number = 10000
   ) {
-    console.log("----------request", user);
-
     // Send request
     const result = (await this.request(
       {
@@ -621,7 +619,7 @@ export class SavWeb {
     return undefined;
   }
 
-  static goTo(link: string, target?: string) {
+  static goTo(link: string, target?: string | null) {
     window.parent.postMessage(
       {
         SavWeb: {

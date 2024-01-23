@@ -136,6 +136,7 @@ import { state } from "../store/globals";
 import { route, router } from "../router/simpleRouter";
 import { routes } from "../router/routes";
 import { savConnected } from "../store/connect";
+import { SavWeb } from "../Components/SavWeb";
 
 export default Vue.defineComponent({
   name: "MainLayout",
@@ -146,6 +147,27 @@ export default Vue.defineComponent({
 
     const darkStyle = state.darkStyle;
     darkStyle.value = true;
+
+    router.afterEach((to, from) => {
+      if (from && to && to.name !== from.name) {
+        // Query to URL string
+        const queryKeys = to.query ? Object.keys(to.query) : undefined;
+        const queryStr =
+          queryKeys && queryKeys.length > 0
+            ? "?" +
+              queryKeys
+                .map(
+                  (key) =>
+                    key +
+                    "=" +
+                    String((to.query as { [key: string]: Object })[key])
+                )
+                .join("&")
+            : "";
+        SavWeb.goTo("/" + to.name + queryStr, null);
+        return;
+      }
+    });
 
     function goBack() {
       if (!router.back()) {

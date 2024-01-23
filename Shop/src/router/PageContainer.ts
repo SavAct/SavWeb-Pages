@@ -1,7 +1,6 @@
 import { route } from "./simpleRouter";
 import { Component } from "@vue/runtime-dom";
 import { routes } from "./routes";
-// import { Token } from "../Components/AntelopeHelpers";
 
 let components: { [key: string]: Component } = {};
 for (const r of routes) {
