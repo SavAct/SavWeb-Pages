@@ -2,6 +2,7 @@
   <q-page class="column">
     <div class="col text-center">
       <div>
+        <category-select class="q-ma-md" v-model="sCategory"></category-select>
         <!-- Search bar -->
         <q-input class="q-ma-md" v-model="searchText" outlined dense>
           <template v-slot:append>
@@ -20,30 +21,7 @@
               color="white"
             ></q-btn>
           </template>
-          <template v-slot:before>
-            <q-btn-dropdown
-              style="width: 150px"
-              color="pink"
-              :label="category.name"
-              split
-              v-model="categoryOpen"
-              @click="categoryOpen = !categoryOpen"
-            >
-              <q-list>
-                <q-item
-                  v-for="(cat, index) in categories"
-                  :key="index"
-                  clickable
-                  v-close-popup
-                  @click="category = cat"
-                >
-                  <q-item-section>
-                    <q-item-label>{{ cat.name }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-              </q-list>
-            </q-btn-dropdown>
-          </template>
+          <template v-slot:before> </template>
         </q-input>
       </div>
       <!-- result list -->
@@ -131,15 +109,18 @@
 </template>
 <script lang="ts">
 import ProImg from "../Components/ProImg.vue";
+import CategorySelect from "../Components/CategorySelect.vue";
 import { QTableProps } from "quasar";
 import { Entry } from "../Components/Items";
 import { router } from "../router/simpleRouter";
 import { state } from "../store/globals";
+import { categories } from "../Components/Categories";
 
 export default Vue.defineComponent({
   name: "indexPage",
   components: {
     ProImg,
+    CategorySelect,
   },
   setup() {
     const searchText = Vue.ref<string>("");
@@ -161,25 +142,15 @@ export default Vue.defineComponent({
       // TODO: Search for each hash in contract table
     }
 
-    const categories = Vue.ref<Array<{ name: string; value: string }>>([
-      { name: "All", value: "all" },
-      { name: "Hardware", value: "hard" },
-      { name: "Software", value: "soft" },
-    ]);
+    const sCategory = Vue.ref<bigint>(0n);
 
-    const _category = Vue.ref<{ name: string; value: string }>(
-      categories.value[0]
-    );
-
-    const category = Vue.computed({
-      get: () => {
-        return _category.value;
-      },
-      set: (value: { name: string; value: string }) => {
-        // TODO: Start filter
-        _category.value = value;
-      },
+    const categoryOptions = categories.map((v) => {
+      return { name: v.name, value: v.index };
     });
+    //   { name: "All", value: "all" },
+    //   { name: "Hardware", value: "hard" },
+    //   { name: "Software", value: "soft" },
+    // ]);
 
     const categoryOpen = Vue.ref<boolean>(false);
 
@@ -217,9 +188,21 @@ export default Vue.defineComponent({
       // TODO: Use filters
 
       return state.itemsList.map((item) => {
+        console.log(
+          "pp-----",
+          item.pp[item.pp.length - 1].p,
+          item.pp[0].p,
+          Number(item.pp[0].p) === 0
+        );
+
         return {
           ...item,
-          price: isPricePerUnit.value ? item.price / item.units : item.price,
+          price: isPricePerUnit.value // Take the last entry per piece if true otherwise the first entry that describes an item
+            ? Number(item.pp[item.pp.length - 1].p) /
+              Number(item.pp[item.pp.length - 1].pcs)
+            : Number(item.pp[0].p) === 0
+              ? Number(item.pp[1].p)
+              : Number(item.pp[0].p),
         };
       });
     });
@@ -254,14 +237,15 @@ export default Vue.defineComponent({
       darkStyle: state.darkStyle,
       isPricePerUnit,
       searchText,
-      category,
       categories,
+      categoryOptions,
       categoryOpen,
       loading,
       itemRows,
       itemColumns,
       openItem,
       search,
+      sCategory,
     };
   },
 });
