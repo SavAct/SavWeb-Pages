@@ -1,9 +1,9 @@
 <template>
-  <q-page class="q-pa-md text-center">
+  <q-page class="q-pa-md text-center" style="max-width: 800px; margin: 0 auto">
     <q-card class="my-card" flat bordered>
       <q-card-actions>
         <q-btn
-          @click="getLoginUser()"
+          @click="getLoginUserAndProps()"
           color="primary"
           label="Get your user data"
           :disable="checkingUserData"
@@ -231,15 +231,12 @@ import {
   openLinkOrMail,
   urlStartByDomainName,
 } from "../Components/LinkConverter";
-import { PublicAccount } from "../Components/SavWeb";
-import {
-  StringToSymbol,
-  getKnownChainId,
-  isSameChain,
-} from "../Components/AntelopeHelpers";
+import { StringToSymbol, getKnownChainId } from "../Components/AntelopeHelpers";
 import { router } from "../router/simpleRouter";
 import { getUserDataToState } from "../Components/SaleContractRequests";
 import { HasQueryRequest, HasQueryUserName } from "../Components/queryHelper";
+import { requestLoginUser } from "../Components/LoginUser";
+import { categoryPathsById } from "../Components/Categories";
 
 export default Vue.defineComponent({
   name: "userPage",
@@ -427,34 +424,15 @@ export default Vue.defineComponent({
 
     const checkingUserData = Vue.ref<boolean>(false);
 
-    async function getLoginUser(name?: string) {
+    async function getLoginUserAndProps(name?: string) {
       if (checkingUserData.value === true) return;
       checkingUserData.value = true;
 
-      let user: PublicAccount | undefined = undefined;
-      if (name !== undefined) {
-        name = name.trim();
-        user = name.length > 0 ? { name } : undefined;
-      }
-
-      const resultUser = await savWeb.getUser(user, 60000);
-      // Check if chain is the same as the shop contract
-      if (
-        resultUser &&
-        resultUser.chain !== undefined &&
-        isSameChain(resultUser.chain, state.contract.chain) !== true
-      ) {
-        Quasar.Notify.create({
-          message: "Wrong chain",
-          caption: `Please connect the browser with an account on the ${state.contract.chain} chain.`,
-          type: "negative",
-          position: "top",
-        });
+      const resultUser = await requestLoginUser(name);
+      if (resultUser === undefined) {
         checkingUserData.value = false;
         return;
       }
-
-      state.loginUser.value = resultUser;
 
       if (resultUser?.name !== undefined) {
         if (resultUser.name === userName.value) {
@@ -576,7 +554,8 @@ export default Vue.defineComponent({
     }
 
     function formatItem(item: IdAndCategory) {
-      return `#${item.id} (${item.category})`;
+      const cateName = categoryPathsById[String(item.category)];
+      return `#${item.id} (${cateName !== undefined && cateName.length > 0 ? cateName : String(item.category)})`;
     }
 
     function openItem(
@@ -589,11 +568,17 @@ export default Vue.defineComponent({
       });
     }
 
+    Vue.onMounted(() => {
+      if (userName.value !== undefined && userName.value.length > 0) {
+        getUserData();
+      }
+    });
+
     return {
       userName,
       darkStyle,
       pgpKey,
-      getLoginUser,
+      getLoginUserAndProps,
       allowedTokensSelect,
       availableTokens,
       allowedTokens,

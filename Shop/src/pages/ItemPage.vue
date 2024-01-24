@@ -125,21 +125,24 @@
             <q-card-section class="row items-center">
               <div class="col-auto q-pb-sm">Ship to</div>
               <div class="col-grow text-right">
-                <span class="q-mr-sm">
+                <span
+                  class="q-mr-sm"
+                  v-for="(to, index) in availableTo"
+                  :key="index"
+                >
                   <q-chip
-                    v-for="(to, index) in item.shipTo"
-                    :key="index"
-                    :style="chipBorderStyle(to.rs === sRegion?.value)"
-                    :color="chipBgColor(to.rs === sRegion?.value)"
-                    :label="getRegion(to.rs.toUpperCase())"
+                    v-if="to"
+                    :style="chipBorderStyle(to.value === sRegion?.value)"
+                    :color="chipBgColor(to.value === sRegion?.value)"
+                    :label="getRegion(to.value.toUpperCase())"
                     text-color="green"
                     clickable
                     @click="regionClick(index)"
                   ></q-chip>
                 </span>
-                <span v-if="item.excl">
+                <span v-if="excluded">
                   <q-chip
-                    v-for="(ex, index) in item.excl.split(' ')"
+                    v-for="(ex, index) in excluded"
                     :key="index"
                     :color="chipBgColor()"
                     text-color="red"
@@ -334,15 +337,47 @@ export default Vue.defineComponent({
     const loadingSeller = Vue.ref<boolean>(false);
 
     const sRegion = Vue.ref<{ value: string; label: string | undefined }>();
+
+    const excluded = Vue.computed(() => {
+      if (item.value !== undefined) {
+        const ex = item.value.excl.match(/../g);
+        if (ex === null) {
+          return undefined;
+        }
+        return ex;
+      }
+      return undefined;
+    });
+
+    const shipTo = Vue.computed(() => {
+      if (item.value !== undefined) {
+        return item.value.shipTo.map((to) => {
+          return { p: Number(to.p), t: Number(to.t), rs: to.rs.match(/../g) };
+        });
+      }
+      return undefined;
+    });
+
+    const shipToCountryCodes = Vue.computed(() => {
+      if (shipTo.value !== undefined) {
+        return shipTo.value.map((to) => to.rs).flat();
+      }
+      return undefined;
+    });
+
     const availableTo = Vue.computed(() => {
       if (item.value !== undefined) {
-        const en = item.value;
-        return en.shipTo
-          .filter((a) => {
-            return !en.excl.split(" ").includes(a.rs);
+        return shipToCountryCodes.value
+          ?.filter((a) => {
+            return a === null || !excluded.value?.includes(a);
           })
-          .map((rto) => {
-            return { value: rto.rs, label: getRegion(rto.rs.toUpperCase()) };
+          .map((to) => {
+            return to === null
+              ? undefined
+              : {
+                  value: to,
+                  label: getRegion(to.toUpperCase()) ?? "",
+                };
           });
       }
       return undefined;
@@ -464,7 +499,7 @@ export default Vue.defineComponent({
       }
     }
 
-    const loadMaxTries = Vue.ref<number>(1);
+    const loadMaxTries = Vue.ref<number>(0);
     const loadTries = Vue.ref<number>(0);
     const loadTryPercentage = Vue.computed(() => {
       if (loadMaxTries.value > 0) {
@@ -508,6 +543,7 @@ export default Vue.defineComponent({
           break;
         case ItemPageMode.Standard:
           const id_category = GetQueryIdAndCategory();
+
           if (
             id_category?.id === undefined ||
             id_category.id == -1 ||
@@ -623,12 +659,12 @@ export default Vue.defineComponent({
       isPreview: mode == ItemPageMode.Preview,
       loadTryPercentage,
       id,
-      category,
       openSettings,
       loadingSeller,
       optClick,
       option,
       showComboboxes,
+      excluded,
     };
   },
 });

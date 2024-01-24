@@ -148,6 +148,7 @@ export default Vue.defineComponent({
     const darkStyle = state.darkStyle;
     darkStyle.value = true;
 
+    // Show each route change of this page in the SavWeb browser
     router.afterEach((to, from) => {
       if (from && to && to.name !== from.name) {
         // Query to URL string
@@ -156,12 +157,18 @@ export default Vue.defineComponent({
           queryKeys && queryKeys.length > 0
             ? "?" +
               queryKeys
-                .map(
-                  (key) =>
-                    key +
-                    "=" +
-                    String((to.query as { [key: string]: Object })[key])
-                )
+                .filter((key) => {
+                  // filter all object values
+                  let value = (to.query as { [key: string]: Object })[key];
+                  if (typeof value === "object") {
+                    return false;
+                  }
+                  return true;
+                })
+                .map((key) => {
+                  let value = (to.query as { [key: string]: Object })[key];
+                  return key + "=" + String(value);
+                })
                 .join("&")
             : "";
         SavWeb.goTo("/" + to.name + queryStr, null);

@@ -1,300 +1,308 @@
 <template>
-  <q-page class="column">
-    <div class="col q-px-md">
-      <q-card class="q-mt-md">
-        <q-card-section>
+  <q-page class="q-px-md" style="max-width: 800px; margin: 0 auto">
+    <q-card class="q-mt-md">
+      <q-card-section>
+        <q-input
+          class="q-mb-sm"
+          v-model="title"
+          label="Title"
+          outlined
+        ></q-input>
+        <category-input
+          class="q-mb-sm"
+          v-model="category"
+          label="Category"
+          outlined
+        />
+        <q-input
+          v-model="description"
+          label="Description"
+          type="textarea"
+          outlined
+        ></q-input>
+        <q-input
+          class="q-mt-md"
+          v-model="imageSrc"
+          label="Image link"
+          outlined
+          @keyup.enter="addImage"
+        >
+          <template v-slot:prepend>
+            <q-icon name="image"></q-icon>
+          </template>
+          <template v-slot:append>
+            <q-btn
+              v-if="imageSrc !== ''"
+              @click="imageSrc = ''"
+              round
+              icon="clear"
+            />
+          </template>
+          <template v-slot:after>
+            <q-btn
+              :disable="imageSrc === ''"
+              icon="send"
+              @click="addImage"
+              :color="imageSrc !== '' ? 'green' : 'grey'"
+            ></q-btn>
+          </template>
+        </q-input>
+        <div
+          v-for="(img, index) in imgSrcs"
+          :key="img.id"
+          class="row justify-between q-mt-md"
+        >
+          <div class="col-grow q-pr-md">
+            <pro-img
+              :src="img.src"
+              style="max-height: 200px"
+              fit="contain"
+              class="bg-black"
+            />
+          </div>
+          <div class="column q-gutter-sm">
+            <q-btn
+              class="col-grow"
+              icon="clear"
+              color="red"
+              @click="imgSrcs.splice(index, 1)"
+            ></q-btn>
+            <q-btn
+              :disable="index === 0"
+              class="col-auto"
+              color="grey"
+              icon="keyboard_arrow_up"
+              @click="moveStringOneFieldBefore(index)"
+            ></q-btn>
+            <q-btn
+              :disable="index === imgSrcs.length - 1"
+              class="col-auto"
+              color="grey"
+              icon="keyboard_arrow_down"
+              @click="moveStringOneFieldAfter(index)"
+            ></q-btn>
+          </div>
+        </div>
+
+        <div>
           <q-input
-            class="q-mb-sm"
-            v-model="title"
-            label="Title"
+            class="q-mt-md q-mb-sm"
+            v-model="tempOptions"
+            label="Add Option"
             outlined
-          ></q-input>
-          <category-input
-            class="q-mb-sm"
-            v-model="category"
-            label="Category"
-            outlined
-          />
-          <q-input
-            v-model="description"
-            label="Description"
-            type="textarea"
-            outlined
-          ></q-input>
-          <q-input
-            class="q-mt-md"
-            v-model="imageSrc"
-            label="Image link"
-            outlined
-            @keyup.enter="addImage"
+            @keyup.enter="pushOption"
           >
             <template v-slot:prepend>
-              <q-icon name="image"></q-icon>
+              <q-icon name="style"></q-icon>
             </template>
             <template v-slot:append>
               <q-btn
-                v-if="imageSrc !== ''"
-                @click="imageSrc = ''"
+                v-if="tempOptions !== ''"
+                @click="tempOptions = ''"
                 round
                 icon="clear"
               />
             </template>
             <template v-slot:after>
               <q-btn
-                :disable="imageSrc === ''"
+                :disable="tempOptions === ''"
                 icon="send"
-                @click="addImage"
-                :color="imageSrc !== '' ? 'green' : 'grey'"
+                @click="pushOption"
+                :color="tempOptions !== '' ? 'green' : 'grey'"
               ></q-btn>
             </template>
           </q-input>
-          <div
-            v-for="(img, index) in imgSrcs"
-            :key="img.id"
-            class="row justify-between q-mt-md"
-          >
-            <div class="col-grow q-pr-md">
-              <pro-img
-                :src="img.src"
-                style="max-height: 200px"
-                fit="contain"
-                class="bg-black"
-              />
-            </div>
-            <div class="column q-gutter-sm">
-              <q-btn
-                class="col-grow"
-                icon="clear"
-                color="red"
-                @click="imgSrcs.splice(index, 1)"
-              ></q-btn>
-              <q-btn
-                :disable="index === 0"
-                class="col-auto"
-                color="grey"
-                icon="keyboard_arrow_up"
-                @click="moveStringOneFieldBefore(index)"
-              ></q-btn>
-              <q-btn
-                :disable="index === imgSrcs.length - 1"
-                class="col-auto"
-                color="grey"
-                icon="keyboard_arrow_down"
-                @click="moveStringOneFieldAfter(index)"
-              ></q-btn>
-            </div>
-          </div>
 
-          <div>
+          <div v-for="(opt, o_index) in options" :key="o_index">
             <q-input
-              class="q-mt-md q-mb-sm"
-              v-model="tempOptions"
-              label="Add Option"
+              class="q-mt-sm"
+              v-model="opt.value"
+              :maxlength="127"
+              :label="'Option ' + (o_index + 1)"
               outlined
-              @keyup.enter="pushOption"
             >
-              <template v-slot:prepend>
-                <q-icon name="style"></q-icon>
-              </template>
-              <template v-slot:append>
-                <q-btn
-                  v-if="tempOptions !== ''"
-                  @click="tempOptions = ''"
-                  round
-                  icon="clear"
-                />
-              </template>
               <template v-slot:after>
                 <q-btn
-                  :disable="tempOptions === ''"
-                  icon="send"
-                  @click="pushOption"
-                  :color="tempOptions !== '' ? 'green' : 'grey'"
+                  class="col-grow"
+                  icon="clear"
+                  color="red"
+                  @click="options.splice(o_index, 1)"
                 ></q-btn>
               </template>
             </q-input>
-
-            <div v-for="(opt, o_index) in options" :key="o_index">
-              <q-input
-                class="q-mt-sm"
-                v-model="opt.value"
-                :maxlength="127"
-                :label="'Option ' + (o_index + 1)"
-                outlined
-              >
-                <template v-slot:after>
-                  <q-btn
-                    class="col-grow"
-                    icon="clear"
-                    color="red"
-                    @click="options.splice(o_index, 1)"
-                  ></q-btn>
-                </template>
-              </q-input>
-            </div>
           </div>
-        </q-card-section>
-      </q-card>
-      <q-card class="q-mt-md">
-        <q-card-section>
-          <price-options-input v-model="pp" />
-        </q-card-section>
-      </q-card>
+        </div>
+      </q-card-section>
+    </q-card>
+    <q-card class="q-mt-md">
+      <q-card-section>
+        <price-options-input v-model="pp" />
+      </q-card-section>
+    </q-card>
 
-      <q-card class="q-mt-md">
-        <q-card-section>
-          <date-time-input
-            v-model="expired"
-            label="Placement expired in"
-          ></date-time-input>
-          <q-checkbox
-            v-model="available"
-            label="Items are available from now on"
-          ></q-checkbox>
-        </q-card-section>
-      </q-card>
+    <q-card class="q-mt-md">
+      <q-card-section>
+        <date-time-input
+          v-model="expired"
+          label="Placement expired in"
+        ></date-time-input>
+        <q-checkbox
+          v-model="available"
+          label="Items are available from now on"
+        ></q-checkbox>
+      </q-card-section>
+    </q-card>
 
-      <q-card class="q-mt-md">
-        <q-card-section>
+    <q-card class="q-mt-md">
+      <q-card-section>
+        <q-select
+          v-model="fromRegion"
+          label="From region"
+          outlined
+          :options="countries"
+          clearable
+        >
+        </q-select>
+        <div class="q-mt-md">
           <q-select
-            v-model="fromRegion"
-            label="From region"
-            outlined
+            v-model="toRegions"
+            multiple
             :options="countries"
-            clearable
-          >
-          </q-select>
-          <div class="q-mt-md">
-            <q-select
-              v-model="toRegions"
-              multiple
-              :options="countries"
-              label="Ship to regions"
-              outlined
-              label-color="green"
-              clearable
-            />
-            <q-select
-              class="q-mt-sm"
-              v-model="excludeRegions"
-              multiple
-              :options="countries"
-              label="Explicit exclude regions"
-              outlined
-              label-color="red"
-              clearable
-            />
-            <duration-input
-              class="q-mt-md"
-              label="Max shipping preparation time"
-              v-model="duration"
-            ></duration-input>
-            <q-card v-for="region in toRegions" class="q-mt-sm">
-              <q-card-section>
-                <div class="row justify-between">
-                  <div>
-                    {{ region.label }}
-                  </div>
-                  <q-btn
-                    class="q-mb-xs"
-                    dense
-                    color="red"
-                    icon="clear"
-                    size="sm"
-                    @click="
-                      toRegions = toRegions.filter(
-                        (r) => r.value !== region.value
-                      )
-                    "
-                  ></q-btn>
-                </div>
-                <div class="row justify-between">
-                  <q-input
-                    class="q-mb-xs col-12 col-sm-5"
-                    v-model="region.sp"
-                    label="Delivery price"
-                    type="number"
-                    outlined
-                    min="0"
-                  >
-                    <template v-slot:append>USD</template>
-                  </q-input>
-                  <duration-input
-                    class="col-12 col-sm-6"
-                    v-model="region.sd"
-                    label="Max delivery duration"
-                  ></duration-input>
-                </div>
-              </q-card-section>
-            </q-card>
-          </div>
-        </q-card-section>
-      </q-card>
-
-      <q-card class="q-mt-md">
-        <q-card-section>
-          <q-checkbox v-model="hasNote" label="Note for customers"></q-checkbox>
-          <q-input
-            v-show="hasNote"
+            label="Ship to regions"
             outlined
-            v-model="note"
-            label="Note"
-            type="textarea"
-          ></q-input>
-        </q-card-section>
-      </q-card>
+            label-color="green"
+            clearable
+          />
+          <q-select
+            class="q-mt-sm"
+            v-model="excludeRegions"
+            multiple
+            :options="countries"
+            label="Explicit exclude regions"
+            outlined
+            label-color="red"
+            clearable
+          />
+          <duration-input
+            class="q-mt-md"
+            label="Max shipping preparation time"
+            v-model="duration"
+          ></duration-input>
+          <q-card v-for="region in toRegions" class="q-mt-sm">
+            <q-card-section>
+              <div class="row justify-between">
+                <div>
+                  {{ region.label }}
+                </div>
+                <q-btn
+                  class="q-mb-xs"
+                  dense
+                  color="red"
+                  icon="clear"
+                  size="sm"
+                  @click="
+                    toRegions = toRegions.filter(
+                      (r) => r.value !== region.value
+                    )
+                  "
+                ></q-btn>
+              </div>
+              <div class="row justify-between">
+                <q-input
+                  class="q-mb-xs col-12 col-sm-5"
+                  v-model="region.sp"
+                  label="Delivery price"
+                  type="number"
+                  outlined
+                  min="0"
+                >
+                  <template v-slot:append>USD</template>
+                </q-input>
+                <duration-input
+                  class="col-12 col-sm-6"
+                  v-model="region.sd"
+                  label="Max delivery duration"
+                ></duration-input>
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
+      </q-card-section>
+    </q-card>
 
-      <q-card class="q-mt-md q-mb-md">
-        <q-card-section>
-          <div
-            class="row justify-between"
-            :class="$q.screen.lt.sm ? 'q-gutter-sm' : 'q-gutter-x-md'"
-          >
-            <div class="col-sm-grow col-12">
-              <q-input v-model="seller" label="Seller account name" outlined />
-            </div>
-            <div class="col-auto flex flex-center">
-              <q-btn
-                @click="showPreview"
-                label="Preview"
-                color="primary"
-                icon-right="preview"
-                size="md"
-              />
-            </div>
-            <div class="col-auto flex flex-center">
-              <q-btn
-                @click="send"
-                label="Send"
-                color="primary"
-                icon-right="send"
-                size="md"
-              />
-            </div>
+    <q-card class="q-mt-md">
+      <q-card-section>
+        <q-checkbox v-model="hasNote" label="Note for customers"></q-checkbox>
+        <q-input
+          v-show="hasNote"
+          outlined
+          v-model="note"
+          label="Note"
+          type="textarea"
+        ></q-input>
+      </q-card-section>
+    </q-card>
+
+    <q-card class="q-mt-md q-mb-md">
+      <q-card-section>
+        <div
+          class="row justify-between"
+          :class="
+            $q.screen.lt.sm ? 'q-gutter-sm' : 'q-gutter-y-sm q-gutter-x-md'
+          "
+        >
+          <div class="col-sm-grow col-12">
+            <q-input v-model="seller" label="Seller account name" outlined />
           </div>
-          <div
-            v-if="id !== undefined && id >= 0"
-            class="row q-col-gutter-x-md q-mt-md"
-          >
-            <div class="col-auto">
-              <q-btn
-                @click="deleteEntry"
-                label="Delete entry"
-                color="red"
-                icon-right="delete"
-                size="md"
-                :disable="isDeleting"
-                :loading="isDeleting"
-              />
-            </div>
-            <div class="col-auto">
-              Id:
-              {{ id }}
-            </div>
+          <div class="col-auto flex flex-center">
+            <q-btn
+              @click="getLoginUser()"
+              color="primary"
+              label="Login user"
+              :disable="checkingLoginUser"
+            />
           </div>
-        </q-card-section>
-      </q-card>
-    </div>
+          <div class="col-auto flex flex-center">
+            <q-btn
+              @click="showPreview"
+              label="Preview"
+              color="primary"
+              icon-right="preview"
+              size="md"
+            />
+          </div>
+          <div class="col-auto flex flex-center">
+            <q-btn
+              @click="send"
+              label="Send"
+              color="primary"
+              icon-right="send"
+              size="md"
+            />
+          </div>
+        </div>
+        <div
+          v-if="id !== undefined && id >= 0"
+          class="row q-col-gutter-x-md q-mt-md"
+        >
+          <div class="col-auto">
+            <q-btn
+              @click="deleteEntry"
+              label="Delete entry"
+              color="red"
+              icon-right="delete"
+              size="md"
+              :disable="isDeleting"
+              :loading="isDeleting"
+            />
+          </div>
+          <div class="col-auto">
+            Id:
+            {{ id }}
+          </div>
+        </div>
+      </q-card-section>
+    </q-card>
   </q-page>
 </template>
 <script lang="ts">
@@ -322,6 +330,7 @@ import {
 import { getUserDataToState } from "../Components/SaleContractRequests";
 import { router } from "../router/simpleRouter";
 import { LoadFromContract } from "../Components/MarketContractHandle";
+import { requestLoginUser } from "../Components/LoginUser";
 
 export default Vue.defineComponent({
   name: "uploadPage",
@@ -539,6 +548,14 @@ export default Vue.defineComponent({
           });
           opts = [];
         }
+      }
+
+      if (opts.length == 1) {
+        errors.push({
+          key: "opts",
+          message: `Options number`,
+          caption: `Use no option or at least two options.`,
+        });
       }
 
       if (
@@ -774,6 +791,18 @@ export default Vue.defineComponent({
       }
     }
 
+    const checkingLoginUser = Vue.ref<boolean>(false);
+
+    async function getLoginUser(name?: string) {
+      if (checkingLoginUser.value === true) return;
+      checkingLoginUser.value = true;
+
+      const resultUser = await requestLoginUser(name);
+      seller.value = resultUser?.name ?? "";
+
+      checkingLoginUser.value = false;
+    }
+
     return {
       darkStyle: state.darkStyle,
       seller,
@@ -804,6 +833,8 @@ export default Vue.defineComponent({
       deleteEntry,
       isDeleting,
       id,
+      getLoginUser,
+      checkingLoginUser,
     };
   },
 });
