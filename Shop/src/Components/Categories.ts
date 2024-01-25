@@ -255,7 +255,7 @@ export const categories: Array<Category> = [
 //   { name: "Powersport Vehicles", index: 5, id: 73464968921481220n },
 //   { name: "Boats", index: 6, id: 73746443898191870n },
 //   { name: "Top Vehicle Makes", index: 7, id: 74027918874902530n },
-//   { name: "Electronics", index: 2, id: 146085512912830460n },
+//   { name: "Electronics", index: 2, id: 144115188075855870n },
 //   {
 //     name: "Computers, Tablets & Network Hardware",
 //     index: 1,
@@ -286,7 +286,7 @@ export const categories: Array<Category> = [
 //     id: 146648462866251780n,
 //   },
 //   { name: "Home Surveillance Systems", index: 10, id: 146929937842962430n },
-//   { name: "Collectibles & Art", index: 3, id: 218987531880890370n },
+//   { name: "Collectibles & Art", index: 3, id: 216172782113783800n },
 //   { name: "Collectibles", index: 1, id: 216454257090494460n },
 //   {
 //     name: "Sports Memorabilia, Fan Shop & Sports Cards",
@@ -302,7 +302,7 @@ export const categories: Array<Category> = [
 //   { name: "Entertainment Memorabilia", index: 9, id: 218706056904179700n },
 //   { name: "Vintage & Antique Jewelry", index: 10, id: 218987531880890370n },
 //   { name: "Stamps", index: 11, id: 219269006857601020n },
-//   { name: "Home & Garden", index: 4, id: 291326600895528960n },
+//   { name: "Home & Garden", index: 4, id: 288230376151711740n },
 //   { name: "Home Decor", index: 1, id: 288511851128422400n },
 //   {
 //     name: "Yard, Garden & Outdoor Living Items",
@@ -331,7 +331,7 @@ export const categories: Array<Category> = [
 //     index: 12,
 //     id: 291608075872239600n,
 //   },
-//   { name: "Holiday & Seasonal D�cor", index: 13, id: 291889550848950300n },
+//   { name: "Holiday & Seasonal Decor", index: 13, id: 291889550848950300n },
 //   {
 //     name: "Bathroom Fixtures, Accessories & Supplies",
 //     index: 14,
@@ -345,7 +345,7 @@ export const categories: Array<Category> = [
 //   { name: "Candles & Home Fragrance", index: 16, id: 292733975779082240n },
 //   { name: "Rugs & Carpets", index: 17, id: 293015450755792900n },
 //   { name: "Window Treatments & Hardware", index: 18, id: 293296925732503550n },
-//   { name: "Clothing, Shoes & Accessories", index: 5, id: 365354519770431500n },
+//   { name: "Clothing, Shoes & Accessories", index: 5, id: 360287970189639700n },
 //   { name: "Action Figures & Accessories", index: 1, id: 360569445166350340n },
 //   {
 //     name: "Collectible Card Games & Accessories",
@@ -374,7 +374,7 @@ export const categories: Array<Category> = [
 //     id: 364510094840299500n,
 //   },
 //   { name: "Slot Cars", index: 16, id: 364791569817010200n },
-//   { name: "Toys & Hobbies", index: 6, id: 436849163854938100n },
+//   { name: "Toys & Hobbies", index: 6, id: 432345564227567600n },
 //   {
 //     name: "Sports Memorabilia, Fan Shop & Sports Cards",
 //     index: 1,
@@ -398,7 +398,7 @@ export const categories: Array<Category> = [
 //   { name: "Tactical & Duty Gear", index: 13, id: 436004738924806140n },
 //   { name: "Tennis & Racquet Sports", index: 14, id: 436286213901516800n },
 //   { name: "Boxing & MMA Equipment", index: 15, id: 436567688878227460n },
-//   { name: "Sporting Goods", index: 7, id: 508625282916155400n },
+//   { name: "Sporting Goods", index: 7, id: 504403158265495550n },
 //   {
 //     name: "Sports Memorabilia, Fan Shop & Sports Cards",
 //     index: 1,
@@ -425,12 +425,12 @@ export const categories: Array<Category> = [
 //   { name: "Top Brands", index: 16, id: 508906757892866050n },
 //   { name: "Popular Topics", index: 17, id: 509188232869576700n },
 //   { name: "Top Stores", index: 18, id: 509469707846287360n },
-//   { name: "Books, Movies & Music", index: 8, id: 581527301884215300n },
+//   { name: "Books, Movies & Music", index: 8, id: 576460752303423500n },
 //   { name: "Books & Magazines", index: 1, id: 576742227280134100n },
 //   { name: "Musical Instruments & Gear", index: 2, id: 577023702256844800n },
 //   { name: "Music", index: 3, id: 577305177233555500n },
 //   { name: "Movies & TV", index: 4, id: 577586652210266100n },
-//   { name: "Health & Beauty", index: 9, id: 649644246248194000n },
+//   { name: "Health & Beauty", index: 9, id: 648518346341351400n },
 //   { name: "Fragrances", index: 1, id: 648799821318062100n },
 //   { name: "Hair Care & Styling Products", index: 2, id: 649081296294772700n },
 //   {
@@ -465,7 +465,7 @@ export const categories: Array<Category> = [
 //     index: 14,
 //     id: 652458996015300600n,
 //   },
-//   { name: "Business & Industrial", index: 10, id: 724516590053228500n },
+//   { name: "Business & Industrial", index: 10, id: 720575940379279400n },
 //   {
 //     name: "Heavy Equipment, Parts & Attachments",
 //     index: 1,
@@ -507,7 +507,7 @@ export const categories: Array<Category> = [
 //   { name: "Material Handling", index: 11, id: 723672165123096600n },
 //   { name: "Facility Maintenance & Safety", index: 12, id: 723953640099807200n },
 //   { name: "Retail & Services", index: 13, id: 724235115076517900n },
-//   { name: "Jewelry & Watches", index: 11, id: 796292709114445800n },
+//   { name: "Jewelry & Watches", index: 11, id: 792633534417207300n },
 //   { name: "Watches, Parts & Accessories", index: 1, id: 792915009393918000n },
 //   { name: "Fine Jewelry", index: 2, id: 793196484370628600n },
 //   { name: "Fashion Jewelry", index: 3, id: 793477959347339300n },
@@ -521,14 +521,14 @@ export const categories: Array<Category> = [
 //     id: 794885334230892500n,
 //   },
 //   { name: "Jewelry Care, Design & Repair", index: 9, id: 795166809207603200n },
-//   { name: "Baby Essentials", index: 12, id: 867224403245531100n },
+//   { name: "Baby Essentials", index: 12, id: 864691128455135200n },
 //   {
 //     name: "Baby Clothing, Shoes & Accessories",
 //     index: 1,
 //     id: 864972603431845900n,
 //   },
 //   { name: "Strollers & Accessories", index: 2, id: 865254078408556500n },
-//   { name: "Pet Supplies", index: 13, id: 937311672446484500n },
+//   { name: "Pet Supplies", index: 13, id: 936748722493063200n },
 //   { name: "Dog Supplies", index: 1, id: 937030197469773800n },
 //   { name: "Fish & Aquariums", index: 2, id: 937311672446484500n },
 // ];
@@ -547,6 +547,10 @@ export const categories: Array<Category> = [
 //   let flat: Array<FlatCategory> = [];
 //   for (let category of categories) {
 //     byteIndex[level] = category.index;
+//     for (let i = level + 1; i < byteIndex.length; i++) {
+//       byteIndex[i] = 0;
+//     }
+
 //     flat.push({
 //       name: category.name,
 //       index: category.index,
@@ -581,7 +585,7 @@ export const categories: Array<Category> = [
 //   categoryPathsById
 // );
 
-export const categoryPathsById: { [id: string]: string } = {
+export const categoryPathsById: { [key: string]: string } = {
   "72057594037927936": "Motors",
   "72339069014638592": "Motors / Auto Parts & Accessories",
   "72620543991349248": "Motors / Other Vehicles & Trailers",
@@ -590,7 +594,7 @@ export const categoryPathsById: { [id: string]: string } = {
   "73464968921481216": "Motors / Powersport Vehicles",
   "73746443898191872": "Motors / Boats",
   "74027918874902528": "Motors / Top Vehicle Makes",
-  "146085512912830464": "Electronics / Portable Audio & Headphones",
+  "144115188075855872": "Electronics",
   "144396663052566528": "Electronics / Computers, Tablets & Network Hardware",
   "144678138029277184":
     "Electronics / Cell Phones, Smart Watches & Accessories",
@@ -598,10 +602,11 @@ export const categoryPathsById: { [id: string]: string } = {
   "145241087982698496": "Electronics / Cameras & Photo",
   "145522562959409152": "Electronics / TV, Video & Home Audio Electronics",
   "145804037936119808": "Electronics / Vehicle Electronics & GPS",
+  "146085512912830464": "Electronics / Portable Audio & Headphones",
   "146366987889541120": "Electronics / Major Appliances, Parts & Accessories",
   "146648462866251776": "Electronics / Surveillance & Smart Home Electronics",
   "146929937842962432": "Electronics / Home Surveillance Systems",
-  "218987531880890368": "Collectibles & Art / Vintage & Antique Jewelry",
+  "216172782113783808": "Collectibles & Art",
   "216454257090494464": "Collectibles & Art / Collectibles",
   "216735732067205120":
     "Collectibles & Art / Sports Memorabilia, Fan Shop & Sports Cards",
@@ -612,8 +617,9 @@ export const categoryPathsById: { [id: string]: string } = {
   "218143106950758400": "Collectibles & Art / Art",
   "218424581927469056": "Collectibles & Art / Pottery & Glass",
   "218706056904179712": "Collectibles & Art / Entertainment Memorabilia",
+  "218987531880890368": "Collectibles & Art / Vintage & Antique Jewelry",
   "219269006857601024": "Collectibles & Art / Stamps",
-  "291326600895528960": "Home & Garden / Food & Beverages",
+  "288230376151711744": "Home & Garden",
   "288511851128422400": "Home & Garden / Home Decor",
   "288793326105133056": "Home & Garden / Yard, Garden & Outdoor Living Items",
   "289074801081843712": "Home & Garden / Kitchen, Dining & Bar Supplies",
@@ -624,6 +630,7 @@ export const categoryPathsById: { [id: string]: string } = {
   "290482175965396992": "Home & Garden / Household & Cleaning Supplies",
   "290763650942107648": "Home & Garden / Bedding",
   "291045125918818304": "Home & Garden / Lamps, Lighting & Ceiling Fans",
+  "291326600895528960": "Home & Garden / Food & Beverages",
   "291608075872239616": "Home & Garden / Surveillance & Smart Home Electronics",
   "291889550848950272": "Home & Garden / Holiday & Seasonal Decor",
   "292171025825660928":
@@ -632,8 +639,7 @@ export const categoryPathsById: { [id: string]: string } = {
   "292733975779082240": "Home & Garden / Candles & Home Fragrance",
   "293015450755792896": "Home & Garden / Rugs & Carpets",
   "293296925732503552": "Home & Garden / Window Treatments & Hardware",
-  "365354519770431488":
-    "Clothing, Shoes & Accessories / Clothing, Shoes & Accessories",
+  "360287970189639680": "Clothing, Shoes & Accessories",
   "360569445166350336":
     "Clothing, Shoes & Accessories / Action Figures & Accessories",
   "360850920143060992":
@@ -658,7 +664,7 @@ export const categoryPathsById: { [id: string]: string } = {
   "364510094840299520":
     "Clothing, Shoes & Accessories / Electronic, Battery & Wind-Up Toys",
   "364791569817010176": "Clothing, Shoes & Accessories / Slot Cars",
-  "436849163854938112": "Toys & Hobbies / Toys & Hobbies",
+  "432345564227567616": "Toys & Hobbies",
   "432627039204278272":
     "Toys & Hobbies / Sports Memorabilia, Fan Shop & Sports Cards",
   "432908514180988928": "Toys & Hobbies / Hunting Equipment",
@@ -675,7 +681,7 @@ export const categoryPathsById: { [id: string]: string } = {
   "436004738924806144": "Toys & Hobbies / Tactical & Duty Gear",
   "436286213901516800": "Toys & Hobbies / Tennis & Racquet Sports",
   "436567688878227456": "Toys & Hobbies / Boxing & MMA Equipment",
-  "508625282916155392": "Sporting Goods / Boxing & MMA Equipment",
+  "504403158265495552": "Sporting Goods",
   "504684633242206208":
     "Sporting Goods / Sports Memorabilia, Fan Shop & Sports Cards",
   "504966108218916864": "Sporting Goods / Hunting Equipment",
@@ -691,18 +697,20 @@ export const categoryPathsById: { [id: string]: string } = {
   "507780857986023424": "Sporting Goods / Indoor Games",
   "508062332962734080": "Sporting Goods / Tactical & Duty Gear",
   "508343807939444736": "Sporting Goods / Tennis & Racquet Sports",
+  "508625282916155392": "Sporting Goods / Boxing & MMA Equipment",
   "508906757892866048": "Sporting Goods / Top Brands",
   "509188232869576704": "Sporting Goods / Popular Topics",
   "509469707846287360": "Sporting Goods / Top Stores",
-  "581527301884215296": "Books, Movies & Music / Books, Movies & Music",
+  "576460752303423488": "Books, Movies & Music",
   "576742227280134144": "Books, Movies & Music / Books & Magazines",
   "577023702256844800": "Books, Movies & Music / Musical Instruments & Gear",
   "577305177233555456": "Books, Movies & Music / Music",
   "577586652210266112": "Books, Movies & Music / Movies & TV",
-  "649644246248194048": "Health & Beauty / Skin Care Products",
+  "648518346341351424": "Health & Beauty",
   "648799821318062080": "Health & Beauty / Fragrances",
   "649081296294772736": "Health & Beauty / Hair Care & Styling Products",
   "649362771271483392": "Health & Beauty / Vitamins & Lifestyle Supplements",
+  "649644246248194048": "Health & Beauty / Skin Care Products",
   "649925721224904704": "Health & Beauty / Makeup Products",
   "650207196201615360": "Health & Beauty / Health Care Products",
   "650488671178326016": "Health & Beauty / Medical & Mobility",
@@ -714,7 +722,7 @@ export const categoryPathsById: { [id: string]: string } = {
     "Health & Beauty / Manicure, Pedicure & Nail Care Products",
   "652177521038589952": "Health & Beauty / Oral Care Products",
   "652458996015300608": "Health & Beauty / Massaging Equipment & Supplies",
-  "724516590053228544": "Business & Industrial / Business & Industrial",
+  "720575940379279360": "Business & Industrial",
   "720857415355990016":
     "Business & Industrial / Heavy Equipment, Parts & Attachments",
   "721138890332700672": "Business & Industrial / Healthcare, Lab & Dental",
@@ -735,7 +743,7 @@ export const categoryPathsById: { [id: string]: string } = {
   "723672165123096576": "Business & Industrial / Material Handling",
   "723953640099807232": "Business & Industrial / Facility Maintenance & Safety",
   "724235115076517888": "Business & Industrial / Retail & Services",
-  "796292709114445824": "Jewelry & Watches / Jewelry & Watches",
+  "792633534417207296": "Jewelry & Watches",
   "792915009393917952": "Jewelry & Watches / Watches, Parts & Accessories",
   "793196484370628608": "Jewelry & Watches / Fine Jewelry",
   "793477959347339264": "Jewelry & Watches / Fashion Jewelry",
@@ -745,18 +753,13 @@ export const categoryPathsById: { [id: string]: string } = {
   "794603859254181888": "Jewelry & Watches / Engagement & Wedding Jewelry",
   "794885334230892544": "Jewelry & Watches / Ethnic, Regional & Tribal Jewelry",
   "795166809207603200": "Jewelry & Watches / Jewelry Care, Design & Repair",
-  "867224403245531136": "Baby Essentials / Baby Essentials",
+  "864691128455135232": "Baby Essentials",
   "864972603431845888": "Baby Essentials / Baby Clothing, Shoes & Accessories",
   "865254078408556544": "Baby Essentials / Strollers & Accessories",
-  "937311672446484480": "Pet Supplies / Fish & Aquariums",
+  "936748722493063168": "Pet Supplies",
   "937030197469773824": "Pet Supplies / Dog Supplies",
+  "937311672446484480": "Pet Supplies / Fish & Aquariums",
 };
-
-export function categoryById(id: bigint) {
-  let byteArray = new Uint8Array(8);
-  let dataView = new DataView(byteArray.buffer);
-  dataView.setBigUint64(0, id);
-}
 
 export function categoryBigInt(main: number, sub1: number) {
   let byteArray = new Uint8Array([main, sub1, 0, 0, 0, 0, 0, 0]);
@@ -799,11 +802,4 @@ function getCategoryPathByIndexes(
 
 export function getCategoryPath(id: bigint) {
   return getCategoryPathByIndexes(indexesById(id));
-}
-
-export function indexesIdById(id: bigint) {
-  let byteArray = new Uint8Array(8);
-  let dataView = new DataView(byteArray.buffer);
-  dataView.setBigUint64(0, id);
-  return Array.from(byteArray);
 }

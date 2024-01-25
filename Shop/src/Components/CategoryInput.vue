@@ -1,6 +1,5 @@
 <template>
   <q-select
-    class="q-mb-sm"
     v-model="category"
     outlined
     :options="categoryOptions"
@@ -11,12 +10,13 @@
     clearable
     @filter="filterCategoryInput"
     @keyup.enter="enterClick"
+    :display-value="shownValue()"
   >
   </q-select>
 </template>
 <script lang="ts">
 import { PropType } from "vue";
-import { categoryPathsById } from "./Categories";
+import { categories, categoryPathsById, indexesById } from "./Categories";
 
 export default Vue.defineComponent({
   name: "categoryInput",
@@ -28,9 +28,6 @@ export default Vue.defineComponent({
   },
   emits: ["update:modelValue"],
   setup(props, context) {
-    // const _category = Vue.ref<{ value: bigint; label: string } | undefined>(
-
-    // );
     const category = Vue.computed({
       get: () =>
         props.modelValue !== undefined
@@ -60,6 +57,7 @@ export default Vue.defineComponent({
       }
       return options;
     }
+
     const categoryOptions =
       Vue.ref<Array<{ label: string; value: bigint }>>(getCategoryOptions());
 
@@ -76,11 +74,24 @@ export default Vue.defineComponent({
       });
     }
 
+    function shownValue() {
+      if (category.value === undefined || category.value.value === 0n) {
+        return "";
+      }
+      const catIds = indexesById(BigInt(category.value.value));
+      const cat0 = categories[catIds[0] - 1];
+      if (cat0.child === undefined || catIds[1] === 0) {
+        return cat0.name;
+      }
+      return cat0.child[catIds[1]].name;
+    }
+
     return {
       category,
       categoryOptions,
       filterCategoryInput,
       enterClick,
+      shownValue,
     };
   },
 });

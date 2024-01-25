@@ -1,10 +1,15 @@
 <template>
   <q-page class="column">
     <div class="col text-center">
-      <div>
-        <category-select class="q-ma-md" v-model="sCategory"></category-select>
+      <div class="row q-mx-md q-mt-md q-col-gutter-sm">
+        <category-select
+          :size="$q.screen.gt.xs ? 'md' : 'sm'"
+          class="col-12 col-md-6"
+          v-model="sCategory"
+          @confirm="searchInCategory"
+        ></category-select>
         <!-- Search bar -->
-        <q-input class="q-ma-md" v-model="searchText" outlined dense>
+        <!-- <q-input class="col-12 col-md-6" v-model="searchText" outlined dense>
           <template v-slot:append>
             <q-icon
               v-if="searchText !== ''"
@@ -17,12 +22,11 @@
             <q-btn
               icon-right="search"
               @click="search"
-              class="cursor-pointer bg-blue"
+              class="bg-blue"
               color="white"
             ></q-btn>
           </template>
-          <template v-slot:before> </template>
-        </q-input>
+        </q-input> -->
       </div>
       <!-- result list -->
       <q-table
@@ -123,24 +127,24 @@ export default Vue.defineComponent({
     CategorySelect,
   },
   setup() {
-    const searchText = Vue.ref<string>("");
+    // const searchText = Vue.ref<string>("");
     const isPricePerUnit = Vue.ref<boolean>(false);
 
-    async function search() {
-      const { h64ToString } = await xxhash();
-      const split = searchText.value.split(" "); // Should remove special signs?
+    // async function search() {
+    //   const { h64ToString } = await xxhash();
+    //   const split = searchText.value.split(" "); // Should remove special signs?
 
-      const hashes: Array<string> = [];
-      for (const v of split) {
-        const t = v.trim();
-        if (t.length > 0) {
-          // For convenience, get hash as string of its zero-padded hex representation
-          hashes.push(h64ToString(v.toLowerCase())); // "502b0c5fc4a5704c" (Hex String) //hasher.h64(v); // 5776724552493396044n (BigInt)
-        }
-      }
-      console.log(hashes);
-      // TODO: Search for each hash in contract table
-    }
+    //   const hashes: Array<string> = [];
+    //   for (const v of split) {
+    //     const t = v.trim();
+    //     if (t.length > 0) {
+    //       // For convenience, get hash as string of its zero-padded hex representation
+    //       hashes.push(h64ToString(v.toLowerCase())); // "502b0c5fc4a5704c" (Hex String) //hasher.h64(v); // 5776724552493396044n (BigInt)
+    //     }
+    //   }
+    //   console.log(hashes);
+    //   // TODO: Search for each hash in contract table
+    // }
 
     const sCategory = Vue.ref<bigint>(0n);
 
@@ -233,10 +237,13 @@ export default Vue.defineComponent({
        Any access of an item of this array is done by a binary search.
     */
 
+    function searchInCategory(value: bigint) {
+      console.log("searchInCategory", value);
+    }
+
     return {
       darkStyle: state.darkStyle,
       isPricePerUnit,
-      searchText,
       categories,
       categoryOptions,
       categoryOpen,
@@ -244,8 +251,8 @@ export default Vue.defineComponent({
       itemRows,
       itemColumns,
       openItem,
-      search,
       sCategory,
+      searchInCategory,
     };
   },
 });
