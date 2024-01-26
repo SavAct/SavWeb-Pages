@@ -16,16 +16,7 @@
   </q-input>
 </template>
 <script lang="ts">
-const hourInMin = 60;
-const dayInMin = 24 * hourInMin;
-const weekInMin = 7 * dayInMin;
-const monthInMin = 30 * dayInMin;
-
-const minInMs = 60 * 1000;
-const hourInMs = 60 * minInMs;
-const dayInMs = 24 * hourInMs;
-const weekInMs = 7 * dayInMs;
-const monthInMs = 30 * dayInMs;
+import { getDuration, getInitialDuration } from "./GeneralJSHelper";
 
 export default Vue.defineComponent({
   name: "durationInput",
@@ -64,50 +55,6 @@ export default Vue.defineComponent({
       },
     });
 
-    /**
-     * Get the initial duration unit and number based on the value
-     * @param msValue Duration in milliseconds
-     */
-    function getInitialDuration(msValue: number): {
-      unit: "months" | "weeks" | "days" | "hours" | "minutes";
-      n: number;
-    } {
-      const value = Math.floor(msValue / 60000);
-      if (value % monthInMin === 0) {
-        return { unit: "months", n: value / monthInMin };
-      } else if (value % weekInMin === 0) {
-        return { unit: "weeks", n: value / weekInMin };
-      } else if (value % dayInMin === 0) {
-        return { unit: "days", n: value / dayInMin };
-      } else if (value % hourInMin === 0) {
-        return { unit: "hours", n: value / hourInMin };
-      } else {
-        return { unit: "minutes", n: value };
-      }
-    }
-
-    /**
-     * Get the duration in milliseconds
-     * @param unit Duration unit
-     * @param value Duration number in duration unit
-     */
-    function getDuration(
-      unit: "months" | "weeks" | "days" | "hours" | "minutes",
-      value: number
-    ) {
-      switch (unit) {
-        case "months":
-          return value * monthInMs;
-        case "weeks":
-          return value * weekInMs;
-        case "days":
-          return value * dayInMs;
-        case "hours":
-          return value * hourInMs;
-        case "minutes":
-          return value * minInMs;
-      }
-    }
     const duration = Vue.computed(() => {
       switch (durationUnit.value) {
         case "months":

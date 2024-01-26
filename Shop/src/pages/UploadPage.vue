@@ -331,6 +331,7 @@ import { getUserDataToState } from "../Components/SaleContractRequests";
 import { router } from "../router/simpleRouter";
 import { LoadFromContract } from "../Components/MarketContractHandle";
 import { requestLoginUser } from "../Components/LoginUser";
+import { deepCopy } from "../Components/GeneralJSHelper";
 
 export default Vue.defineComponent({
   name: "uploadPage",
@@ -615,10 +616,6 @@ export default Vue.defineComponent({
         },
         error: errors,
       };
-    }
-
-    function deepCopy<T>(obj: T): T {
-      return JSON.parse(JSON.stringify(obj));
     }
 
     async function send() {

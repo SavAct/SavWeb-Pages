@@ -1,14 +1,17 @@
 <template>
-  <q-page class="column">
-    <div class="col text-center">
-      <div class="row q-mx-md q-mt-md q-col-gutter-sm">
+  <q-page
+    :class="$q.screen.gt.xs ? 'q-px-lg' : 'q-px-md'"
+    style="max-width: 800px; margin: 0 auto"
+  >
+    <div>
+      <div class="row q-my-md q-col-gutter-sm">
         <category-select
           :size="$q.screen.gt.xs ? 'md' : 'sm'"
           class="col-12 col-md-6"
           v-model="sCategory"
           @confirm="searchInCategory"
         ></category-select>
-        <!-- Search bar -->
+        <!-- Filter bar -->
         <!-- <q-input class="col-12 col-md-6" v-model="searchText" outlined dense>
           <template v-slot:append>
             <q-icon
@@ -29,7 +32,136 @@
         </q-input> -->
       </div>
       <!-- result list -->
-      <q-table
+      <q-card
+        v-for="(row, index) in itemRows"
+        :key="index"
+        flat
+        bordered
+        style="max-height: 260px"
+        clickable
+        @click="openItem(row.id, sCategory)"
+      >
+        <q-card-section
+          v-if="$q.screen.lt.sm"
+          class="text-bold q-px-sm q-pb-none q-pt-sm"
+        >
+          {{ row.title }}
+        </q-card-section>
+        <q-card-section horizontal class="justify-between">
+          <q-card-section class="col-5 col-lg-2 col-md-3 q-pa-sm">
+            <div
+              class="flex flex-center full-width full-height"
+              :class="darkStyle ? 'bg-grey-9' : 'bg-grey-4'"
+            >
+              <pro-img
+                style="max-height: 240px"
+                fit="contain"
+                v-if="row.imgs.length > 0"
+                :src="row.imgs[0]"
+              ></pro-img>
+            </div>
+          </q-card-section>
+          <q-card-section
+            class="col q-pt-xs"
+            :class="$q.screen.lt.sm ? 'q-pl-sm' : ''"
+          >
+            <div class="q-mt-sm row q-col-gutter-x-sm justify-end">
+              <div
+                class="col-grow"
+                :class="row.expired < Date.now() ? 'text-red' : 'text-grey'"
+              >
+                {{ new Date(row.expired).toLocaleDateString() }}
+              </div>
+              <div class="col-auto text-right q-ma-none q-pa-none">
+                <q-chip
+                  class="q-ma-none q-pr-none q-pt-none"
+                  icon="account_circle"
+                  :label="row.seller"
+                  dense
+                />
+              </div>
+            </div>
+            <div
+              v-if="$q.screen.gt.xs"
+              class="q-mb-xs"
+              :class="$q.screen.gt.sm ? 'text-h6' : 'text-bold'"
+            >
+              {{ row.title }}
+            </div>
+            <div class="text-caption text-grey full-width row">
+              <div :class="$q.screen.gt.xs ? 'col-auto' : 'col-12'">
+                From {{ getRegion(row.fromR) }}
+              </div>
+              <div class="col-auto">
+                {{
+                  $q.screen.gt.xs ? "&nbsp;with preparation of" : "Preparation"
+                }}&nbsp;{{ getInitialDuration(row.prepT * 1000).n }}&nbsp;{{
+                  getInitialDuration(row.prepT * 1000).unit
+                }}
+              </div>
+            </div>
+            <q-card-section class="col-3 q-pa-none">
+              <div class="q-mt-sm q-mb-xs">
+                <span
+                  v-if="
+                    row.pp.length > 2 ||
+                    (row.pp.length == 2 && row.pp[0].pcs != 0)
+                  "
+                >
+                  <span class="text-bold" :class="priceSize">
+                    {{ row.pp[row.pp[0].pcs == 0 ? 1 : 0].p }} $
+                  </span>
+                  <span> to </span>
+                </span>
+                <span class="text-bold" :class="priceSize">
+                  {{ row.pp[row.pp.length - 1].p }} $
+                </span>
+              </div>
+
+              <div class="text-caption text-grey">
+                <span v-if="!(row.pp.length === 2 && row.pp[0].pcs == 0)"
+                  >For</span
+                >
+                <span class="text-bold">
+                  {{ row.pp[row.pp[0].pcs == 0 ? 1 : 0].pcs }}
+                </span>
+                <template v-if="row.pp.length > 1">
+                  <span v-if="row.pp[0].pcs != 0 || row.pp.length > 2">
+                    <span
+                      >&nbsp;{{
+                        row.pp[0].pcs != 0 ||
+                        (row.pp[0].pcs == 0 &&
+                          Number(row.pp[0].p) > row.pp[row.pp.length - 1].pcs)
+                          ? "to over"
+                          : "to"
+                      }}&nbsp;</span
+                    >
+                    <span class="text-bold">{{
+                      row.pp[row.pp.length - 1].pcs
+                    }}</span>
+                  </span>
+                  <span
+                    class="text-bold"
+                    v-if="row.pp[0].pcs == 0 && Number(row.pp[0].p) > 0"
+                    >&nbsp;(max.&nbsp;{{ row.pp[0].p }})</span
+                  >
+                  <span>&nbsp;pieces</span>
+                </template>
+                <span v-else>&nbsp;piece</span>
+              </div>
+            </q-card-section>
+          </q-card-section>
+          <div
+            class="col-12 q-pt-none text-grey q-px-sm"
+            :class="$q.screen.gt.xs ? 'text-right' : 'text-left'"
+            style="position: absolute; bottom: 0"
+          >
+            <div class="text-overline">#{{ row.id }}</div>
+          </div>
+        </q-card-section>
+      </q-card>
+
+      <!-- <q-table
         title="Items"
         class="q-ma-md card"
         :rows="itemRows"
@@ -45,9 +177,9 @@
             label="Price per unit"
             left-label
           />
-        </template>
+        </template> -->
 
-        <!-- <template v-slot:header>
+      <!-- <template v-slot:header>
           <q-tr class="cursor-pointer">
             <q-td>
               <div class="text-italic text-orange">This is an Ads</div>
@@ -66,8 +198,8 @@
             </q-td>
           </q-tr>
         </template> -->
-        <template v-slot:body="props">
-          <q-tr :props="props" class="cursor-pointer">
+      <!-- <template v-slot:body="props">
+          <q-tr :props="props" class="cursor-pointer" colspan="6">
             <q-td
               key="imgs"
               :props="props"
@@ -105,8 +237,8 @@
           <div class="full-width row flex-center q-gutter-sm">
             <span>{{ message }}</span>
           </div>
-        </template>
-      </q-table>
+        </template> -->
+      <!-- </q-table> -->
       <div class="q-mt-lg">Presented by SavAct.</div>
     </div>
   </q-page>
@@ -115,10 +247,12 @@
 import ProImg from "../Components/ProImg.vue";
 import CategorySelect from "../Components/CategorySelect.vue";
 import { QTableProps } from "quasar";
-import { Entry } from "../Components/Items";
 import { router } from "../router/simpleRouter";
 import { state } from "../store/globals";
 import { categories } from "../Components/Categories";
+import { ItemTable } from "../Components/ContractInterfaces";
+import { getRegion } from "../Components/ConvertRegion";
+import { getInitialDuration } from "../Components/GeneralJSHelper";
 
 export default Vue.defineComponent({
   name: "indexPage",
@@ -192,13 +326,6 @@ export default Vue.defineComponent({
       // TODO: Use filters
 
       return state.itemsList.map((item) => {
-        console.log(
-          "pp-----",
-          item.pp[item.pp.length - 1].p,
-          item.pp[0].p,
-          Number(item.pp[0].p) === 0
-        );
-
         return {
           ...item,
           price: isPricePerUnit.value // Take the last entry per piece if true otherwise the first entry that describes an item
@@ -207,12 +334,15 @@ export default Vue.defineComponent({
             : Number(item.pp[0].p) === 0
               ? Number(item.pp[1].p)
               : Number(item.pp[0].p),
-        };
+        } as ItemTable & { price: number };
       });
     });
 
-    function openItem(item: Entry) {
-      router.push({ name: "item", query: { id: item.id } });
+    function openItem(id: number | bigint | string, category: bigint | string) {
+      router.push({
+        name: "item",
+        query: { id: String(id), category: BigInt(category) },
+      });
     }
 
     // TODO: Consider small screen size for the table
@@ -241,6 +371,10 @@ export default Vue.defineComponent({
       console.log("searchInCategory", value);
     }
 
+    const priceSize = Vue.computed(() => {
+      return Quasar.Screen.gt.xs ? "text-h6" : "text-subtitle1";
+    });
+
     return {
       darkStyle: state.darkStyle,
       isPricePerUnit,
@@ -253,6 +387,9 @@ export default Vue.defineComponent({
       openItem,
       sCategory,
       searchInCategory,
+      getRegion,
+      priceSize,
+      getInitialDuration,
     };
   },
 });

@@ -11,8 +11,7 @@
     @filter="filterCategoryInput"
     @keyup.enter="enterClick"
     :display-value="shownValue()"
-  >
-  </q-select>
+  ></q-select>
 </template>
 <script lang="ts">
 import { PropType } from "vue";
@@ -79,11 +78,11 @@ export default Vue.defineComponent({
         return "";
       }
       const catIds = indexesById(BigInt(category.value.value));
-      const cat0 = categories[catIds[0] - 1];
-      if (cat0.child === undefined || catIds[1] === 0) {
-        return cat0.name;
+      const cat0 = categories.find((c) => c.index == catIds[0]);
+      if (cat0?.child === undefined || catIds[1] === 0) {
+        return cat0?.name;
       }
-      return cat0.child[catIds[1]].name;
+      return cat0.child.find((c) => c.index == catIds[1])?.name;
     }
 
     return {
