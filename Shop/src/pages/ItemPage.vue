@@ -43,6 +43,7 @@
               :color="chipBgColor()"
               class="col-auto"
               :user="item.seller"
+              internal
             ></user-link>
           </span>
           <span class="col-auto" v-if="item.fromR.length > 0">
@@ -109,6 +110,7 @@
                   :color="chipBgColor()"
                   class="col-auto"
                   :user="item.seller"
+                  internal
                 ></user-link>
               </span>
               <span class="col-auto" v-if="item.fromR.length > 0">
@@ -320,7 +322,6 @@ export default Vue.defineComponent({
   setup() {
     // TODO: Handle wait mode
     // TODO: Link to find more items on the same category
-    // TODO: Link to all of sellers items
 
     const showComboboxes = Vue.ref<boolean>(false); // TODO: Settings to switch this design option
 
@@ -519,7 +520,7 @@ export default Vue.defineComponent({
         item.value.seller.length > 0
       ) {
         loadingSeller.value = true;
-        seller.value = await state.getSeller(item.value.seller, state.contract);
+        seller.value = await state.getUser(item.value.seller, state.contract);
         loadingSeller.value = false;
       }
     }

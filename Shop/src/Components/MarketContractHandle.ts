@@ -1,6 +1,33 @@
 import { Ref } from "vue";
 import { MarketContract, state } from "../store/globals";
-import { ItemTable } from "./ContractInterfaces";
+import { ItemTable, TokenSymbol } from "./ContractInterfaces";
+import { UserTable } from "./ContractInterfaces";
+import { StringToSymbol } from "./AntelopeHelpers";
+
+export function userTableEntryToUser(userTableEntry: UserTable) {
+  return {
+    ...userTableEntry,
+    active: Boolean(userTableEntry.active),
+    allowed: userTableEntry.allowed.map((t: TokenSymbol) => {
+      return {
+        symbol: StringToSymbol(t.sym),
+        contract: t.contr,
+        chain: t.chain,
+      };
+    }),
+  };
+}
+
+// export function isUserTableEntryValid(userTableEntry: UserTable) {
+//   return (
+//     userTableEntry.pgp !== undefined &&
+//     userTableEntry.contact !== undefined &&
+//     userTableEntry.allowed !== undefined &&
+//     userTableEntry.note !== undefined &&
+//     userTableEntry.active !== undefined &&
+//     userTableEntry.banned !== undefined
+//   );
+// }
 
 export class LoadFromContract {
   constructor(
@@ -9,6 +36,39 @@ export class LoadFromContract {
   ) {
     loadMaxTries.value = 1;
     loadTries.value = -1;
+  }
+
+  /**
+   * Will set the user from table data
+   *
+   * @param user User account name
+   * @param contract Market contract
+   * @param maxTries Number of tries to get the user from table
+   * @param waitTime Wait time after each try
+   * @returns
+   */
+  public async loadUser(
+    user: string,
+    contract: MarketContract = state.contract,
+    maxTries = 3,
+    waitTime = 1000
+  ) {
+    this.loadMaxTries.value = maxTries;
+    this.loadTries.value = 0;
+
+    for (let i = 0; i < maxTries; i++) {
+      const tbUser = await state.getUser(user, contract);
+      if (tbUser) {
+        this.loadMaxTries.value = this.loadTries.value;
+        return tbUser as UserTable;
+      } else {
+        // Wait before trying again
+        this.loadTries.value++;
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
+      }
+    }
+
+    return undefined;
   }
 
   /**

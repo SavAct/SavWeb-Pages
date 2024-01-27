@@ -233,10 +233,14 @@ import {
 } from "../Components/LinkConverter";
 import { StringToSymbol, getKnownChainId } from "../Components/AntelopeHelpers";
 import { router } from "../router/simpleRouter";
-import { getUserDataToState } from "../Components/SaleContractRequests";
+
 import { HasQueryRequest, HasQueryUserName } from "../Components/queryHelper";
 import { requestLoginUser } from "../Components/LoginUser";
 import { categoryPathsById } from "../Components/Categories";
+import {
+  LoadFromContract,
+  userTableEntryToUser,
+} from "../Components/MarketContractHandle";
 
 export default Vue.defineComponent({
   name: "userPage",
@@ -518,10 +522,13 @@ export default Vue.defineComponent({
 
     const items = Vue.ref<Array<IdAndCategory> | undefined>(undefined);
 
+    const loadUser = new LoadFromContract();
+
     async function getUserData() {
       checkingUserData.value = true;
-      const foundUser = await getUserDataToState(userName.value);
+      const foundUser = await loadUser.loadUser(userName.value);
       if (foundUser) {
+        state.user.value = userTableEntryToUser(foundUser);
         pgpKey.value = {
           pub: state.user.value.pgp,
           pri: "",

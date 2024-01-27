@@ -98,23 +98,21 @@ function getArticleKey(
  * @param data Article data
  * @returns key
  */
-function getSellerKey(seller: string, marketContract: MarketContract) {
-  return `${seller}_${marketContract.account}_${marketContract.chain}`;
+function getUserKey(user: string, marketContract: MarketContract) {
+  return `${user}_${marketContract.account}_${marketContract.chain}`;
 }
 
 // Articles
 const article = new Map<string, { time: number; entry: ItemTable }>();
 
-// Sellers
-const sellerEntry = new Map<string, { time: number; entry: UserTable }>();
+// Users
+const userEntry = new Map<string, { time: number; entry: UserTable }>();
 
 /**
  * Get article from cache or blockchain
  * @param id Article data
- * @param forceUpdate Update the cache for this article
- * @param chain Chain name
- * @param code Contract account
- * @param table Table name
+ * @param category Article data
+ * @param forceUpdate Update the cache of this article
  * @returns Article otherwise undefined
  */
 async function getArticle(
@@ -147,13 +145,20 @@ async function getArticle(
   return undefined;
 }
 
-async function getSeller(
-  seller: string,
+/**
+ * Get user from cache or blockchain
+ * @param user User account name
+ * @param marketContract Market contract
+ * @param forceUpdate Update the cache of this user
+ * @returns
+ */
+async function getUser(
+  user: string,
   marketContract: MarketContract,
   forceUpdate = false
 ): Promise<UserTable | undefined> {
-  const key = getSellerKey(seller, marketContract);
-  const seUser = sellerEntry.get(key);
+  const key = getUserKey(user, marketContract);
+  const seUser = userEntry.get(key);
 
   if (
     !forceUpdate &&
@@ -168,11 +173,11 @@ async function getSeller(
       code: marketContract.account,
       table: marketContract.tables.user,
       scope: marketContract.account,
-      entry: seller,
+      entry: user,
     });
     if (result && "rows" in result && result.rows.length > 0) {
       const user = result.rows[0];
-      sellerEntry.set(key, { time: Date.now(), entry: user });
+      userEntry.set(key, { time: Date.now(), entry: user });
       return user;
     }
   }
@@ -396,5 +401,5 @@ export const state = {
   uploadPageInputs,
   defaultValue,
   getArticle,
-  getSeller,
+  getUser,
 };

@@ -48,7 +48,7 @@
           {{ row.title }}
         </q-card-section>
         <q-card-section horizontal class="justify-between">
-          <q-card-section class="col-5 col-lg-2 col-md-3 q-pa-sm">
+          <q-card-section class="col-5 col-md-3 q-pa-sm">
             <div
               class="flex flex-center full-width full-height"
               :class="darkStyle ? 'bg-grey-9' : 'bg-grey-4'"
@@ -160,85 +160,6 @@
           </div>
         </q-card-section>
       </q-card>
-
-      <!-- <q-table
-        title="Items"
-        class="q-ma-md card"
-        :rows="itemRows"
-        :columns="itemColumns"
-        :row-key="(row) => row.id"
-        color="amber"
-        :loading="loading"
-        no-data-label="No items found"
-      >
-        <template v-slot:top>
-          <q-toggle
-            v-model="isPricePerUnit"
-            label="Price per unit"
-            left-label
-          />
-        </template> -->
-
-      <!-- <template v-slot:header>
-          <q-tr class="cursor-pointer">
-            <q-td>
-              <div class="text-italic text-orange">This is an Ads</div>
-              <pro-img
-                src="https://savact.com/wp-content/uploads/2021/12/002-space-station2.png"
-              ></pro-img>
-              <div class="text-italic text-orange">--------------</div>
-            </q-td>
-            <q-td colspan="2">Super satellite payed Item</q-td>
-            <q-td>1.00 USD</q-td>
-            <q-td> by hans </q-td>
-            <q-td>
-              <template>
-                {{ new Date(Date.now()).toLocaleTimeString() }}
-              </template>
-            </q-td>
-          </q-tr>
-        </template> -->
-      <!-- <template v-slot:body="props">
-          <q-tr :props="props" class="cursor-pointer" colspan="6">
-            <q-td
-              key="imgs"
-              :props="props"
-              clickable
-              @click="openItem(props.row)"
-            >
-              <pro-img
-                v-if="props.row.imgs.length > 0"
-                :src="props.row.imgs[0]"
-              ></pro-img>
-            </q-td>
-            <q-td key="title" colspan="3" :props="props"
-              ><div clickable @click="openItem(props.row)">
-                {{ props.row.title }}
-              </div></q-td
-            >
-            <q-td key="price" :props="props">
-              <div v-if="isPricePerUnit">{{ props.row.price }} USD</div>
-              <div v-else>
-                {{ props.row.price }} USD for {{ props.row.units }} units
-              </div>
-            </q-td>
-            <q-td key="seller" :props="props">
-              #{{ props.row.id }} {{ props.row.seller }}
-            </q-td>
-            <q-td key="editDate" :props="props">
-              <template v-if="props.row.editDate > 1">
-                {{ new Date(props.row.editDate * 1000).toLocaleTimeString() }}
-              </template>
-              <template v-else>-</template>
-            </q-td>
-          </q-tr>
-        </template>
-        <template v-slot:no-data="{ message }">
-          <div class="full-width row flex-center q-gutter-sm">
-            <span>{{ message }}</span>
-          </div>
-        </template> -->
-      <!-- </q-table> -->
       <div class="q-mt-lg">Presented by SavAct.</div>
     </div>
   </q-page>
@@ -285,10 +206,6 @@ export default Vue.defineComponent({
     const categoryOptions = categories.map((v) => {
       return { name: v.name, value: v.index };
     });
-    //   { name: "All", value: "all" },
-    //   { name: "Hardware", value: "hard" },
-    //   { name: "Software", value: "soft" },
-    // ]);
 
     const categoryOpen = Vue.ref<boolean>(false);
 

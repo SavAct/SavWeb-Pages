@@ -8,6 +8,7 @@
   ></q-chip>
 </template>
 <script lang="ts">
+import { router } from "../router/simpleRouter";
 import { openLinkOrMail } from "./LinkConverter";
 
 export default Vue.defineComponent({
@@ -22,11 +23,20 @@ export default Vue.defineComponent({
       required: false,
       default: undefined,
     },
+    internal: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   setup(props) {
     return {
       click: () => {
-        openLinkOrMail(`https://bloks.io/account/${props.user}`);
+        if (props.internal) {
+          router.push({ name: "user", query: { user: props.user } });
+        } else {
+          openLinkOrMail(`https://bloks.io/account/${props.user}`);
+        }
       },
     };
   },

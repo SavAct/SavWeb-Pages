@@ -327,9 +327,11 @@ import {
   checkUserOffline,
   checkUserOnline,
 } from "../Components/AntelopeHelpers";
-import { getUserDataToState } from "../Components/SaleContractRequests";
 import { router } from "../router/simpleRouter";
-import { LoadFromContract } from "../Components/MarketContractHandle";
+import {
+  LoadFromContract,
+  userTableEntryToUser,
+} from "../Components/MarketContractHandle";
 import { requestLoginUser } from "../Components/LoginUser";
 import { deepCopy } from "../Components/GeneralJSHelper";
 
@@ -618,6 +620,8 @@ export default Vue.defineComponent({
       };
     }
 
+    const loadUser = new LoadFromContract();
+
     async function send() {
       const settings = getAndCheckAllSettings();
       if (settings.error.length > 0) {
@@ -634,8 +638,11 @@ export default Vue.defineComponent({
         return;
       }
 
-      // Check if user is in contract table
-      if (!(await getUserDataToState(seller.value))) {
+      // Set User data to current state if user is in table
+      const foundUser = await loadUser.loadUser(seller.value);
+      if (foundUser) {
+        state.user.value = userTableEntryToUser(foundUser);
+      } else {
         Quasar.Dialog.create({
           title: "Seller settings are not set",
           message:
