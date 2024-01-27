@@ -7,32 +7,33 @@
       <div class="row q-my-md q-col-gutter-sm">
         <category-select
           :size="$q.screen.gt.xs ? 'md' : 'sm'"
-          class="col-12 col-md-6"
+          class="col-12"
           v-model="sCategory"
           @confirm="searchInCategory"
+          v-model:expand-filter="isFilterOpen"
         ></category-select>
-        <!-- Filter bar -->
-        <!-- <q-input class="col-12 col-md-6" v-model="searchText" outlined dense>
-          <template v-slot:append>
-            <q-icon
-              v-if="searchText !== ''"
-              name="close"
-              @click="searchText = ''"
-              class="cursor-pointer"
-            ></q-icon>
-          </template>
-          <template v-slot:after>
-            <q-btn
-              icon-right="search"
-              @click="search"
-              class="bg-blue"
-              color="white"
-            ></q-btn>
-          </template>
-        </q-input> -->
+
+        <div v-if="isFilterOpen" class="col-12">
+          <q-separator />
+          <!-- Filter bar -->
+          <q-input class="q-mt-sm" v-model="filterText" outlined dense>
+            <template v-slot:append>
+              <q-icon
+                v-if="filterText !== ''"
+                name="close"
+                @click="filterText = ''"
+                class="cursor-pointer"
+              ></q-icon>
+            </template>
+            <template v-slot:after>
+              <q-btn icon-right="send" outline @click="filter"></q-btn>
+            </template>
+          </q-input>
+        </div>
       </div>
       <!-- result list -->
       <q-card
+        class="q-mb-sm"
         v-for="(row, index) in itemRows"
         :key="index"
         flat
@@ -68,9 +69,11 @@
             <div class="q-mt-sm row q-col-gutter-x-sm justify-end">
               <div
                 class="col-grow"
-                :class="row.expired < Date.now() ? 'text-red' : 'text-grey'"
+                :class="
+                  row.expired * 1000 < Date.now() ? 'text-red' : 'text-grey'
+                "
               >
-                {{ new Date(row.expired).toLocaleDateString() }}
+                {{ new Date(row.expired * 1000).toLocaleDateString() }}
               </div>
               <div class="col-auto text-right q-ma-none q-pa-none">
                 <q-chip
@@ -90,7 +93,7 @@
             </div>
             <div class="text-caption text-grey full-width row">
               <div :class="$q.screen.gt.xs ? 'col-auto' : 'col-12'">
-                From {{ getRegion(row.fromR) }}
+                From {{ getRegion(row.fromR.toUpperCase()) }}
               </div>
               <div class="col-auto">
                 {{
@@ -160,6 +163,17 @@
           </div>
         </q-card-section>
       </q-card>
+      <div class="full-width text-center">
+        <q-btn
+          v-if="itemRows.length > 0"
+          outline
+          color="grey"
+          round
+          class="q-mt-sm"
+          icon="more_vert"
+          @click="searchForOlder"
+        ></q-btn>
+      </div>
       <div class="q-mt-lg">Presented by SavAct.</div>
     </div>
   </q-page>
@@ -169,7 +183,7 @@ import ProImg from "../Components/ProImg.vue";
 import CategorySelect from "../Components/CategorySelect.vue";
 import { QTableProps } from "quasar";
 import { router } from "../router/simpleRouter";
-import { state } from "../store/globals";
+import { CategoryCacheEntry, GetArticleMode, state } from "../store/globals";
 import { categories } from "../Components/Categories";
 import { ItemTable } from "../Components/ContractInterfaces";
 import { getRegion } from "../Components/ConvertRegion";
@@ -182,26 +196,34 @@ export default Vue.defineComponent({
     CategorySelect,
   },
   setup() {
-    // const searchText = Vue.ref<string>("");
+    const filterText = Vue.ref<string>("");
+    const isFilterOpen = Vue.ref<boolean>(false);
     const isPricePerUnit = Vue.ref<boolean>(false);
 
-    // async function search() {
-    //   const { h64ToString } = await xxhash();
-    //   const split = searchText.value.split(" "); // Should remove special signs?
+    async function filter() {
+      console.log("filter", filterText.value);
 
-    //   const hashes: Array<string> = [];
-    //   for (const v of split) {
-    //     const t = v.trim();
-    //     if (t.length > 0) {
-    //       // For convenience, get hash as string of its zero-padded hex representation
-    //       hashes.push(h64ToString(v.toLowerCase())); // "502b0c5fc4a5704c" (Hex String) //hasher.h64(v); // 5776724552493396044n (BigInt)
-    //     }
-    //   }
-    //   console.log(hashes);
-    //   // TODO: Search for each hash in contract table
-    // }
+      // const { h64ToString } = await xxhash();
+      // const split = filterText.value.split(" "); // Should remove special signs?
 
-    const sCategory = Vue.ref<bigint>(0n);
+      // const hashes: Array<string> = [];
+      // for (const v of split) {
+      //   const t = v.trim();
+      //   if (t.length > 0) {
+      //     // For convenience, get hash as string of its zero-padded hex representation
+      //     hashes.push(h64ToString(v.toLowerCase())); // "502b0c5fc4a5704c" (Hex String) //hasher.h64(v); // 5776724552493396044n (BigInt)
+      //   }
+      // }
+      // console.log(hashes);
+      // TODO: Search for each hash in contract table
+    }
+
+    const sCategory = Vue.computed({
+      get: () => state.indexPageCategory.value,
+      set: (value) => {
+        state.indexPageCategory.value = value;
+      },
+    });
 
     const categoryOptions = categories.map((v) => {
       return { name: v.name, value: v.index };
@@ -239,20 +261,11 @@ export default Vue.defineComponent({
       },
     ];
 
-    const itemRows = Vue.computed(() => {
-      // TODO: Use filters
+    const itemEntries = Vue.ref<Array<ItemTable>>([]);
 
-      return state.itemsList.map((item) => {
-        return {
-          ...item,
-          price: isPricePerUnit.value // Take the last entry per piece if true otherwise the first entry that describes an item
-            ? Number(item.pp[item.pp.length - 1].p) /
-              Number(item.pp[item.pp.length - 1].pcs)
-            : Number(item.pp[0].p) === 0
-              ? Number(item.pp[1].p)
-              : Number(item.pp[0].p),
-        } as ItemTable & { price: number };
-      });
+    const itemRows = Vue.computed<Array<ItemTable>>(() => {
+      // TODO: Filter
+      return itemEntries.value;
     });
 
     function openItem(id: number | bigint | string, category: bigint | string) {
@@ -262,11 +275,10 @@ export default Vue.defineComponent({
       });
     }
 
-    // TODO: Consider small screen size for the table
     // TODO: Filter for currency and users country
     // TODO: Sort option for lowest total price, file name, shipping time and date
 
-    /* TODO: Search for items.
+    /* Thoughts on a search function for items by words.
        Search primary for categories.
        -------
        Search secondary for decisive words in a contract table with this procedure (This procedure is too RAM expensive, see below for alternative):
@@ -284,8 +296,45 @@ export default Vue.defineComponent({
        Any access of an item of this array is done by a binary search.
     */
 
-    function searchInCategory(value: bigint) {
-      console.log("searchInCategory", value);
+    function updateRows(cat: CategoryCacheEntry | undefined) {
+      // TODO: Use filters
+      if (cat) {
+        itemEntries.value = [];
+        // Add to itemRows for each entry of the object arts.list
+        for (const [key, entries] of Object.entries(cat.list)) {
+          console.log(key, entries);
+
+          itemEntries.value.push({
+            ...entries.entry,
+          });
+        }
+      }
+    }
+
+    async function searchInCategory() {
+      if (sCategory.value === 0n) {
+        return;
+      }
+
+      updateRows(
+        await state.getArticles(
+          { category: sCategory.value, ...state.contract },
+          GetArticleMode.upper
+        )
+      );
+    }
+
+    async function searchForOlder() {
+      if (sCategory.value === 0n) {
+        return;
+      }
+
+      updateRows(
+        await state.getArticles(
+          { category: sCategory.value, ...state.contract },
+          GetArticleMode.upper
+        )
+      );
     }
 
     const priceSize = Vue.computed(() => {
@@ -307,6 +356,10 @@ export default Vue.defineComponent({
       getRegion,
       priceSize,
       getInitialDuration,
+      isFilterOpen,
+      filterText,
+      filter,
+      searchForOlder,
     };
   },
 });

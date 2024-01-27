@@ -1,15 +1,37 @@
 <template>
   <div class="row q-col-gutter-sm full-width q-pa-none">
-    <div class="col-auto">
-      <q-btn
-        v-bind="$props"
-        :icon="isTextInput ? 'mouse' : 'keyboard'"
-        @click="isTextInput = !isTextInput"
-        class="bg-grey-8"
-        color="white"
-      ></q-btn>
+    <div
+      class="col-auto q-col-gutter-sm"
+      :class="
+        isTextInput && $q.screen.lt.sm
+          ? 'column justify-between'
+          : 'row reverse'
+      "
+    >
+      <div class="col-auto">
+        <q-btn
+          v-bind="$props"
+          :icon="isTextInput ? 'mouse' : 'keyboard'"
+          @click="isTextInput = !isTextInput"
+          class="bg-grey-8"
+          color="white"
+        ></q-btn>
+      </div>
+      <div class="col-auto">
+        <q-btn
+          v-bind="$props"
+          @click="expandFilterClick"
+          class="bg-grey-8"
+          color="white"
+        >
+          <q-icon
+            name="filter_list"
+            :class="expandFilter ? 'rotate-180' : ''"
+          ></q-icon>
+        </q-btn>
+      </div>
     </div>
-    <template v-if="!isTextInput">
+    <div v-if="!isTextInput" class="col-auto q-col-gutter-sm row">
       <div class="col-auto">
         <q-btn-dropdown
           color="grey-8"
@@ -66,16 +88,16 @@
           </q-btn-dropdown>
         </div>
       </template>
-    </template>
+    </div>
     <template v-else>
       <category-input class="col" dense v-model="catValue"></category-input>
     </template>
-    <div class="col-auto">
+    <div class="col-grow row justify-end">
       <q-btn
         v-bind="$props"
         icon="search"
         @click="confirmClick"
-        class="bg-blue"
+        class="col-auto bg-blue"
         color="white"
       ></q-btn>
     </div>
@@ -96,7 +118,7 @@ import { deepCopy } from "./GeneralJSHelper";
 export default Vue.defineComponent({
   name: "categorySelect",
   components: { CategoryInput },
-  emits: ["update:modelValue", "confirm"],
+  emits: ["update:modelValue", "confirm", "update:expandFilter"],
   props: {
     modelValue: {
       type: Object as PropType<bigint>,
@@ -105,6 +127,10 @@ export default Vue.defineComponent({
     size: {
       type: String,
       default: "md",
+    },
+    expandFilter: {
+      type: Boolean,
+      default: false,
     },
   },
   setup(props, context) {
@@ -129,7 +155,6 @@ export default Vue.defineComponent({
     const level0 = Vue.computed({
       get: () => _level0.value,
       set: (value) => {
-        console.log("level0", value, _level0);
         if (_level0.value.index !== value.index) {
           catValue.value = categoryBigInt(value.index, 0);
         }
@@ -139,28 +164,9 @@ export default Vue.defineComponent({
     const level1 = Vue.computed({
       get: () => _level1.value,
       set: (value) => {
-        console.log("level1", value);
         catValue.value = categoryBigInt(level0.value.index, value.index);
       },
     });
-
-    // Vue.watch(
-    //   () => level1.value,
-    //   () => {
-    //     const v = categoryBigInt(level0.value.index, level1.value.index);
-    //     context.emit("update:modelValue", v);
-    //   }
-    // );
-
-    // Watch for changes of modelValue
-    // Vue.watch(
-    //   () => props.modelValue,
-    //   (id) => {
-    //     if (id !== undefined) {
-    //       idToIndexInputs(BigInt(id));
-    //     }
-    //   }
-    // );
 
     function idToIndexInputs(id: bigint) {
       const levels = indexesById(id);
@@ -171,8 +177,12 @@ export default Vue.defineComponent({
     }
 
     const catValue = Vue.computed({
-      get: () => BigInt(props.modelValue),
+      get: () =>
+        props.modelValue !== undefined ? BigInt(props.modelValue) : 0n,
       set: (value) => {
+        if (value === undefined) {
+          value = 0n;
+        }
         idToIndexInputs(value);
         context.emit("update:modelValue", value);
       },
@@ -182,7 +192,13 @@ export default Vue.defineComponent({
       context.emit("confirm", catValue);
     }
 
-    idToIndexInputs(catValue.value);
+    function expandFilterClick() {
+      context.emit("update:expandFilter", !props.expandFilter);
+    }
+
+    Vue.onMounted(() => {
+      idToIndexInputs(catValue.value);
+    });
 
     return {
       categoriesWithAll,
@@ -194,6 +210,7 @@ export default Vue.defineComponent({
       searchText,
       catValue,
       confirmClick,
+      expandFilterClick,
     };
   },
 });

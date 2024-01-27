@@ -36,6 +36,25 @@ export interface MarketContract {
   };
 }
 
+export interface CategoryCacheEntry {
+  list: CategoryList;
+  last: LastBoundaryInfo;
+}
+
+interface ItemCacheEntry {
+  time: number;
+  entry: ItemTable;
+}
+
+interface CategoryList {
+  [key: number]: ItemCacheEntry;
+}
+
+interface LastBoundaryInfo {
+  upper: { id: number; hasMore: boolean };
+  lower: { id: number; hasMore: boolean };
+}
+
 const contract: MarketContract = {
   account: "infiniteshop",
   chain: "lamington",
@@ -79,18 +98,19 @@ const darkStyle = Vue.computed({
   },
 });
 
+const indexPageCategory = Vue.ref<bigint>(0n);
+
 /**
- * Get the key for the article cache
+ * Get the key for the articles by category cache
  * @param data Article data
  * @returns key
  */
-function getArticleKey(
-  data: {
-    id: number;
-    category: string | bigint | number;
-  } & MarketContract
-) {
-  return `${data.id}_${String(BigInt(data.category))}_${data.chain}_${data.account}`;
+function getArticlesByCategoryKey(data: {
+  chain: string;
+  account: string;
+  category: string | bigint | number;
+}) {
+  return `${String(BigInt(data.category))}_${data.chain}_${data.account}`;
 }
 
 /**
@@ -102,15 +122,22 @@ function getUserKey(user: string, marketContract: MarketContract) {
   return `${user}_${marketContract.account}_${marketContract.chain}`;
 }
 
+function resetBoundaries() {
+  return {
+    upper: { id: -1, hasMore: true },
+    lower: { id: Number.MAX_VALUE, hasMore: true },
+  };
+}
+
 // Articles
-const article = new Map<string, { time: number; entry: ItemTable }>();
+const articleLists = new Map<string, CategoryCacheEntry>(); // category + chain data -> article id -> article
 
 // Users
 const userEntry = new Map<string, { time: number; entry: UserTable }>();
 
 /**
  * Get article from cache or blockchain
- * @param id Article data
+ * @param id Article id
  * @param category Article data
  * @param forceUpdate Update the cache of this article
  * @returns Article otherwise undefined
@@ -118,12 +145,18 @@ const userEntry = new Map<string, { time: number; entry: UserTable }>();
 async function getArticle(
   data: {
     id: number;
-    category: string | bigint | number;
+    category: bigint;
   } & MarketContract,
   forceUpdate = false
 ): Promise<ItemTable | undefined> {
-  const key = getArticleKey(data);
-  const art = article.get(key);
+  const keyByCat = getArticlesByCategoryKey(data);
+  let aList = articleLists.get(keyByCat);
+  if (aList === undefined) {
+    aList = { list: {}, last: resetBoundaries() };
+    articleLists.set(keyByCat, aList);
+  }
+  const art = aList.list[data.id];
+
   if (!forceUpdate && art !== undefined && art.time + 1800000 > Date.now()) {
     // Update at least after 30 minutes
     return art.entry;
@@ -137,12 +170,120 @@ async function getArticle(
       entry: data.id,
     });
     if (result && "rows" in result && result.rows.length > 0) {
-      const art = result.rows[0];
-      article.set(key, { time: Date.now(), entry: art });
-      return art;
+      const entry = result.rows[0];
+      aList.list[data.id] = { time: Date.now(), entry };
+      return entry;
     }
   }
   return undefined;
+}
+
+export enum GetArticleMode {
+  upper,
+  lower,
+  reset,
+}
+
+/**
+ * Get articles from cache or blockchain
+ * @param category Article data
+ * @param marketContract Market contract
+ * @param mode Mode to get articles
+ * @returns Articles otherwise undefined
+ */
+async function getArticles(
+  data: { category: bigint } & MarketContract,
+  mode?: GetArticleMode
+) {
+  const limit = 100;
+  let upper_bound: string | undefined = undefined;
+  let lower_bound: string | undefined = undefined;
+
+  const keyByCat = getArticlesByCategoryKey(data);
+  let aList = articleLists.get(keyByCat);
+  if (aList === undefined) {
+    aList = { list: {}, last: resetBoundaries() };
+    articleLists.set(keyByCat, aList);
+  }
+
+  switch (mode) {
+    case GetArticleMode.reset: // Reset boundaries
+      aList.last = resetBoundaries();
+      aList.list = {};
+      break;
+    case GetArticleMode.upper: // Expand upper boundary
+      if (aList.last.upper.id !== -1) {
+        upper_bound = String(aList.last.upper.id + limit - 1);
+        lower_bound = String(aList.last.upper.id);
+      }
+      break;
+    case GetArticleMode.lower: // Expand lower boundary
+      if (aList.last.lower.id !== Number.MAX_VALUE) {
+        upper_bound = String(aList.last.lower.id);
+        const lower = aList.last.lower.id - limit + 1;
+        lower_bound = String(lower < 0 ? 0 : lower);
+      }
+      break;
+  }
+
+  const result = await savWeb.getTableRows({
+    chain: data.chain,
+    code: data.account,
+    table: data.tables.item,
+    scope: String(data.category),
+    limit,
+    upper_bound,
+    lower_bound,
+  });
+  if (result && "rows" in result && result.rows.length > 0) {
+    // Add articles to cache
+    const inListIds = new Set<number>();
+    for (const art of result.rows) {
+      aList.list[art.id] = { time: Date.now(), entry: art };
+      inListIds.add(art.id);
+    }
+
+    // Remove articles that are not in the result within the requested boundaries
+    if (
+      lower_bound !== undefined &&
+      upper_bound !== undefined &&
+      (mode === GetArticleMode.upper || mode === GetArticleMode.lower)
+    ) {
+      const start = Number(lower_bound);
+      const end = Number(upper_bound);
+      for (let id = start; id <= end; id++) {
+        if (!inListIds.has(id)) {
+          delete aList.list[id];
+        }
+      }
+    }
+
+    // Expand already requested boundaries
+    const lastEntry = result.rows[result.rows.length - 1];
+    const firstEntry = result.rows[0];
+    setBoundaries(aList.last, firstEntry.id, lastEntry.id);
+  }
+
+  return articleLists.get(keyByCat);
+}
+
+function setBoundaries(
+  last: LastBoundaryInfo,
+  firstId: number,
+  lastId: number
+) {
+  if (last.lower.id > lastId) {
+    last.lower.id = lastId;
+  }
+  if (last.lower.id > firstId) {
+    last.lower.id = firstId;
+  }
+  if (last.upper.id < lastId) {
+    last.upper.id = lastId;
+  }
+  if (last.upper.id < firstId) {
+    last.upper.id = firstId;
+  }
 }
 
 /**
@@ -244,144 +385,144 @@ const barStyle: any = {
 };
 
 // Example data // TODO: Remove
-const itemsList: Array<ItemTable> = [
-  {
-    id: 0,
-    title: "Cheap planet with great landscapes",
-    imgs: [
-      "https://cdn.quasar.dev/img/mountains.jpg",
-      "https://cdn.quasar.dev/img/parallax1.jpg",
-      "https://cdn.quasar.dev/img/parallax2.jpg",
-    ],
-    pp: [{ p: 13.23, pcs: 1 }],
-    seller: "yearofthesav",
-    shipTo: [{ rs: "EU", p: 5.35, t: 3600 * 24 * 14 }],
-    excl: "DE",
-    fromR: "NL",
-    // accept: [{ symbol: "4,EOS", contract: "eosio.token", chain: "eos" }],
-    available: true,
-    descr: "This is a very good planet",
-    note: "Write me before you send the token!",
-    expired: Date.now() + 3600 * 24 * 30,
-    opts: ["blue", "red"],
-    prepT: 3600 * 24 * 2,
-  },
-  {
-    id: 1,
-    title: "Quasar with ionic beams",
-    imgs: ["https://cdn.quasar.dev/img/quasar.jpg"],
-    pp: [
-      { p: 13.23, pcs: 1 },
-      { p: 20, pcs: 2 },
-    ],
-    seller: "savact",
-    shipTo: [
-      { rs: "DE", p: 2.1, t: 3600 * 24 },
-      { rs: "AT", p: 4.23, t: 3600 * 24 * 2 },
-    ],
-    excl: "NL",
-    fromR: "EU",
-    // accept: [
-    //   { symbol: "4,EOS", contract: "eosio.token", chain: "eos" },
-    //   { symbol: "8,WAX", contract: "eosio.token", chain: "wax" },
-    // ],
-    available: true,
-    descr: "This is a very good\nQuasar<br>with long ionic beams",
-    note: "",
-    opts: ["big", "bigger", "biggest"],
-    prepT: 3600 * 24 * 2,
-    expired: Date.now() + 3600 * 24 * 30,
-  },
-  {
-    id: 2,
-    title: "Cute cat or penguin for half price",
-    imgs: [
-      "https://cdn.quasar.dev/img/linux-avatar.png",
-      "https://cdn.quasar.dev/img/cat.jpg", // Too big to load
-      "https://cdn.quasar.dev/empty/not-found.png", // 404
-      "https://savact.com/wp-content/uploads/2021/12/003-observatory2.png", // Blocked by server to load via script
-    ],
-    pp: [
-      { p: 2.55, pcs: 5 },
-      { p: 1, pcs: 2 },
-    ],
-    seller: "savactsavact",
-    shipTo: [
-      { rs: "DE", p: 2.1, t: 3600 * 24 },
-      { rs: "US", p: 4.23, t: 3600 * 24 * 2 },
-    ],
-    excl: "CN",
-    fromR: "EU",
-    // accept: [
-    //   { symbol: "4,EOS", contract: "eosio.token", chain: "eos" },
-    //   { symbol: "8,WAX", contract: "eosio.token", chain: "wax" },
-    // ],
-    available: true,
-    descr:
-      "This animals are very cute. The price is infinite, half of it is still infinite. But I can send you a picture for a payable amount.",
-    note: "I do not send pictures to zoophilia dogs",
-    opts: ["cat", "penguin"],
-    prepT: 3600 * 24 * 4,
-    expired: Date.now() + 3600 * 24 * 30,
-  },
-];
+// const itemsList: Array<ItemTable> = [
+//   {
+//     id: 0,
+//     title: "Cheap planet with great landscapes",
+//     imgs: [
+//       "https://cdn.quasar.dev/img/mountains.jpg",
+//       "https://cdn.quasar.dev/img/parallax1.jpg",
+//       "https://cdn.quasar.dev/img/parallax2.jpg",
+//     ],
+//     pp: [{ p: 13.23, pcs: 1 }],
+//     seller: "yearofthesav",
+//     shipTo: [{ rs: "EU", p: 5.35, t: 3600 * 24 * 14 }],
+//     excl: "DE",
+//     fromR: "NL",
+//     // accept: [{ symbol: "4,EOS", contract: "eosio.token", chain: "eos" }],
+//     available: true,
+//     descr: "This is a very good planet",
+//     note: "Write me before you send the token!",
+//     expired: Date.now() + 3600 * 24 * 30,
+//     opts: ["blue", "red"],
+//     prepT: 3600 * 24 * 2,
+//   },
+//   {
+//     id: 1,
+//     title: "Quasar with ionic beams",
+//     imgs: ["https://cdn.quasar.dev/img/quasar.jpg"],
+//     pp: [
+//       { p: 13.23, pcs: 1 },
+//       { p: 20, pcs: 2 },
+//     ],
+//     seller: "savact",
+//     shipTo: [
+//       { rs: "DE", p: 2.1, t: 3600 * 24 },
+//       { rs: "AT", p: 4.23, t: 3600 * 24 * 2 },
+//     ],
+//     excl: "NL",
+//     fromR: "EU",
+//     // accept: [
+//     //   { symbol: "4,EOS", contract: "eosio.token", chain: "eos" },
+//     //   { symbol: "8,WAX", contract: "eosio.token", chain: "wax" },
+//     // ],
+//     available: true,
+//     descr: "This is a very good\nQuasar<br>with long ionic beams",
+//     note: "",
+//     opts: ["big", "bigger", "biggest"],
+//     prepT: 3600 * 24 * 2,
+//     expired: Date.now() + 3600 * 24 * 30,
+//   },
+//   {
+//     id: 2,
+//     title: "Cute cat or penguin for half price",
+//     imgs: [
+//       "https://cdn.quasar.dev/img/linux-avatar.png",
+//       "https://cdn.quasar.dev/img/cat.jpg", // Too big to load
+//       "https://cdn.quasar.dev/empty/not-found.png", // 404
+//       "https://savact.com/wp-content/uploads/2021/12/003-observatory2.png", // Blocked by server to load via script
+//     ],
+//     pp: [
+//       { p: 2.55, pcs: 5 },
+//       { p: 1, pcs: 2 },
+//     ],
+//     seller: "savactsavact",
+//     shipTo: [
+//       { rs: "DE", p: 2.1, t: 3600 * 24 },
+//       { rs: "US", p: 4.23, t: 3600 * 24 * 2 },
+//     ],
+//     excl: "CN",
+//     fromR: "EU",
+//     // accept: [
+//     //   { symbol: "4,EOS", contract: "eosio.token", chain: "eos" },
+//     //   { symbol: "8,WAX", contract: "eosio.token", chain: "wax" },
+//     // ],
+//     available: true,
+//     descr:
+//       "This animals are very cute. The price is infinite, half of it is still infinite. But I can send you a picture for a payable amount.",
+//     note: "I do not send pictures to zoophilia dogs",
+//     opts: ["cat", "penguin"],
+//     prepT: 3600 * 24 * 4,
+//     expired: Date.now() + 3600 * 24 * 30,
+//   },
+// ];
 
-const sellerList: { [key: string]: UserTable } = {
-  savact: {
-    user: "savact",
-    active: false,
-    banned: false,
-    items: [],
-    note: "I am a very good seller",
-    allowed: [
-      { sym: "4,EOS", contr: "eosio.token", chain: "eos" },
-      { sym: "4,SAVACT", contr: "savactsavpay", chain: "lamington" },
-    ],
-    lastUpdate: 1689150279,
-    contact: ["test1@test1.com", "t.me/test1"],
-    pgp: "PGP KEY---------------PGP END",
-  },
-  savactsavact: {
-    user: "savactsavact",
-    active: false,
-    banned: false,
-    items: [],
-    note: "I am an inactive seller",
-    allowed: [],
-    lastUpdate: 1679150279,
-    contact: ["test2@test2.com", "t.me/test2"],
-    pgp: `PGP KEY---------------PGP END`,
-  },
-  yearofthesav: {
-    user: "yearofthesav",
-    active: true,
-    banned: true,
-    items: [],
-    note: "I am a banned seller",
-    allowed: [],
-    lastUpdate: 1679826294,
-    contact: [
-      "test3@test3.com",
-      "t.me/test3",
-      "https://simplex.chat/contact#/?v=1-2&smp=smp%aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaacccccccccccccccccccccccccc.onion",
-    ],
-    pgp: `-----BEGIN PGP PUBLIC KEY BLOCK-----
+// const sellerList: { [key: string]: UserTable } = {
+//   savact: {
+//     user: "savact",
+//     active: false,
+//     banned: false,
+//     items: [],
+//     note: "I am a very good seller",
+//     allowed: [
+//       { sym: "4,EOS", contr: "eosio.token", chain: "eos" },
+//       { sym: "4,SAVACT", contr: "savactsavpay", chain: "lamington" },
+//     ],
+//     lastUpdate: 1689150279,
+//     contact: ["test1@test1.com", "t.me/test1"],
+//     pgp: "PGP KEY---------------PGP END",
+//   },
+//   savactsavact: {
+//     user: "savactsavact",
+//     active: false,
+//     banned: false,
+//     items: [],
+//     note: "I am an inactive seller",
+//     allowed: [],
+//     lastUpdate: 1679150279,
+//     contact: ["test2@test2.com", "t.me/test2"],
+//     pgp: `PGP KEY---------------PGP END`,
+//   },
+//   yearofthesav: {
+//     user: "yearofthesav",
+//     active: true,
+//     banned: true,
+//     items: [],
+//     note: "I am a banned seller",
+//     allowed: [],
+//     lastUpdate: 1679826294,
+//     contact: [
+//       "test3@test3.com",
+//       "t.me/test3",
+//       "https://simplex.chat/contact#/?v=1-2&smp=smp%aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaacccccccccccccccccccccccccc.onion",
+//     ],
+//     pgp: `-----BEGIN PGP PUBLIC KEY BLOCK-----
 
-xjMEZMwzBBYJKwYBBAHaRw8BAQdA/+/C8lm299s9AZ8YOya+FbbuPFpV3JHr
-V2mbEoQoPz7NAMKMBBAWCgA+BYJkzDMEBAsJBwgJkBQ0wwB7GCsCAxUICgQW
-AAIBAhkBApsDAh4BFiEENlDVzQ1pptmiGBU+FDTDAHsYKwIAACWqAP9Pu+PK
-b0cP6U4hdfFpg/ajAt6XThcFZPw5+E616apN6wEAjWi4Amd/HPBERnzFaLKb
-aBkaGlhPJZf4RN8w7uBZ+QvOOARkzDMEEgorBgEEAZdVAQUBAQdANBbouTlY
-uHJUZYhe0El8D+caQ5iXJREvTcpCk15+30cDAQgHwngEGBYIACoFgmTMMwQJ
-kBQ0wwB7GCsCApsMFiEENlDVzQ1pptmiGBU+FDTDAHsYKwIAAGLkAP9CBgwY
-U2WliTCVyjBUwZH4Dq+7ldEvYdw+UdHL0jw24AD/dfh8vv6YurfvqPRNwJnz
-WkrmPMQ2vCNN/vfNRi447wg=
-=Vfmh
------END PGP PUBLIC KEY BLOCK-----
+// xjMEZMwzBBYJKwYBBAHaRw8BAQdA/+/C8lm299s9AZ8YOya+FbbuPFpV3JHr
+// V2mbEoQoPz7NAMKMBBAWCgA+BYJkzDMEBAsJBwgJkBQ0wwB7GCsCAxUICgQW
+// AAIBAhkBApsDAh4BFiEENlDVzQ1pptmiGBU+FDTDAHsYKwIAACWqAP9Pu+PK
+// b0cP6U4hdfFpg/ajAt6XThcFZPw5+E616apN6wEAjWi4Amd/HPBERnzFaLKb
+// aBkaGlhPJZf4RN8w7uBZ+QvOOARkzDMEEgorBgEEAZdVAQUBAQdANBbouTlY
+// uHJUZYhe0El8D+caQ5iXJREvTcpCk15+30cDAQgHwngEGBYIACoFgmTMMwQJ
+// kBQ0wwB7GCsCApsMFiEENlDVzQ1pptmiGBU+FDTDAHsYKwIAAGLkAP9CBgwY
+// U2WliTCVyjBUwZH4Dq+7ldEvYdw+UdHL0jw24AD/dfh8vv6YurfvqPRNwJnz
+// WkrmPMQ2vCNN/vfNRi447wg=
+// =Vfmh
+// -----END PGP PUBLIC KEY BLOCK-----
 
-`,
-  },
-};
+// `,
+//   },
+// };
 
 export const state = {
   contract,
@@ -390,8 +531,6 @@ export const state = {
   user,
   defaultUserName,
   darkStyle,
-  itemsList,
-  sellerList,
   mainFooterRef,
   mainHeaderRef,
   thumbStyle,
@@ -401,5 +540,7 @@ export const state = {
   uploadPageInputs,
   defaultValue,
   getArticle,
+  getArticles,
   getUser,
+  indexPageCategory,
 };

@@ -97,7 +97,7 @@ export interface SavActPayment {
   time:
     | number
     | {
-        // seconds since epoch (from midnight of January 1, 1970). Attention seconds are needed, date.getTime is in milli seconds
+        // seconds since epoch (from midnight of January 1, 1970). Attention seconds are needed, date.getTime is in milliseconds
         min?: number;
         max?: number;
       };
@@ -109,7 +109,7 @@ export interface PayParams {
   to: string;
   pay: string; // Asset like "1.2300 EOS eosio.token"
   memo?: string;
-  t?: string | number; // Absolut time stamp of the deadline in seconds
+  t?: string | number; // Absolute time stamp of the deadline in seconds
   dt?: string | number; // Relative time until the deadline in seconds
   index?: string; // Index of the RAM table entry
 }
@@ -447,7 +447,15 @@ export class SavWeb {
    * @param code Contract account
    * @param table Table name
    * @param scope Scope name
-   * @param entry Is a single number or an array. As array the first index descipe the lower_bound and the second the upper_bound
+   * @param entry Is a single number or an array. As array the first index describe the lower_bound and the second the upper_bound
+   * @param json If true, then the result is parsed as json and otherwise as binary
+   * @param lower_bound Lower bound of the table
+   * @param upper_bound Upper bound of the table
+   * @param index_position Index position
+   * @param key_type Key type
+   * @param limit Limit of entries in the result. Default is 10 and maximum is usually 200
+   * @param reverse If true, then the entries in the result start by the last one
+   * @param show_payer If true, then the RAM payer is shown in the result
    * @param maxWaitMs Maximum amount of time to wait until the request should be handled
    * @returns A single row if there is only one requested and an array of rows if there is an interval requested
    */
@@ -458,12 +466,21 @@ export class SavWeb {
       table: string;
       scope: string;
       entry?: number | string | Array<number | string>;
+
+      json?: string | boolean;
+      lower_bound?: string;
+      upper_bound?: string;
+      index_position?: string | number;
+      key_type?: string;
+      limit?: number;
+      reverse?: boolean;
+      show_payer?: boolean;
     },
 
     maxWaitMs = 10000
   ) {
-    let lower_bound: undefined | string = undefined;
-    let upper_bound: undefined | string = undefined;
+    let lower_bound: undefined | string = v.lower_bound;
+    let upper_bound: undefined | string = v.upper_bound;
     if (typeof v.entry == "object") {
       lower_bound = v.entry[0].toString();
       upper_bound = v.entry[1].toString();
@@ -486,6 +503,13 @@ export class SavWeb {
             scope: v.scope,
             lower_bound,
             upper_bound,
+
+            json: v.json,
+            index_position: v.index_position,
+            key_type: v.key_type,
+            limit: v.limit,
+            reverse: v.reverse,
+            show_payer: v.show_payer,
           },
           idToken: this.idToken,
         },
