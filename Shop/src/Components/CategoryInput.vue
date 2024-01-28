@@ -24,6 +24,10 @@ export default Vue.defineComponent({
       type: Object as PropType<bigint | undefined>,
       required: true,
     },
+    range: {
+      type: Object as PropType<Map<bigint, number>>,
+      default: undefined,
+    },
   },
   emits: ["update:modelValue"],
   setup(props, context) {
@@ -48,11 +52,24 @@ export default Vue.defineComponent({
 
     function getCategoryOptions() {
       const options = [];
-      for (let id in categoryPathsById) {
-        options.push({
-          label: categoryPathsById[id],
-          value: BigInt(id),
-        });
+      if (props.range !== undefined) {
+        for (let [catInt, count] of props.range) {
+          if (!count) {
+            continue;
+          }
+          const cat = categoryPathsById[String(catInt)];
+          options.push({
+            label: `${cat} (${count})`,
+            value: catInt,
+          });
+        }
+      } else {
+        for (let id in categoryPathsById) {
+          options.push({
+            label: categoryPathsById[id],
+            value: BigInt(id),
+          });
+        }
       }
       return options;
     }
@@ -60,13 +77,35 @@ export default Vue.defineComponent({
     const categoryOptions =
       Vue.ref<Array<{ label: string; value: bigint }>>(getCategoryOptions());
 
+    Vue.watch(
+      () => props.range,
+      () => {
+        categoryOptions.value = getCategoryOptions();
+      }
+    );
+
     function filterCategoryInput(search: string, update: Function) {
       const needle = search.toLowerCase();
       update(() => {
         let options = [];
-        for (let id in categoryPathsById) {
-          if (categoryPathsById[id].toLowerCase().includes(needle)) {
-            options.push({ value: BigInt(id), label: categoryPathsById[id] });
+        if (props.range !== undefined) {
+          for (let [catInt, count] of props.range) {
+            if (!count) {
+              continue;
+            }
+            const cat = categoryPathsById[String(catInt)];
+            if (cat.toLowerCase().includes(needle)) {
+              options.push({
+                label: `${cat} (${count})`,
+                value: catInt,
+              });
+            }
+          }
+        } else {
+          for (let id in categoryPathsById) {
+            if (categoryPathsById[id].toLowerCase().includes(needle)) {
+              options.push({ value: BigInt(id), label: categoryPathsById[id] });
+            }
           }
         }
         categoryOptions.value = options;

@@ -90,7 +90,12 @@
       </template>
     </div>
     <template v-else>
-      <category-input class="col" dense v-model="catValue"></category-input>
+      <category-input
+        class="col"
+        dense
+        v-model="catValue"
+        :range="range"
+      ></category-input>
     </template>
     <div class="col-grow row justify-end">
       <q-btn
@@ -132,18 +137,36 @@ export default Vue.defineComponent({
       type: Boolean,
       default: false,
     },
+    range: {
+      type: Object as PropType<Map<bigint, number>>,
+      default: false,
+    },
   },
   setup(props, context) {
     const level0All = { name: "All", index: 0 };
     const level1All = { name: "All", index: 0 };
 
-    const categoriesWithAll = deepCopy(categories);
-    categoriesWithAll.unshift(level0All);
-    for (let cat of categoriesWithAll) {
-      if (cat.child !== undefined) {
-        cat.child.unshift(level1All);
+    const categoriesWithAll = Vue.computed(() => {
+      const cats = deepCopy(categories) as Category[];
+      cats.unshift(level0All);
+      for (let cat of cats) {
+        if (cat.child !== undefined) {
+          let allCount = 0;
+          if (props.range !== undefined) {
+            for (let child of cat.child) {
+              const catInt = categoryBigInt(cat.index, child.index);
+              const count = props.range.get(catInt);
+              if (count !== undefined) {
+                child.name += ` (${count})`;
+                allCount += count;
+              }
+            }
+          }
+          cat.child.unshift({ name: `All (${allCount})`, index: 0 });
+        }
       }
-    }
+      return cats;
+    });
 
     const isTextInput = Vue.ref<boolean>(false);
     const searchText = Vue.ref<string>("");
@@ -170,7 +193,7 @@ export default Vue.defineComponent({
 
     function idToIndexInputs(id: bigint) {
       const levels = indexesById(id);
-      _level0.value = categoriesWithAll[levels[0]];
+      _level0.value = categoriesWithAll.value[levels[0]];
       _level1.value = _level0.value.child
         ? _level0.value.child[levels[1]]
         : level1All;

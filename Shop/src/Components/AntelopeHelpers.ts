@@ -190,6 +190,42 @@ export function isSameChain(chain_A: string, chain_B: string) {
   return idA === idB;
 }
 
+/**
+ *  Converts a %name Base32 symbol into its corresponding value
+ *
+ *  @param c - Character to be converted
+ *  @return constexpr char - Converted value
+ */
+function char_to_value(c: string): number {
+  if (c == ".") return 0;
+  else if (c >= "1" && c <= "5") return c.charCodeAt(0) - "1".charCodeAt(0) + 1;
+  else if (c >= "a" && c <= "z") return c.charCodeAt(0) - "a".charCodeAt(0) + 6;
+  else throw new Error("Character is not in allowed character set for names");
+}
+
+export function nameToBigInt(name: string) {
+  if (name.length > 13)
+    throw new Error("string is too long to be a valid name");
+  let value = BigInt(0);
+  const n = Math.min(name.length, 12);
+  for (let i = 0; i < n; ++i) {
+    value = value << BigInt(5);
+    value = value | BigInt(char_to_value(name[i]));
+  }
+  value = value << BigInt(4 + 5 * (12 - n));
+
+  if (name.length == 13) {
+    const v = BigInt(char_to_value(name[12]));
+    if (v > BigInt(0x0f)) {
+      throw new Error(
+        "Thirteenth character in name cannot be a letter that comes after j"
+      );
+    }
+    value = value | v;
+  }
+  return value;
+}
+
 export function isValidTableResult(result: any) {
   return result && "rows" in result && Array.isArray(result?.rows);
 }

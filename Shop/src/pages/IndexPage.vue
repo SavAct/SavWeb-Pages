@@ -10,6 +10,7 @@
           class="col-12"
           v-model="sCategory"
           @confirm="searchInCategory"
+          :range="usedCategories"
           v-model:expand-filter="isFilterOpen"
         ></category-select>
 
@@ -197,6 +198,7 @@ export default Vue.defineComponent({
     CategorySelect,
   },
   setup() {
+    // TODO: Get all available categories from contract
     const filterText = Vue.ref<string>("");
     const isFilterOpen = Vue.ref<boolean>(false);
     const isPricePerUnit = Vue.ref<boolean>(false);
@@ -302,9 +304,7 @@ export default Vue.defineComponent({
       if (cat) {
         itemEntries.value = [];
         // Add to itemRows for each entry of the object arts.list
-        for (const [key, entries] of Object.entries(cat.list)) {
-          console.log(key, entries);
-
+        for (const [_, entries] of Object.entries(cat.list)) {
           itemEntries.value.push({
             ...entries.entry,
           });
@@ -345,6 +345,17 @@ export default Vue.defineComponent({
       return Quasar.Screen.gt.xs ? "text-h6" : "text-subtitle1";
     });
 
+    Vue.onMounted(() => {
+      // Update used categories if last update is older than 30 minutes
+      if (state.usedCategoriesLastUpdate.value + 1800000 < Date.now()) {
+        state.updateUsedCategories(true);
+      }
+    });
+
+    const usedCategories = Vue.computed(() => {
+      return state.usedCategories.value;
+    });
+
     return {
       darkStyle: state.darkStyle,
       isPricePerUnit,
@@ -365,6 +376,7 @@ export default Vue.defineComponent({
       filterText,
       filter,
       searchForOlder,
+      usedCategories,
     };
   },
 });

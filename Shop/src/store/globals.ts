@@ -1,4 +1,12 @@
-import { AssetSymbol, Token } from "../Components/AntelopeHelpers";
+import {
+  GetTableByScopeResult,
+  GetTableByScopeResultRow,
+} from "eosjs/dist/eosjs-rpc-interfaces";
+import {
+  AssetSymbol,
+  Token,
+  nameToBigInt,
+} from "../Components/AntelopeHelpers";
 import { get_available_tokens } from "../Components/AvailableTokens";
 import {
   AddItem,
@@ -343,6 +351,56 @@ async function getAvailableTokens(callback: (hasError?: boolean) => void) {
   return allowedTokens;
 }
 
+// Get categories
+const usedCategories = Vue.ref<Map<bigint, number>>(new Map<bigint, number>());
+const usedCategoriesLastUpdate = Vue.ref<number>(0);
+let isUpdatingUsedCategories = false;
+let nextCategoriesLowerBound: bigint | undefined = 0n;
+/**
+ * Load categories that are in use
+ * @param loadAll it loads all categories if true otherwise only the next 100
+ * @returns
+ */
+async function updateUsedCategories(loadAll: boolean) {
+  if (isUpdatingUsedCategories) return undefined;
+  isUpdatingUsedCategories = true;
+  try {
+    do {
+      const limit = 100;
+      const result = await savWeb.getTableByScope({
+        chain: contract.chain,
+        code: contract.account,
+        table: contract.tables.item,
+        limit,
+        lower_bound:
+          nextCategoriesLowerBound !== undefined
+            ? String(nextCategoriesLowerBound)
+            : undefined,
+      });
+      if (result && "rows" in result) {
+        for (const row of result.rows as GetTableByScopeResultRow[]) {
+          const cat = nameToBigInt(row.scope);
+          usedCategories.value.set(cat, Number(row.count));
+        }
+        const more = (result as unknown as GetTableByScopeResult).more;
+
+        nextCategoriesLowerBound =
+          more !== undefined && more !== "" ? nameToBigInt(more) : undefined;
+      } else {
+        return false;
+      }
+      // Sleep 1 second to not overload the server
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    } while (loadAll && nextCategoriesLowerBound !== undefined);
+    usedCategoriesLastUpdate.value = Date.now();
+  } catch (e) {
+    console.log("Error while getting the used categories", e);
+    return false;
+  }
+  isUpdatingUsedCategories = false;
+  return undefined;
+}
+
 const loginUser = Vue.ref<PublicAccount | undefined>(undefined);
 const user = Vue.ref<User>({
   user: "",
@@ -403,4 +461,7 @@ export const state = {
   getArticles,
   getUser,
   indexPageCategory,
+  updateUsedCategories,
+  usedCategories,
+  usedCategoriesLastUpdate,
 };

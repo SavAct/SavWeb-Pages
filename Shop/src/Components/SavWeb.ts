@@ -566,16 +566,7 @@ export class SavWeb {
       return undefined;
     }
 
-    // Return the result
-    if ("rows" in result) {
-      const rows = result.rows;
-      if (rows.length > 0) {
-        return rows;
-      } else {
-        return null;
-      }
-    }
-    return undefined;
+    return result;
   }
 
   async getBalance(
