@@ -61,11 +61,11 @@ export default Vue.defineComponent({
       Vue.ref<Array<{ label: string; value: bigint }>>(getCategoryOptions());
 
     function filterCategoryInput(search: string, update: Function) {
-      const needle = search.toLocaleLowerCase();
+      const needle = search.toLowerCase();
       update(() => {
         let options = [];
         for (let id in categoryPathsById) {
-          if (categoryPathsById[id].toLocaleLowerCase().includes(needle)) {
+          if (categoryPathsById[id].toLowerCase().includes(needle)) {
             options.push({ value: BigInt(id), label: categoryPathsById[id] });
           }
         }

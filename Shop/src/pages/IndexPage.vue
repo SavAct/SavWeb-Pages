@@ -41,6 +41,7 @@
         style="max-height: 260px"
         clickable
         @click="openItem(row.id, sCategory)"
+        :loading="loadItems"
       >
         <q-card-section
           v-if="$q.screen.lt.sm"
@@ -311,30 +312,33 @@ export default Vue.defineComponent({
       }
     }
 
-    async function searchInCategory() {
-      if (sCategory.value === 0n) {
+    const loadItems = Vue.ref<boolean>(false);
+    async function loadItemsFromContract(
+      category: bigint,
+      mode: GetArticleMode
+    ) {
+      if (loadItems.value || category === 0n) {
         return;
       }
+      loadItems.value = true;
 
-      updateRows(
-        await state.getArticles(
-          { category: sCategory.value, ...state.contract },
-          GetArticleMode.upper
-        )
-      );
+      try {
+        updateRows(
+          await state.getArticles({ category, ...state.contract }, mode)
+        );
+      } catch (e) {
+        console.error(e);
+      }
+
+      loadItems.value = false;
+    }
+
+    async function searchInCategory() {
+      loadItemsFromContract(sCategory.value, GetArticleMode.upper);
     }
 
     async function searchForOlder() {
-      if (sCategory.value === 0n) {
-        return;
-      }
-
-      updateRows(
-        await state.getArticles(
-          { category: sCategory.value, ...state.contract },
-          GetArticleMode.upper
-        )
-      );
+      loadItemsFromContract(sCategory.value, GetArticleMode.lower);
     }
 
     const priceSize = Vue.computed(() => {
@@ -348,6 +352,7 @@ export default Vue.defineComponent({
       categoryOptions,
       categoryOpen,
       loading,
+      loadItems,
       itemRows,
       itemColumns,
       openItem,

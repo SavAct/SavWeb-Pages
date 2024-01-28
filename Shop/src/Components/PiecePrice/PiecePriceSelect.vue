@@ -145,6 +145,9 @@ export default Vue.defineComponent({
             pricePiece.value = fromPp;
           }
         }
+        if (pieces.value < minPieces.value) {
+          pieces.value = minPieces.value;
+        }
         context.emit("update:pieces", pieces.value);
       },
       { immediate: true }

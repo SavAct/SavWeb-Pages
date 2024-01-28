@@ -159,29 +159,51 @@
           v-model="fromRegion"
           label="From region"
           outlined
-          :options="countries"
+          :options="fromOptions"
+          @filter="filterFromInput"
           clearable
+          use-input
+          input-debounce="0"
+          behavior="menu"
+          @keyup.enter="
+            if (fromOptions.length === 1) fromRegion = fromOptions[0];
+          "
         >
         </q-select>
         <div class="q-mt-md">
           <q-select
             v-model="toRegions"
             multiple
-            :options="countries"
+            :options="shipToOptions"
+            @filter="filterShipToInput"
             label="Ship to regions"
             outlined
             label-color="green"
             clearable
+            use-input
+            input-debounce="0"
+            behavior="menu"
+            @clear="toRegions = []"
+            @keyup.enter="enterToRegionsClick"
           />
           <q-select
             class="q-mt-sm"
             v-model="excludeRegions"
             multiple
-            :options="countries"
+            :options="excludeOptions"
+            @filter="filterExcludeInput"
             label="Explicit exclude regions"
             outlined
             label-color="red"
             clearable
+            use-input
+            input-debounce="0"
+            behavior="menu"
+            @keyup.enter="
+              if (excludeOptions.length === 1)
+                excludeRegions.push(excludeOptions[0]);
+            "
+            @clear="excludeRegions = []"
           />
           <duration-input
             class="q-mt-md"
@@ -807,6 +829,49 @@ export default Vue.defineComponent({
       checkingLoginUser.value = false;
     }
 
+    const shipToOptions = Vue.ref<Array<{ label: string; value: string }>>([]);
+    const excludeOptions = Vue.ref<Array<{ label: string; value: string }>>([]);
+    const fromOptions = Vue.ref<Array<{ label: string; value: string }>>([]);
+
+    function regionFilter(
+      search: string,
+      update: Function,
+      resultOptions: Ref<Array<{ label: string; value: string }>>
+    ) {
+      const needle = search.toLowerCase();
+      update(() => {
+        let options = [];
+        for (let c of countries.value) {
+          if (c.label.toLowerCase().includes(needle)) {
+            options.push(c);
+          }
+        }
+        resultOptions.value = options;
+      });
+    }
+    function filterShipToInput(search: string, update: Function) {
+      regionFilter(search, update, shipToOptions);
+    }
+
+    function filterExcludeInput(search: string, update: Function) {
+      regionFilter(search, update, excludeOptions);
+    }
+
+    function filterFromInput(search: string, update: Function) {
+      regionFilter(search, update, fromOptions);
+    }
+
+    function enterToRegionsClick() {
+      if (shipToOptions.value.length === 1) {
+        toRegions.value.push({
+          label: shipToOptions.value[0].label,
+          value: shipToOptions.value[0].value,
+          sp: NaN,
+          sd: NaN,
+        });
+      }
+    }
+
     return {
       darkStyle: state.darkStyle,
       seller,
@@ -839,6 +904,13 @@ export default Vue.defineComponent({
       id,
       getLoginUser,
       checkingLoginUser,
+      filterShipToInput,
+      filterExcludeInput,
+      filterFromInput,
+      shipToOptions,
+      excludeOptions,
+      fromOptions,
+      enterToRegionsClick,
     };
   },
 });
