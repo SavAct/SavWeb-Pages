@@ -12,31 +12,21 @@
           @confirm="searchInCategory"
           :range="usedCategories"
           v-model:expand-filter="isFilterOpen"
+          :search-loading="loadItems"
         ></category-select>
 
+        <!-- Filter bar -->
         <div v-if="isFilterOpen" class="col-12">
           <q-separator />
-          <!-- Filter bar -->
-          <q-input class="q-mt-sm" v-model="filterText" outlined dense>
-            <template v-slot:append>
-              <q-icon
-                v-if="filterText !== ''"
-                name="close"
-                @click="filterText = ''"
-                class="cursor-pointer"
-              ></q-icon>
-            </template>
-            <template v-slot:after>
-              <q-btn icon-right="send" outline @click="filter"></q-btn>
-            </template>
-          </q-input>
+          <filter-inputs @filter="(v) => filter(v)"></filter-inputs>
+          <q-separator class="q-mt-md" />
         </div>
       </div>
       <!-- result list -->
       <q-card
         class="q-mb-sm"
         v-for="(row, index) in itemRows"
-        :key="index"
+        :key="String(row.id) + '_' + String(sCategory)"
         flat
         bordered
         style="max-height: 260px"
@@ -176,7 +166,10 @@
           @click="searchForOlder"
         ></q-btn>
       </div>
-      <div class="q-mt-lg">Presented by SavAct.</div>
+      <div v-if="itemRows.length == 0" class="q-mt-xl text-center text-h5">
+        <div>Search for items by selecting a category above.</div>
+      </div>
+      <div class="q-mt-xl">Presented by SavAct.</div>
     </div>
   </q-page>
 </template>
@@ -190,34 +183,27 @@ import { categories } from "../Components/Categories";
 import { ItemTable } from "../Components/ContractInterfaces";
 import { getRegion } from "../Components/ConvertRegion";
 import { getInitialDuration } from "../Components/GeneralJSHelper";
+import { GetCategory } from "../Components/queryHelper";
+import FilterInputs, { FilterValues } from "../Components/FilterInputs.vue";
 
 export default Vue.defineComponent({
   name: "indexPage",
   components: {
     ProImg,
     CategorySelect,
+    FilterInputs,
   },
   setup() {
-    const filterText = Vue.ref<string>("");
     const isFilterOpen = Vue.ref<boolean>(false);
     const isPricePerUnit = Vue.ref<boolean>(false);
 
-    async function filter() {
-      console.log("filter", filterText.value);
-
-      // const { h64ToString } = await xxhash();
-      // const split = filterText.value.split(" "); // Should remove special signs?
-
-      // const hashes: Array<string> = [];
-      // for (const v of split) {
-      //   const t = v.trim();
-      //   if (t.length > 0) {
-      //     // For convenience, get hash as string of its zero-padded hex representation
-      //     hashes.push(h64ToString(v.toLowerCase())); // "502b0c5fc4a5704c" (Hex String) //hasher.h64(v); // 5776724552493396044n (BigInt)
-      //   }
-      // }
-      // console.log(hashes);
-      // TODO: Search for each hash in contract table
+    const filterValues = Vue.ref<FilterValues>({
+      text: "",
+      toRegion: undefined,
+      fromRegion: undefined,
+    });
+    function filter(v: FilterValues) {
+      filterValues.value = v;
     }
 
     const sCategory = Vue.computed({
@@ -266,8 +252,53 @@ export default Vue.defineComponent({
     const itemEntries = Vue.ref<Array<ItemTable>>([]);
 
     const itemRows = Vue.computed<Array<ItemTable>>(() => {
-      // TODO: Filter
-      return itemEntries.value;
+      let filteredEntries = itemEntries.value;
+
+      if (filterValues) {
+        // Filter all words from text filter
+        if (filterValues.value.text.length > 0) {
+          const words = filterValues.value.text
+            .split(" ")
+            .map((v) => v.trim().toLowerCase())
+            .filter((v) => v.length > 0);
+          filteredEntries = filteredEntries.filter((v) => {
+            const title = v.title.toLowerCase();
+            let found = true;
+            for (const w of words) {
+              if (!title.includes(w)) {
+                found = false;
+              }
+            }
+            return found;
+          });
+        }
+        // Filter for from region
+        if (filterValues.value.fromRegion) {
+          const fRegion = filterValues.value.fromRegion.value.toLowerCase();
+          filteredEntries = filteredEntries.filter((v) => {
+            return v.fromR === fRegion;
+          });
+        }
+        // Filter for to region
+        if (filterValues.value.toRegion) {
+          const tRegion = filterValues.value.toRegion.value.toLowerCase();
+          filteredEntries = filteredEntries.filter((v) => {
+            for (const to of v.shipTo) {
+              const toRs = to.rs.match(/../g);
+              if (toRs) {
+                for (const toR of toRs) {
+                  if (toR === tRegion) {
+                    return true;
+                  }
+                }
+              }
+            }
+            return false;
+          });
+        }
+      }
+
+      return filteredEntries;
     });
 
     function openItem(id: number | bigint | string, category: bigint | string) {
@@ -347,7 +378,20 @@ export default Vue.defineComponent({
     Vue.onMounted(() => {
       // Update used categories if last update is older than 30 minutes
       if (state.usedCategoriesLastUpdate.value + 1800000 < Date.now()) {
-        state.updateUsedCategories(true);
+        state.updateUsedCategories(true).then(() => {
+          // Get category from query
+          const queryCat = GetCategory()?.category;
+          if (queryCat) {
+            sCategory.value = queryCat;
+            searchInCategory();
+          }
+
+          // if (sCategory.value === 0n) {
+          //   Set selected category to a random entry of the available ones
+          //   const keys = Array.from(state.usedCategories.value.keys());
+          //   sCategory.value = keys[Math.floor(Math.random() * keys.length)];
+          // }
+        });
       }
     });
 
@@ -372,7 +416,6 @@ export default Vue.defineComponent({
       priceSize,
       getInitialDuration,
       isFilterOpen,
-      filterText,
       filter,
       searchForOlder,
       usedCategories,

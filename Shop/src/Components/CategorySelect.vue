@@ -104,6 +104,7 @@
         @click="confirmClick"
         class="col-auto bg-blue"
         color="white"
+        :loading="searchLoading"
       ></q-btn>
     </div>
   </div>
@@ -123,7 +124,7 @@ import { deepCopy } from "./GeneralJSHelper";
 export default Vue.defineComponent({
   name: "categorySelect",
   components: { CategoryInput },
-  emits: ["update:modelValue", "confirm", "update:expandFilter"],
+  emits: ["update:modelValue", "update:expandFilter", "confirm"],
   props: {
     modelValue: {
       type: Object as PropType<bigint>,
@@ -139,6 +140,10 @@ export default Vue.defineComponent({
     },
     range: {
       type: Object as PropType<Map<bigint, number>>,
+      default: false,
+    },
+    searchLoading: {
+      type: Boolean,
       default: false,
     },
   },
@@ -237,7 +242,10 @@ export default Vue.defineComponent({
     const level1 = Vue.computed({
       get: () => _level1.value,
       set: (value) => {
-        catValue.value = categoryBigInt(level0.value.index, value.index);
+        if (value.index !== _level1.value.index) {
+          catValue.value = categoryBigInt(level0.value.index, value.index);
+          confirmClick();
+        }
       },
     });
 
@@ -283,6 +291,14 @@ export default Vue.defineComponent({
       }
       return "All";
     }
+
+    Vue.watch(
+      () => props.modelValue,
+      (value) => {
+        // trigger update of catValue without changing the value
+        catValue.value = value;
+      }
+    );
 
     return {
       categoriesWithAll,

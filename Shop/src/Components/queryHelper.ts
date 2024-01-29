@@ -19,6 +19,20 @@ export function GetQueryIdAndCategory() {
   return undefined;
 }
 
+export function GetCategory() {
+  if (route.query) {
+    const category =
+      "category" in route.query &&
+      (typeof route.query.category == "number" ||
+        typeof route.query.category == "string" ||
+        typeof route.query.category == "bigint")
+        ? BigInt(route.query.category)
+        : 0n;
+    return { category };
+  }
+  return undefined;
+}
+
 export enum ItemPageMode {
   Standard = 0,
   Preview = 1, // Preview the item with inconsistent data

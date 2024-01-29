@@ -48,8 +48,6 @@ const recordIndex = Vue.computed({
   set: (value) => {
     const from = router.currentRoute();
     const to = record[value];
-    console.log("set", value, from, to);
-
     if (
       typeof beforeEachRouteChange !== "function" ||
       beforeEachRouteChange(to, from) !== false

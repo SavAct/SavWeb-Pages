@@ -1,293 +1,307 @@
 <template>
-  <q-page class="column full-width">
-    <q-inner-loading
-      :showing="loadTryPercentage != 100"
-      :label="loadTryPercentage + '%'"
-      label-class="text-teal"
-      style="z-index: 99; background-color: #000000a0"
-    />
+  <q-page class="column full-width items-center">
     <q-btn
       v-if="isPreview"
-      class="bg-grey-8 text-white"
+      class="col-auto full-width bg-grey-8 text-white"
       label="Close Preview"
       color="white"
       outline
       @click="goBack()"
     ></q-btn>
-    <div class="q-pa-md full-width">
-      <div class="row full-width">
-        <div class="col text-h5 q-pr-sm no-text-overflow">
-          {{ item?.title }}
-          <q-tooltip anchor="top middle" style="word-wrap: break-word">{{
-            item?.title
-          }}</q-tooltip>
+    <div class="full-width q-px-md" style="max-width: 1200px">
+      <q-inner-loading
+        :showing="loadTryPercentage != 100"
+        :label="loadTryPercentage + '%'"
+        label-class="text-teal"
+        style="z-index: 99; background-color: #000000a0"
+      />
+      <div class="q-py-md full-width">
+        <div class="row full-width">
+          <div class="col text-h5 q-pr-sm no-text-overflow">
+            {{ item?.title }}
+            <q-tooltip anchor="top middle" style="word-wrap: break-word">{{
+              item?.title
+            }}</q-tooltip>
+          </div>
+          <div class="col-auto">
+            <q-btn
+              icon="settings"
+              size="sm"
+              round
+              v-if="!isPreview"
+              @click="openSettings()"
+            ></q-btn>
+          </div>
         </div>
-        <div class="col-auto">
-          <q-btn
-            icon="settings"
-            size="sm"
-            round
-            v-if="!isPreview"
-            @click="openSettings()"
-          ></q-btn>
-        </div>
-      </div>
 
-      <q-card
-        v-if="(!$q.screen.gt.sm || !hasImgs) && item"
-        class="q-mt-sm q-mb-sm"
-      >
-        <q-card-section class="text-right row justify-between q-py-sm">
-          <span class="col-auto">
-            <user-link
-              :color="chipBgColor()"
-              class="col-auto"
-              :user="item.seller"
-              internal
-            ></user-link>
-          </span>
-          <span class="col-auto" v-if="item.fromR.length > 0">
-            <span class="q-pr-sm">from</span>
-            <q-chip
-              :color="chipBgColor()"
-              :label="getRegion(item.fromR.toUpperCase())"
-            ></q-chip
-          ></span>
-        </q-card-section>
-      </q-card>
-
-      <div class="q-mt-md row">
-        <div class="col-12" :class="hasImgs ? 'col-md-6' : ''">
-          <gallery
-            v-if="hasImgs"
-            :height="$q.screen.lt.sm ? '250px' : '400px'"
-            :srcs="imgs"
-            :file-size="2117632"
-          ></gallery>
-          <!-- <q-separator class="q-my-md" /> -->
-
-          <q-card
-            v-if="showComboboxes && item?.opts && item.opts.length > 0"
-            :class="hasImgs ? 'q-mt-lg' : 'q-mt-sm'"
-          >
-            <q-card-section class="row items-center">
-              <div class="col-auto q-pb-sm">Options</div>
-              <div class="col-grow text-right">
-                <q-chip
-                  v-for="(opt, index) in item?.opts"
-                  :key="index"
-                  :label="opt"
-                  :style="chipBorderStyle(option === opt)"
-                  :color="chipBgColor(option === opt)"
-                  clickable
-                  @click="optClick(index)"
-                ></q-chip>
-              </div>
-              <q-select
-                outlined
-                v-model="option"
-                :options="item.opts"
-                label="Select an option"
-                dense
-                color="green"
-                class="q-my-sm col-12"
-              ></q-select>
-            </q-card-section>
-          </q-card>
-        </div>
-        <div
-          class="col-12"
-          :class="{
-            'q-pl-md': !$q.screen.lt.md && hasImgs,
-            'col-md-6': hasImgs,
-          }"
-          v-if="item"
+        <q-card
+          v-if="(!$q.screen.gt.sm || !hasImgs) && item"
+          class="q-mt-sm q-mb-sm"
         >
-          <q-card v-if="$q.screen.gt.sm && hasImgs">
-            <q-card-section class="text-right row justify-between q-py-sm">
-              <span class="col-auto">
-                <user-link
-                  :color="chipBgColor()"
-                  class="col-auto"
-                  :user="item.seller"
-                  internal
-                ></user-link>
-              </span>
-              <span class="col-auto" v-if="item.fromR.length > 0">
-                <span class="q-pr-sm">from</span>
-                <q-chip
-                  :color="chipBgColor()"
-                  :label="getRegion(item.fromR.toUpperCase())"
-                ></q-chip
-              ></span>
-            </q-card-section>
-          </q-card>
+          <q-card-section class="text-right row justify-between q-py-sm">
+            <span class="col-auto">
+              <user-link
+                :color="chipBgColor()"
+                class="col-auto"
+                :user="item.seller"
+                internal
+              ></user-link>
+            </span>
+            <span class="col-auto" v-if="item.fromR.length > 0">
+              <span class="q-pr-sm">from</span>
+              <q-chip
+                :color="chipBgColor()"
+                :label="getRegion(item.fromR.toUpperCase())"
+              ></q-chip
+            ></span>
+          </q-card-section>
+        </q-card>
 
-          <q-card class="q-mt-lg">
-            <q-card-section class="row items-center">
-              <div class="col-auto q-pb-sm">Ship to</div>
-              <div class="col-grow text-right">
-                <span
-                  class="q-mr-sm"
-                  v-for="(to, index) in availableTo"
-                  :key="index"
-                >
+        <div class="q-mt-md row">
+          <div class="col-12" :class="hasImgs ? 'col-md-6' : ''">
+            <gallery
+              v-if="hasImgs"
+              :height="$q.screen.lt.sm ? '250px' : '400px'"
+              :srcs="imgs"
+              :file-size="2117632"
+            ></gallery>
+            <!-- <q-separator class="q-my-md" /> -->
+
+            <q-card
+              v-if="showComboboxes && item?.opts && item.opts.length > 0"
+              :class="hasImgs ? 'q-mt-lg' : 'q-mt-sm'"
+            >
+              <q-card-section class="row items-center">
+                <div class="col-auto q-pb-sm">Options</div>
+                <div class="col-grow text-right">
                   <q-chip
-                    v-if="to"
-                    :style="chipBorderStyle(to.value === sRegion?.value)"
-                    :color="chipBgColor(to.value === sRegion?.value)"
-                    :label="getRegion(to.value.toUpperCase())"
-                    text-color="green"
-                    clickable
-                    @click="regionClick(index)"
-                  ></q-chip>
-                </span>
-                <span v-if="excluded">
-                  <q-chip
-                    v-for="(ex, index) in excluded"
+                    v-for="(opt, index) in item?.opts"
                     :key="index"
-                    :color="chipBgColor()"
-                    text-color="red"
-                    :label="getRegion(ex.toUpperCase())"
-                    icon="do_not_disturb"
+                    :label="opt"
+                    :style="chipBorderStyle(option === opt)"
+                    :color="chipBgColor(option === opt)"
+                    clickable
+                    @click="optClick(index)"
                   ></q-chip>
+                </div>
+                <q-select
+                  outlined
+                  v-model="option"
+                  :options="item.opts"
+                  label="Select an option"
+                  dense
+                  color="green"
+                  class="q-my-sm col-12"
+                ></q-select>
+              </q-card-section>
+            </q-card>
+          </div>
+          <div
+            class="col-12"
+            :class="{
+              'q-pl-md': !$q.screen.lt.md && hasImgs,
+              'col-md-6': hasImgs,
+            }"
+            v-if="item"
+          >
+            <q-card v-if="$q.screen.gt.sm && hasImgs">
+              <q-card-section class="text-right row justify-between q-py-sm">
+                <span class="col-auto">
+                  <user-link
+                    :color="chipBgColor()"
+                    class="col-auto"
+                    :user="item.seller"
+                    internal
+                  ></user-link>
                 </span>
-              </div>
-              <q-select
-                v-if="showComboboxes"
-                outlined
-                v-model="sRegion"
-                :options="availableTo"
-                label="Select your region"
-                dense
-                color="green"
-                class="q-mt-sm col-12"
-              ></q-select>
-            </q-card-section>
-          </q-card>
-
-          <q-card class="q-mt-lg">
-            <q-card-section class="row items-center">
-              <div class="col-auto q-pb-sm">Accept payments of</div>
-              <div class="col-grow text-right">
-                <token-symbol
-                  v-for="(token, index) in acceptToken"
-                  :key="index"
-                  :style="chipBorderStyle(token.label === sToken?.label)"
-                  :color="chipBgColor(token.label === sToken?.label)"
-                  :symbol="token.value.symbol"
-                  :contract="token.value.contract"
-                  :chain="token.value.chain"
-                  size="18px"
-                  clickable
-                  @click="tokenClick(index)"
-                ></token-symbol>
-              </div>
-              <q-select
-                v-if="showComboboxes"
-                outlined
-                v-model="sToken"
-                :options="acceptToken"
-                label="Token you want to pay with"
-                dense
-                color="green"
-                class="q-mt-sm col-12"
-              ></q-select>
-            </q-card-section>
-          </q-card>
-
-          <q-card class="q-mt-lg">
-            <q-card-section>
-              <piece-price-select
-                class="q-mb-sm"
-                label="Price option"
-                :pps="item.pp"
-                v-model:pieces="pieces"
-                v-model="piecesPrice"
-              ></piece-price-select>
-
-              <div class="row justify-between q-col-gutter-x-sm">
-                <div v-if="price" class="col-auto">
-                  Price:
+                <span class="col-auto" v-if="item.fromR.length > 0">
+                  <span class="q-pr-sm">from</span>
                   <q-chip
                     :color="chipBgColor()"
-                    :label="price?.toFixed(2) + ' USD'"
-                  ></q-chip>
+                    :label="getRegion(item.fromR.toUpperCase())"
+                  ></q-chip
+                ></span>
+              </q-card-section>
+            </q-card>
+
+            <q-card class="q-mt-lg">
+              <q-card-section class="row items-center">
+                <div class="col-auto q-pb-sm">Ship to</div>
+                <div class="col-grow text-right">
+                  <span
+                    class="q-mr-sm"
+                    v-for="(to, index) in availableTo"
+                    :key="index"
+                  >
+                    <q-chip
+                      v-if="to"
+                      :style="chipBorderStyle(to.value === sRegion?.value)"
+                      :color="chipBgColor(to.value === sRegion?.value)"
+                      :label="getRegion(to.value.toUpperCase())"
+                      text-color="green"
+                      clickable
+                      @click="regionClick(index)"
+                    ></q-chip>
+                  </span>
+                  <span v-if="excluded">
+                    <q-chip
+                      v-for="(ex, index) in excluded"
+                      :key="index"
+                      :color="chipBgColor()"
+                      text-color="red"
+                      :label="getRegion(ex.toUpperCase())"
+                      icon="do_not_disturb"
+                    ></q-chip>
+                  </span>
                 </div>
-                <div v-if="shipPrice !== undefined" class="col-auto">
-                  Shipping:
-                  <q-chip
-                    :color="chipBgColor()"
-                    :label="
-                      'within ' +
-                      shipDuration +
-                      ' for ' +
-                      shipPrice?.toFixed(2) +
-                      ' USD'
+                <q-select
+                  v-if="showComboboxes"
+                  outlined
+                  v-model="sRegion"
+                  :options="availableTo"
+                  label="Select your region"
+                  dense
+                  color="green"
+                  class="q-mt-sm col-12"
+                ></q-select>
+              </q-card-section>
+            </q-card>
+
+            <q-card class="q-mt-lg">
+              <q-card-section class="row items-center">
+                <div class="col-auto q-pb-sm">Accept payments of</div>
+                <div class="col-grow text-right">
+                  <token-symbol
+                    v-for="(token, index) in acceptToken"
+                    :key="index"
+                    :style="chipBorderStyle(token.label === sToken?.label)"
+                    :color="chipBgColor(token.label === sToken?.label)"
+                    :symbol="token.value.symbol"
+                    :contract="token.value.contract"
+                    :chain="token.value.chain"
+                    size="18px"
+                    clickable
+                    @click="tokenClick(index)"
+                  ></token-symbol>
+                </div>
+                <q-select
+                  v-if="showComboboxes"
+                  outlined
+                  v-model="sToken"
+                  :options="acceptToken"
+                  label="Token you want to pay with"
+                  dense
+                  color="green"
+                  class="q-mt-sm col-12"
+                ></q-select>
+              </q-card-section>
+            </q-card>
+
+            <q-card class="q-mt-lg">
+              <q-card-section>
+                <piece-price-select
+                  class="q-mb-sm"
+                  label="Price option"
+                  :pps="item.pp"
+                  v-model:pieces="pieces"
+                  v-model="piecesPrice"
+                ></piece-price-select>
+
+                <div class="row justify-between q-col-gutter-x-sm">
+                  <div v-if="price" class="col-auto">
+                    Price:
+                    <q-chip
+                      :color="chipBgColor()"
+                      :label="price?.toFixed(2) + ' USD'"
+                    ></q-chip>
+                  </div>
+                  <div v-if="shipPrice !== undefined" class="col-auto">
+                    Shipping:
+                    <q-chip
+                      :color="chipBgColor()"
+                      :label="
+                        'within ' +
+                        shipDuration +
+                        ' for ' +
+                        shipPrice?.toFixed(2) +
+                        ' USD'
+                      "
+                    ></q-chip>
+                  </div>
+                  <div v-if="totalPrice" class="col-auto">
+                    Total price:
+                    <q-chip
+                      :color="chipBgColor()"
+                      :label="totalPrice?.toFixed(2) + ' USD'"
+                    ></q-chip>
+                    <q-chip
+                      v-if="sToken"
+                      :color="chipBgColor()"
+                      :label="totalTokenStr"
+                    >
+                    </q-chip>
+                  </div>
+                </div>
+              </q-card-section>
+            </q-card>
+            <q-card class="q-mt-lg">
+              <q-card-section>
+                <q-spinner-grid v-if="loadingSeller" />
+                <div v-if="seller" class="row">
+                  <div v-if="!seller.active" class="text-red text-h5">
+                    The seller is&nbsp;<span
+                      v-if="seller.lastUpdate < Date.now() / 1000"
+                      >not available.</span
+                    ><span v-else
+                      >not available until&nbsp;<span class="text-bold">{{
+                        new Date(seller.lastUpdate * 1000)
+                          .toUTCString()
+                          .substring(5)
+                      }}</span></span
+                    >
+                  </div>
+                  <q-btn
+                    v-else
+                    :disable="
+                      !seller.active ||
+                      typeof totalPrice != 'number' ||
+                      !sToken?.value
                     "
-                  ></q-chip>
+                    class="bg-green col-12"
+                    label="Buy"
+                    color="white"
+                    outline
+                    @click="buyClick"
+                  ></q-btn>
                 </div>
-                <div v-if="totalPrice" class="col-auto">
-                  Total price:
-                  <q-chip
-                    :color="chipBgColor()"
-                    :label="totalPrice?.toFixed(2) + ' USD'"
-                  ></q-chip>
-                  <q-chip
-                    v-if="sToken"
-                    :color="chipBgColor()"
-                    :label="totalTokenStr"
-                  >
-                  </q-chip>
-                </div>
-              </div>
-            </q-card-section>
-          </q-card>
-          <q-card class="q-mt-lg">
-            <q-card-section>
-              <q-spinner-grid v-if="loadingSeller" />
-              <div v-if="seller" class="row">
-                <div v-if="!seller.active" class="text-red text-h5">
-                  The seller is&nbsp;<span
-                    v-if="seller.lastUpdate < Date.now() / 1000"
-                    >not available.</span
-                  ><span v-else
-                    >not available until&nbsp;<span class="text-bold">{{
-                      new Date(seller.lastUpdate * 1000)
-                        .toUTCString()
-                        .substring(5)
-                    }}</span></span
-                  >
-                </div>
-                <q-btn
-                  v-else
-                  :disable="
-                    !seller.active ||
-                    typeof totalPrice != 'number' ||
-                    !sToken?.value
-                  "
-                  class="bg-green col-12"
-                  label="Buy"
-                  color="white"
-                  outline
-                  @click="buyClick"
-                ></q-btn>
-              </div>
-            </q-card-section>
-          </q-card>
+              </q-card-section>
+            </q-card>
+          </div>
+        </div>
+
+        <q-separator class="q-my-lg" />
+        <div v-if="item && item?.descr.length > 0">
+          <div class="text-h5 no-text-overflow">Description</div>
+          <div>{{ item?.descr }}</div>
+        </div>
+        <div v-if="item?.note">
+          <q-separator class="q-my-md" />
+          <div>
+            <div class="text-h5 no-text-overflow">Note</div>
+            <div>{{ item.note }}</div>
+          </div>
         </div>
       </div>
-
-      <q-separator class="q-my-lg" />
-      <div v-if="item && item?.descr.length > 0">
-        <div class="text-h5 no-text-overflow">Description</div>
-        <div>{{ item?.descr }}</div>
-      </div>
-      <div v-if="item?.note">
-        <q-separator class="q-my-md" />
-        <div>
-          <div class="text-h5 no-text-overflow">Note</div>
-          <div>{{ item.note }}</div>
+      <div v-if="categoryName">
+        <q-separator class="q-my-lg" />
+        <div class="row items-center q-col-gutter-x-sm">
+          <div class="col-auto">Other items in this category:</div>
+          <q-chip
+            class="col-auto"
+            :label="categoryName"
+            clickable
+            @click="clickCategory"
+          ></q-chip>
         </div>
       </div>
     </div>
@@ -315,18 +329,16 @@ import {
 } from "../Components/queryHelper";
 import { ItemTable, UserTable } from "../Components/ContractInterfaces";
 import { LoadFromContract } from "../Components/MarketContractHandle";
+import { categoryPathsById } from "../Components/Categories";
 
 export default Vue.defineComponent({
   components: { Gallery, TokenSymbol, UserLink, PiecePriceSelect },
   name: "itemPage",
   setup() {
     // TODO: Handle wait mode
-    // TODO: Link to find more items on the same category
-
     const showComboboxes = Vue.ref<boolean>(false); // TODO: Settings to switch this design option
 
     const mode = GetQueryMode();
-    console.log("Item page mode: ", mode);
 
     const id = Vue.ref<number>();
     const category = Vue.ref<bigint>();
@@ -602,8 +614,6 @@ export default Vue.defineComponent({
     const option = Vue.ref<string | undefined>();
 
     function optClick(index: number) {
-      console.log("optClick", index);
-
       if (item.value && index < item.value.opts.length) {
         option.value = item.value.opts[index];
       }
@@ -631,6 +641,19 @@ export default Vue.defineComponent({
     const hasImgs = Vue.computed(() => {
       return imgs.value && imgs.value.length > 0;
     });
+
+    const categoryName = Vue.computed(() => {
+      if (category.value) {
+        return categoryPathsById[String(category.value)];
+      }
+      return undefined;
+    });
+
+    function clickCategory() {
+      if (category.value) {
+        router.push({ name: "home", query: { category: category.value } });
+      }
+    }
 
     return {
       darkStyle: state.darkStyle,
@@ -666,6 +689,8 @@ export default Vue.defineComponent({
       option,
       showComboboxes,
       excluded,
+      categoryName,
+      clickCategory,
     };
   },
 });
