@@ -35,7 +35,7 @@
       <div class="col-auto">
         <q-btn-dropdown
           color="grey-8"
-          :label="level0?.name"
+          :label="level0.name"
           split
           v-bind="$props"
           v-model="openLevel0Btn"
@@ -51,7 +51,7 @@
               @click="level0 = cat"
             >
               <q-item-section>
-                <q-item-label>{{ cat.name }}</q-item-label>
+                <q-item-label>{{ getCategoryName(cat) }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
@@ -81,7 +81,7 @@
                 @click="level1 = cat"
               >
                 <q-item-section>
-                  <q-item-label>{{ cat.name }}</q-item-label>
+                  <q-item-label>{{ getCategoryName(cat) }}</q-item-label>
                 </q-item-section>
               </q-item>
             </q-list>
@@ -143,10 +143,10 @@ export default Vue.defineComponent({
     },
   },
   setup(props, context) {
-    const level0All = { name: "All", index: 0 };
-    const level1All = { name: "All", index: 0 };
+    const level0All = { name: "All", index: 0, count: 0 };
+    const level1All = { name: "All", index: 0, count: 0 };
 
-    const categoriesWithAll = Vue.computed(() => {
+    function getAllCategoriesWithAll() {
       const cats = deepCopy(categories) as Category[];
       cats.unshift(level0All);
       for (let cat of cats) {
@@ -166,6 +166,56 @@ export default Vue.defineComponent({
         }
       }
       return cats;
+    }
+
+    interface CategoryWithAll extends Category {
+      count: number;
+      child?: CategoryWithAll[];
+    }
+
+    const categoriesWithAll = Vue.computed(() => {
+      const options: Array<CategoryWithAll> = [
+        { name: "All", index: 0, count: 0 },
+      ];
+      if (props.range !== undefined) {
+        for (let [catInt, count] of props.range) {
+          if (!count) {
+            continue;
+          }
+          const [l0, l1] = indexesById(catInt);
+          const catL0 = categories.find((c) => c.index === l0);
+          if (!catL0 || !catL0.child) {
+            continue;
+          }
+          const catL1 = catL0.child.find((c) => c.index === l1);
+          if (!catL1) {
+            continue;
+          }
+
+          let optCat = options.find((c) => c.index === catL0.index);
+          // Push L0 Element of L1 category if not already in options
+          if (!optCat) {
+            optCat = {
+              name: catL0.name,
+              index: l0,
+              child: [{ name: "All", index: 0, count: 0 }],
+              count: 0,
+            };
+            options.push(optCat);
+          }
+          // Push L1 category
+          optCat.child?.push({
+            name: catL1.name,
+            index: l1,
+            child: [],
+            count,
+          });
+          optCat.count += count;
+        }
+        return options;
+      } else {
+        return getAllCategoriesWithAll();
+      }
     });
 
     const isTextInput = Vue.ref<boolean>(false);
@@ -193,7 +243,8 @@ export default Vue.defineComponent({
 
     function idToIndexInputs(id: bigint) {
       const levels = indexesById(id);
-      _level0.value = categoriesWithAll.value[levels[0]];
+      _level0.value =
+        categoriesWithAll.value.find((c) => c.index === levels[0]) || level0All;
       _level1.value = _level0.value.child
         ? _level0.value.child[levels[1]]
         : level1All;
@@ -223,6 +274,16 @@ export default Vue.defineComponent({
       idToIndexInputs(catValue.value);
     });
 
+    function getCategoryName(cat: Category | CategoryWithAll | undefined) {
+      if (cat) {
+        if ("count" in cat && cat.count) {
+          return `${cat.name} (${cat.count})`;
+        }
+        return cat.name;
+      }
+      return "All";
+    }
+
     return {
       categoriesWithAll,
       level0,
@@ -234,6 +295,7 @@ export default Vue.defineComponent({
       catValue,
       confirmClick,
       expandFilterClick,
+      getCategoryName,
     };
   },
 });

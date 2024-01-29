@@ -198,7 +198,6 @@ export default Vue.defineComponent({
     CategorySelect,
   },
   setup() {
-    // TODO: Get all available categories from contract
     const filterText = Vue.ref<string>("");
     const isFilterOpen = Vue.ref<boolean>(false);
     const isPricePerUnit = Vue.ref<boolean>(false);

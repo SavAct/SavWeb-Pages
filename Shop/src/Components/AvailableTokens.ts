@@ -49,11 +49,12 @@ export async function get_available_tokens(
     chain: state.savpayContract.chain,
     code: state.savpayContract.account,
     table: state.savpayContract.tables.tokens,
+    limit: 100, // TODO: Get all available tokens if there are more in the future
   });
   const availableTokens = [];
-  if (result && result.length > 0) {
-    for (let i = 0; i < result.length; i++) {
-      const tokenContract = result[i];
+  if (result && "rows" in result && result.rows.length > 0) {
+    for (let i = 0; i < result.rows.length; i++) {
+      const tokenContract = result.rows[i];
       const t = await getTokensData(tokenContract.scope);
       if (t) {
         availableTokens.push(...t);

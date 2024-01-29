@@ -83,7 +83,7 @@ const contract: MarketContract = {
 
 const savpayContract = {
   account: "savactsavpay",
-  chain: "lamington",
+  chain: "eos",
   tables: {
     tokens: "tokens",
   },
