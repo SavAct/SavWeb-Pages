@@ -42,8 +42,7 @@
 </template>
 <script lang="ts">
 import { PropType } from "vue";
-import AddPgpBtn from "./AddPgpBtn.vue";
-import { PGP_Keys } from "./Items";
+import AddPgpBtn, { PGP_Keys } from "./AddPgpBtn.vue";
 
 export default Vue.defineComponent({
   name: "tokenSymbol",

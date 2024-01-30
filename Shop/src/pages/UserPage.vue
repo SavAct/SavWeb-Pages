@@ -218,7 +218,6 @@ import UserInput from "../Components/UserInput.vue";
 import SetPgp from "../Components/SetPgp.vue";
 import { state } from "../store/globals";
 import { QSelect } from "quasar";
-import { PGP_Keys } from "../Components/Items";
 import { savWeb } from "../store/connect";
 import {
   Deleteuser,
@@ -241,6 +240,7 @@ import {
   LoadFromContract,
   userTableEntryToUser,
 } from "../Components/MarketContractHandle";
+import { PGP_Keys } from "../Components/AddPgpBtn.vue";
 
 export default Vue.defineComponent({
   name: "userPage",

@@ -25,7 +25,7 @@
       <!-- result list -->
       <q-card
         class="q-mb-sm"
-        v-for="(row, index) in itemRows"
+        v-for="row in itemRows"
         :key="String(row.id) + '_' + String(sCategory)"
         flat
         bordered
@@ -383,7 +383,6 @@ export default Vue.defineComponent({
           const queryCat = GetCategory()?.category;
           if (queryCat) {
             sCategory.value = queryCat;
-            searchInCategory();
           }
 
           // if (sCategory.value === 0n) {
@@ -391,7 +390,15 @@ export default Vue.defineComponent({
           //   const keys = Array.from(state.usedCategories.value.keys());
           //   sCategory.value = keys[Math.floor(Math.random() * keys.length)];
           // }
+
+          if (sCategory.value !== 0n) {
+            searchInCategory();
+          }
         });
+      } else {
+        if (sCategory.value !== 0n) {
+          searchInCategory();
+        }
       }
     });
 

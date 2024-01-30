@@ -504,9 +504,10 @@ export default Vue.defineComponent({
           name: "buy",
           query: {
             id: item.value.id,
-            region: sRegion.value.value,
+            category: category.value,
+            to: sRegion.value.value,
             token: sToken.value.value,
-            pieces: pieces.value,
+            pcs: pieces.value,
           },
         });
       }

@@ -80,13 +80,12 @@
   </q-card>
 </template>
 <script lang="ts">
-import AddPgpBtn from "../AddPgpBtn.vue";
+import AddPgpBtn, { PGP_Keys } from "../AddPgpBtn.vue";
 import OrderItem from "../OrderItem.vue";
 import { PropType } from "vue";
 import { state } from "../../store/globals";
 import { AssetToString, InformSellerData, Token } from "../AntelopeHelpers";
-import { Entry, PGP_Keys, Seller } from "../Items";
-import { formatDuration } from "../ConverTime";
+import { formatDuration } from "../ConvertTime";
 import {
   SellerResponse,
   decrypt,
@@ -94,6 +93,7 @@ import {
   generateRandomString,
 } from "../Generator";
 import { savWeb } from "../../store/connect";
+import { ItemTable, UserTable } from "../ContractInterfaces";
 
 export default Vue.defineComponent({
   name: "buyStep3",
@@ -109,7 +109,7 @@ export default Vue.defineComponent({
   ],
   props: {
     entry: {
-      type: Object as PropType<Entry>,
+      type: Object as PropType<ItemTable>,
       required: true,
       default: null,
     },
@@ -134,7 +134,7 @@ export default Vue.defineComponent({
       default: false,
     },
     seller: {
-      type: Object as PropType<Seller>,
+      type: Object as PropType<UserTable>,
       required: true,
       default: undefined,
     },
@@ -391,7 +391,7 @@ export default Vue.defineComponent({
         if (memo.value === undefined) throw new Error("No memo");
         const jsonData: InformSellerData = {
           buyer: props.buyer,
-          seller: props.seller.account,
+          seller: props.seller.user,
           token: props.token,
           memo: memo.value,
         };

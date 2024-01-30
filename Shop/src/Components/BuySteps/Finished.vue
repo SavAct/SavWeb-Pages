@@ -10,7 +10,7 @@
           <div class="q-mb-md col-12 col-sm-6 q-pr-md">
             The payment&nbsp;
             <template v-if="seller"
-              >to <span class="text-bold">{{ seller.account }}</span
+              >to <span class="text-bold">{{ seller.user }}</span
               >&nbsp;</template
             >
             <template v-if="trxData && trxData.memo.length > 0">
@@ -120,11 +120,12 @@ import OrderItem from "../OrderItem.vue";
 import RawDataBtn from "../RawDataBtn.vue";
 import { copy } from "../QuasarHelpers";
 import { PropType } from "vue";
-import { Entry, PGP_Keys, Seller } from "../Items";
 import { InformSellerData, Token } from "../AntelopeHelpers";
-import { formatDuration } from "../ConverTime";
+import { formatDuration } from "../ConvertTime";
 import { encrypt } from "../Generator";
 import { savWeb } from "../../store/connect";
+import { ItemTable, UserTable } from "../ContractInterfaces";
+import { PGP_Keys } from "../AddPgpBtn.vue";
 
 export default Vue.defineComponent({
   name: "finished",
@@ -134,7 +135,7 @@ export default Vue.defineComponent({
   },
   props: {
     entry: {
-      type: Object as PropType<Entry>,
+      type: Object as PropType<ItemTable>,
       required: true,
       default: null,
     },
@@ -159,7 +160,7 @@ export default Vue.defineComponent({
       default: "",
     },
     seller: {
-      type: Object as PropType<Seller>,
+      type: Object as PropType<UserTable>,
       required: true,
       default: undefined,
     },

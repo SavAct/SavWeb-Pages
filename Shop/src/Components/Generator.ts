@@ -25,7 +25,7 @@ export interface Address {
 export interface UserData extends Address {
   buyer: string;
   pubPgp: string;
-  itemId: number;
+  item: { id: number; category: string | number };
   pieces: number;
   token: Token;
   seller: string;

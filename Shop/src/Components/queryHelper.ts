@@ -1,4 +1,5 @@
 import { route } from "../router/simpleRouter";
+import { Token } from "./AntelopeHelpers";
 
 export function GetQueryIdAndCategory() {
   if (route.query) {
@@ -30,6 +31,29 @@ export function GetCategory() {
         : 0n;
     return { category };
   }
+  return undefined;
+}
+
+export function GetQueryOrderRequest() {
+  const idAndCat = GetQueryIdAndCategory();
+  if (idAndCat) {
+    const token =
+      route.query &&
+      "token" in route.query &&
+      typeof route.query.token == "object"
+        ? (route.query.token as Token)
+        : undefined;
+    const pieces =
+      route.query && "pcs" in route.query && typeof route.query.pcs == "number"
+        ? route.query.pcs
+        : 1;
+    const toRegion =
+      route.query && "to" in route.query && typeof route.query.to == "string"
+        ? route.query.to
+        : undefined;
+    return { ...idAndCat, token, pieces, toRegion };
+  }
+
   return undefined;
 }
 

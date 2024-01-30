@@ -57,8 +57,9 @@ import AddressInput from "../AddressInput.vue";
 import { PropType } from "vue";
 import { Token } from "../AntelopeHelpers";
 
-import { PGP_Keys, Seller } from "../Items";
 import { Address, UserData, encrypt } from "../Generator";
+import { PGP_Keys } from "../AddPgpBtn.vue";
+import { UserTable } from "../ContractInterfaces";
 
 export default Vue.defineComponent({
   name: "buyStep1",
@@ -95,6 +96,7 @@ export default Vue.defineComponent({
     token: {
       type: Object as PropType<Token>,
       required: true,
+      default: undefined,
     },
     encrypt: {
       type: Boolean,
@@ -102,14 +104,14 @@ export default Vue.defineComponent({
       default: false,
     },
     seller: {
-      type: Object as PropType<Seller>,
+      type: Object as PropType<UserTable>,
       required: true,
       default: undefined,
     },
-    id: {
-      type: Number,
+    item: {
+      type: Object as PropType<{ id: number; category: bigint }>,
       required: true,
-      default: -1,
+      default: undefined,
     },
     pieces: {
       type: Number,
@@ -201,7 +203,12 @@ export default Vue.defineComponent({
 
       if (!props.token) {
         return "No token selected";
-      } else if (props.id === undefined || props.id < 0) {
+      } else if (
+        props.item?.id === undefined ||
+        props.item?.id < 0 ||
+        props.item.category === undefined ||
+        typeof props.item.category !== "bigint"
+      ) {
         return "No item selected";
       } else if (props.buyerName === undefined || props.buyerName.length == 0) {
         validBuyerName.value = false;
@@ -247,12 +254,16 @@ export default Vue.defineComponent({
       try {
         if (props.token === undefined) throw new Error("No token");
         if (props.seller === undefined) throw new Error("No seller");
+        if (props.item === undefined) throw new Error("No item");
         const userData = props.address as UserData;
         userData.buyer = props.buyerName;
-        userData.itemId = props.id;
+        userData.item = {
+          id: props.item.id,
+          category: String(props.item.category),
+        };
         userData.pieces = props.pieces;
         userData.token = props.token;
-        userData.seller = props.seller.account;
+        userData.seller = props.seller.user;
         userData.sigDate = Date.now();
         userData.pubPgp = props.buyerKeys.pub;
 

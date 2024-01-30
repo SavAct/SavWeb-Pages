@@ -17,11 +17,16 @@ function resolvePage(pIni: PageIni) {
     console.log("Use contract account:", state.contract.account);
   }
 
-  console.log("resolvePage", pageName, pIni.query);
+  console.log("resolvePage", pageName, "query", pIni.query);
 
   router.push({
-    name: pageName.length > 0 ? pageName : state.defaultValue.startPage,
-    query: pIni.query,
+    name: pageName.length > 0 ? pageName : state.defaultValue.startPage.name,
+    query:
+      Object.keys(pIni.query).length > 0
+        ? pIni.query
+        : state.defaultValue.startPage.query
+          ? state.defaultValue.startPage.query
+          : undefined,
   });
 }
 

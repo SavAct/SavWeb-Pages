@@ -235,7 +235,7 @@
 </template>
 <script lang="ts">
 import OrderItem from "../Components/OrderItem.vue";
-import AddPgpBtn from "../Components/AddPgpBtn.vue";
+import AddPgpBtn, { PGP_Keys } from "../Components/AddPgpBtn.vue";
 import RawDataBtn from "../Components/RawDataBtn.vue";
 import {
   SellerResponse,
@@ -244,9 +244,10 @@ import {
   encrypt,
   generateRandomString,
 } from "../Components/Generator";
-import { Entry, PGP_Keys } from "../Components/Items";
 import { state } from "../store/globals";
 import { copy } from "../Components/QuasarHelpers";
+import { LoadFromContract } from "../Components/MarketContractHandle";
+import { ItemTable, UserTable } from "../Components/ContractInterfaces";
 
 export default Vue.defineComponent({
   components: { AddPgpBtn, OrderItem, RawDataBtn },
@@ -294,15 +295,22 @@ export default Vue.defineComponent({
         try {
           const response = JSON.parse(responseDecrypted.value) as UserData;
           if (
-            response.itemId != undefined &&
-            typeof response.itemId == "number"
+            response.item?.id != undefined &&
+            typeof response.item.id == "number" &&
+            response.item.category != undefined &&
+            (typeof response.item.category == "string" ||
+              typeof response.item.category == "number" ||
+              typeof response.item.category == "bigint")
           ) {
+            const id = response.item.id;
+            const category = BigInt(response.item.category);
+
             if (response.token) {
               // TODO: Check all parameters like price, token, pieces
               // TODO: Check if buyers public key is on blockchain and check if it is identical
               userData.value = response;
               buyerPubKey.value = response.pubPgp;
-              findEntry(response.itemId);
+              await findEntry(id, category);
               if (response.note.length > 0) {
                 note.value = response.note;
               }
@@ -328,11 +336,59 @@ export default Vue.defineComponent({
 
     const requestId = Vue.ref<string>(generateRandomString(8));
 
-    const entry = Vue.ref<Entry>();
+    const entry = Vue.ref<ItemTable>();
     const memo = Vue.ref<string>("");
 
-    function findEntry(id: number) {
-      entry.value = state.itemsList.find((item) => item.id == id);
+    const loadMaxTries = Vue.ref<number>(0);
+    const loadTries = Vue.ref<number>(0);
+    const loadTryPercentage = Vue.computed(() => {
+      if (loadMaxTries.value > 0) {
+        return Math.round(
+          (1 - (loadMaxTries.value - loadTries.value) / loadMaxTries.value) *
+            100
+        );
+      }
+
+      return 100;
+    });
+
+    const seller = Vue.ref<UserTable | undefined>(undefined);
+    const loadingSeller = Vue.ref<boolean>(false);
+    async function getSellerByItem() {
+      if (
+        entry.value &&
+        entry.value.seller !== undefined &&
+        entry.value.seller.length > 0
+      ) {
+        loadingSeller.value = true;
+        seller.value = await state.getUser(entry.value.seller, state.contract);
+        loadingSeller.value = false;
+      }
+    }
+
+    async function findEntry(
+      id: number,
+      category: bigint,
+      contract = state.contract
+    ) {
+      entry.value = await new LoadFromContract(
+        loadMaxTries,
+        loadTries
+      ).loadItem({
+        id,
+        category,
+        ...contract,
+      });
+      if (!entry.value) {
+        // No entry found
+        Quasar.Notify.create({
+          type: "negative",
+          message: "Item not found",
+          position: "top",
+        });
+      } else {
+        getSellerByItem();
+      }
       console.log("found entry", id, userData.value);
     }
 
@@ -507,6 +563,13 @@ OO8I
       thumbStyle: state.thumbStyle,
       barStyle: state.barStyle,
       nextLoading,
+
+      // TODO: Show loading of the following
+      loadMaxTries,
+      loadTries,
+      loadTryPercentage,
+      seller,
+      loadingSeller,
     };
   },
 });

@@ -110,7 +110,13 @@
 <script lang="ts">
 import { PropType } from "vue";
 import { copy } from "./QuasarHelpers";
-import { PGP_Keys } from "./Items";
+
+export interface PGP_Keys {
+  pub: string;
+  pri: string;
+  passphrase: string;
+  fingerprint?: string;
+}
 
 export default Vue.defineComponent({
   name: "addPgpBtn",

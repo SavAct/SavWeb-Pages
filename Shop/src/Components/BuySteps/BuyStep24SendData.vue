@@ -79,13 +79,13 @@
 <script lang="ts">
 import RawDataBtn from "../RawDataBtn.vue";
 import { PropType } from "vue";
-import { Seller } from "../Items";
 import { copy } from "../QuasarHelpers";
 import {
   messengerShortName,
   openLinkOrMail,
   urlStartByDomainName,
 } from "../LinkConverter";
+import { UserTable } from "../ContractInterfaces";
 
 export default Vue.defineComponent({
   name: "buyStep24SendData",
@@ -110,7 +110,7 @@ export default Vue.defineComponent({
       default: "",
     },
     seller: {
-      type: Object as PropType<Seller>,
+      type: Object as PropType<UserTable>,
       required: true,
       default: undefined,
     },

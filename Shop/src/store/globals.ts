@@ -90,7 +90,10 @@ const savpayContract = {
 };
 
 const defaultValue = {
-  startPage: "item", //"home";
+  startPage: {
+    name: "item", // "home"
+    query: { id: 0, category: 792915009393917952n }, // {}
+  },
   prepDuration: 3600 * 24 * 2 * 1000, // 2 days
   shipDuration: 3600 * 24 * 5 * 1000, // 5 days
   expireDuration: 3600 * 24 * 30 * 1000, // 30 days

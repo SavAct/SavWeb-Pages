@@ -17,7 +17,7 @@
       </div>
       <div class="row justify-between">
         <div class="col-auto">
-          <div>{{ pieces }}x {{ entry.price }} USD</div>
+          <!-- TODO: <div>{{ pieces }}x {{ entry.price }} USD</div> -->
           <div>+ Shipping {{ 0 }} USD</div>
           <div>
             Total price
@@ -47,9 +47,9 @@
 import ProImg from "../Components/ProImg.vue";
 import TokenSymbol from "./TokenSymbol.vue";
 import { PropType } from "vue";
-import { Entry } from "./Items";
 import { state } from "../store/globals";
 import { AssetToString, Token } from "./AntelopeHelpers";
+import { ItemTable } from "./ContractInterfaces";
 
 export default Vue.defineComponent({
   name: "orderItem",
@@ -57,7 +57,7 @@ export default Vue.defineComponent({
   emits: ["currentTokenPrice"],
   props: {
     entry: {
-      type: Object as PropType<Entry>,
+      type: Object as PropType<ItemTable>,
       required: true,
     },
     pieces: {

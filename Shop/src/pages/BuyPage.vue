@@ -146,11 +146,14 @@ import BuyStep1 from "../Components/BuySteps/BuyStep1.vue";
 import BuyStep24SendData from "../Components/BuySteps/BuyStep24SendData.vue";
 import BuyStep3 from "../Components/BuySteps/BuyStep3.vue";
 import Finished from "../Components/BuySteps/Finished.vue";
-import { Entry, PGP_Keys, Seller } from "../Components/Items";
 import { state } from "../store/globals";
-import { route } from "../router/simpleRouter";
 import { Token } from "../Components/AntelopeHelpers";
 import { Address } from "../Components/Generator";
+import { ItemTable, UserTable } from "../Components/ContractInterfaces";
+import { PGP_Keys } from "../Components/AddPgpBtn.vue";
+import { LoadFromContract } from "../Components/MarketContractHandle";
+import { getRegion } from "../Components/ConvertRegion";
+import { GetQueryOrderRequest } from "../Components/queryHelper";
 
 export default Vue.defineComponent({
   components: {
@@ -167,43 +170,76 @@ export default Vue.defineComponent({
   },
   name: "buyPage",
   setup() {
-    const id =
-      route.query && "id" in route.query && typeof route.query.id == "number"
-        ? route.query.id
-        : -1;
-    const token =
-      route.query &&
-      "token" in route.query &&
-      typeof route.query.token == "object"
-        ? (route.query.token as Token)
-        : undefined;
+    const id = Vue.ref<number>();
+    const category = Vue.ref<bigint>();
 
-    const _pieces =
-      route.query &&
-      "pieces" in route.query &&
-      typeof route.query.pieces == "number"
-        ? route.query.pieces
-        : 1;
-    const pieces = Vue.ref<number>(_pieces);
+    const token = Vue.ref<Token>();
+    const pieces = Vue.ref<number>();
+    const toRegion = Vue.ref<string>(); // Compare with data entry
 
     const usdPrice = Vue.computed(() => {
-      if (entry.value) {
-        console.log("---price---", pieces.value * entry.value.price);
+      // TODO:
+      // if (entry.value) {
+      //   console.log("---price---", pieces.value * entry.value.price);
 
-        return pieces.value * entry.value.price; // TODO: Calculate and add delivery price
-      }
+      //   return pieces.value * entry.value.price; // TODO: Calculate and add delivery price
+      // }
       return -1;
     });
 
-    const regionName = new Intl.DisplayNames(["en"], { type: "region" });
-    const entry = Vue.ref<Entry>();
-    entry.value = state.itemsList.find((item) => item.id == id);
+    const entry = Vue.ref<ItemTable>();
 
-    const seller = Vue.ref<Seller>();
-    seller.value =
-      entry.value && entry.value.seller.length > 0
-        ? state.sellerList[entry.value.seller]
-        : undefined;
+    const loadMaxTries = Vue.ref<number>(0);
+    const loadTries = Vue.ref<number>(0);
+    const loadTryPercentage = Vue.computed(() => {
+      if (loadMaxTries.value > 0) {
+        return Math.round(
+          (1 - (loadMaxTries.value - loadTries.value) / loadMaxTries.value) *
+            100
+        );
+      }
+
+      return 100;
+    });
+
+    const seller = Vue.ref<UserTable | undefined>(undefined);
+    const loadingSeller = Vue.ref<boolean>(false);
+    async function getSellerByItem() {
+      if (
+        entry.value &&
+        entry.value.seller !== undefined &&
+        entry.value.seller.length > 0
+      ) {
+        loadingSeller.value = true;
+        seller.value = await state.getUser(entry.value.seller, state.contract);
+        loadingSeller.value = false;
+      }
+    }
+
+    async function findEntry(
+      id: number,
+      category: bigint,
+      contract = state.contract
+    ) {
+      entry.value = await new LoadFromContract(
+        loadMaxTries,
+        loadTries
+      ).loadItem({
+        id,
+        category,
+        ...contract,
+      });
+      if (!entry.value) {
+        // No entry found
+        Quasar.Notify.create({
+          type: "negative",
+          message: "Item not found",
+          position: "top",
+        });
+      } else {
+        getSellerByItem();
+      }
+    }
 
     const step = Vue.ref<number>(1);
 
@@ -220,19 +256,6 @@ export default Vue.defineComponent({
 
     function backStep() {
       if (step.value > 1) step.value--;
-    }
-
-    function getRegion(code: string) {
-      const c = regionName.of(code);
-      if (c !== undefined) {
-        return c;
-      } else {
-        switch (code) {
-          case "ww":
-            return "World Wide";
-        }
-      }
-      return undefined;
     }
 
     function getRegions(r: string) {
@@ -285,8 +308,24 @@ export default Vue.defineComponent({
       }
     });
 
+    Vue.onMounted(async () => {
+      const orderRequest = GetQueryOrderRequest();
+      if (
+        orderRequest?.id !== undefined &&
+        orderRequest.category !== undefined
+      ) {
+        id.value = orderRequest.id;
+        category.value = orderRequest.category;
+        await findEntry(id.value, category.value);
+
+        token.value = orderRequest.token;
+        pieces.value = orderRequest.pieces;
+        toRegion.value = orderRequest.toRegion;
+      }
+    });
+
     // Dev mode
-    if (true) {
+    if (false) {
       address.value = {
         firstName: "Sav",
         middleNames: "",
@@ -299,6 +338,7 @@ export default Vue.defineComponent({
         addressL2: "",
         note: "With onions please",
       };
+
       buyerName.value = "savact";
 
       buyerKeys.value.pri = `-----BEGIN PGP PRIVATE KEY BLOCK-----
@@ -367,6 +407,12 @@ FrBLSSi9cFyo7kugL3b3Lwo=
       forwardNaviLabel,
       sellerResponse,
       trxLink,
+
+      // TODO: Show loading of the following
+      loadMaxTries,
+      loadTries,
+      loadTryPercentage,
+      loadingSeller,
     };
   },
 });
