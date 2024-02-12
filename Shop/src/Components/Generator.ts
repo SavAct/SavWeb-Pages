@@ -127,7 +127,6 @@ export async function encrypt(
       const recipientPupKey = await openpgp.readKey({
         armoredKey: recipientPublicKey,
       });
-
       const data = (
         await openpgp.encrypt({
           message,

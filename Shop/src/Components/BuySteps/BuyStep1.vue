@@ -142,6 +142,9 @@ export default Vue.defineComponent({
         return props.buyerName;
       },
       set(value: string) {
+        if (value.length > 0) {
+          validBuyerName.value = true;
+        }
         context.emit("update:buyerName", value);
         // TODO: Check if there is a public key of the buyer on blockchain and use it if there is one
       },
@@ -287,6 +290,7 @@ export default Vue.defineComponent({
       }
       const json = createJsonUserData();
       context.emit("update:jsonData", json);
+
       if (props.seller) {
         const data = await encrypt(
           json,

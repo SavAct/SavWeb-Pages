@@ -22,7 +22,7 @@
           v-model:address="address"
           v-model:buyer-name="buyerName"
           v-model:buyer-keys="buyerKeys"
-          :id="entry?.id"
+          :item="item"
           :seller="seller"
           :pieces="pieces"
           :token="token"
@@ -170,8 +170,10 @@ export default Vue.defineComponent({
   },
   name: "buyPage",
   setup() {
-    const id = Vue.ref<number>();
-    const category = Vue.ref<bigint>();
+    const item = Vue.ref<{ id: number; category: bigint }>({
+      id: -1,
+      category: 0n,
+    });
 
     const token = Vue.ref<Token>();
     const pieces = Vue.ref<number>();
@@ -229,7 +231,7 @@ export default Vue.defineComponent({
         category,
         ...contract,
       });
-      if (!entry.value) {
+      if (!entry.value || entry.value.id != id) {
         // No entry found
         Quasar.Notify.create({
           type: "negative",
@@ -314,9 +316,9 @@ export default Vue.defineComponent({
         orderRequest?.id !== undefined &&
         orderRequest.category !== undefined
       ) {
-        id.value = orderRequest.id;
-        category.value = orderRequest.category;
-        await findEntry(id.value, category.value);
+        item.value.id = orderRequest.id;
+        item.value.category = orderRequest.category;
+        await findEntry(item.value.id, item.value.category);
 
         token.value = orderRequest.token;
         pieces.value = orderRequest.pieces;
@@ -325,7 +327,7 @@ export default Vue.defineComponent({
     });
 
     // Dev mode
-    if (false) {
+    if (true) {
       address.value = {
         firstName: "Sav",
         middleNames: "",
@@ -339,46 +341,46 @@ export default Vue.defineComponent({
         note: "With onions please",
       };
 
-      buyerName.value = "savact";
+      //       buyerName.value = "savact";
 
-      buyerKeys.value.pri = `-----BEGIN PGP PRIVATE KEY BLOCK-----
+      //       buyerKeys.value.pri = `-----BEGIN PGP PRIVATE KEY BLOCK-----
 
-xVgEZHceshYJKwYBBAHaRw8BAQdAATe7K3EKTISl+ydnlYPRBt9/6umNrgHB
-0IVX0MdF/b8AAQCGTxcG2PzIOf4VttpjY56QYNDNfcB7Im0GdnV5myGJEA9i
-zQDCjAQQFgoAPgWCZHcesgQLCQcICZD0y5TvjrHEvwMVCAoEFgACAQIZAQKb
-AwIeARYhBOTkwymjLFxmWn2QKPTLlO+OscS/AACsgQD+MGYZgrTFb16/c9Cj
-08miHKAQu94gsN6ygCnYyXeenxYBAOalhOYVLkVSZaliCMLoUhcU026jdUD6
-nx0HYM6bOp0Gx10EZHceshIKKwYBBAGXVQEFAQEHQMXwAuKpAPalRmHi3uS+
-DIPuzN/nn4HuYDHE3bvKVLFUAwEIBwAA/3JjTLYhYmGpweNp2jjamtBDvvu0
-CuThqiZroEf6/rTYE+vCeAQYFggAKgWCZHcesgmQ9MuU746xxL8CmwwWIQTk
-5MMpoyxcZlp9kCj0y5TvjrHEvwAAtdIBAMQcsynLyHx4gNvKIbVE7/6dezuH
-+Tii1Ro3cc+WYk9oAP9X3aTvv1GsDDvxBs1fp74WsEtJKL1wXKjuS6Avdvcv
-Cg==
-=Z/vq
------END PGP PRIVATE KEY BLOCK-----
-`;
+      // xVgEZHceshYJKwYBBAHaRw8BAQdAATe7K3EKTISl+ydnlYPRBt9/6umNrgHB
+      // 0IVX0MdF/b8AAQCGTxcG2PzIOf4VttpjY56QYNDNfcB7Im0GdnV5myGJEA9i
+      // zQDCjAQQFgoAPgWCZHcesgQLCQcICZD0y5TvjrHEvwMVCAoEFgACAQIZAQKb
+      // AwIeARYhBOTkwymjLFxmWn2QKPTLlO+OscS/AACsgQD+MGYZgrTFb16/c9Cj
+      // 08miHKAQu94gsN6ygCnYyXeenxYBAOalhOYVLkVSZaliCMLoUhcU026jdUD6
+      // nx0HYM6bOp0Gx10EZHceshIKKwYBBAGXVQEFAQEHQMXwAuKpAPalRmHi3uS+
+      // DIPuzN/nn4HuYDHE3bvKVLFUAwEIBwAA/3JjTLYhYmGpweNp2jjamtBDvvu0
+      // CuThqiZroEf6/rTYE+vCeAQYFggAKgWCZHcesgmQ9MuU746xxL8CmwwWIQTk
+      // 5MMpoyxcZlp9kCj0y5TvjrHEvwAAtdIBAMQcsynLyHx4gNvKIbVE7/6dezuH
+      // +Tii1Ro3cc+WYk9oAP9X3aTvv1GsDDvxBs1fp74WsEtJKL1wXKjuS6Avdvcv
+      // Cg==
+      // =Z/vq
+      // -----END PGP PRIVATE KEY BLOCK-----
+      // `;
 
-      buyerKeys.value.pub = `-----BEGIN PGP PUBLIC KEY BLOCK-----
+      //       buyerKeys.value.pub = `-----BEGIN PGP PUBLIC KEY BLOCK-----
 
-xjMEZHceshYJKwYBBAHaRw8BAQdAATe7K3EKTISl+ydnlYPRBt9/6umNrgHB
-0IVX0MdF/b/NAMKMBBAWCgA+BYJkdx6yBAsJBwgJkPTLlO+OscS/AxUICgQW
-AAIBAhkBApsDAh4BFiEE5OTDKaMsXGZafZAo9MuU746xxL8AAKyBAP4wZhmC
-tMVvXr9z0KPTyaIcoBC73iCw3rKAKdjJd56fFgEA5qWE5hUuRVJlqWIIwuhS
-FxTTbqN1QPqfHQdgzps6nQbOOARkdx6yEgorBgEEAZdVAQUBAQdAxfAC4qkA
-9qVGYeLe5L4Mg+7M3+efge5gMcTdu8pUsVQDAQgHwngEGBYIACoFgmR3HrIJ
-kPTLlO+OscS/ApsMFiEE5OTDKaMsXGZafZAo9MuU746xxL8AALXSAQDEHLMp
-y8h8eIDbyiG1RO/+nXs7h/k4otUaN3HPlmJPaAD/V92k779RrAw78QbNX6e+
-FrBLSSi9cFyo7kugL3b3Lwo=
-=XIte
------END PGP PUBLIC KEY BLOCK-----
-`;
+      // xjMEZHceshYJKwYBBAHaRw8BAQdAATe7K3EKTISl+ydnlYPRBt9/6umNrgHB
+      // 0IVX0MdF/b/NAMKMBBAWCgA+BYJkdx6yBAsJBwgJkPTLlO+OscS/AxUICgQW
+      // AAIBAhkBApsDAh4BFiEE5OTDKaMsXGZafZAo9MuU746xxL8AAKyBAP4wZhmC
+      // tMVvXr9z0KPTyaIcoBC73iCw3rKAKdjJd56fFgEA5qWE5hUuRVJlqWIIwuhS
+      // FxTTbqN1QPqfHQdgzps6nQbOOARkdx6yEgorBgEEAZdVAQUBAQdAxfAC4qkA
+      // 9qVGYeLe5L4Mg+7M3+efge5gMcTdu8pUsVQDAQgHwngEGBYIACoFgmR3HrIJ
+      // kPTLlO+OscS/ApsMFiEE5OTDKaMsXGZafZAo9MuU746xxL8AALXSAQDEHLMp
+      // y8h8eIDbyiG1RO/+nXs7h/k4otUaN3HPlmJPaAD/V92k779RrAw78QbNX6e+
+      // FrBLSSi9cFyo7kugL3b3Lwo=
+      // =XIte
+      // -----END PGP PUBLIC KEY BLOCK-----
+      // `;
 
-      contact.value = {
-        label: "Telegram",
-        value: "t.me/test3",
-      };
+      //       contact.value = {
+      //         label: "Telegram",
+      //         value: "t.me/test3",
+      //       };
 
-      sellerResponse.value = `{ "confirm": true,"buyer": "savact", "time": 1706111323}`;
+      //       sellerResponse.value = `{ "confirm": true,"buyer": "savact", "time": 1706111323}`;
       // trxLink.value =
       // "https://savact.app/#/_trx_/history?user=yearofthesav&to=savact&chain=eos";
     }
@@ -407,6 +409,7 @@ FrBLSSi9cFyo7kugL3b3Lwo=
       forwardNaviLabel,
       sellerResponse,
       trxLink,
+      item,
 
       // TODO: Show loading of the following
       loadMaxTries,
