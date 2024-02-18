@@ -10,10 +10,37 @@ export function getRegion(code: string) {
   return c;
 }
 
-export const countryCodes = [
-  // Additional codes:
-  "WW",
-  "EU",
+export const euCountryCodes = [
+  "AT", // Austria
+  "BE", // Belgium
+  "BG", // Bulgaria
+  "CY", // Cyprus
+  "CZ", // Czech Republic
+  "DE", // Germany
+  "DK", // Denmark
+  "EE", // Estonia
+  "ES", // Spain
+  "FI", // Finland
+  "FR", // France
+  "GR", // Greece
+  "HR", // Croatia
+  "HU", // Hungary
+  "IE", // Ireland
+  "IT", // Italy
+  "LT", // Lithuania
+  "LU", // Luxembourg
+  "LV", // Latvia
+  "MT", // Malta
+  "NL", // Netherlands
+  "PL", // Poland
+  "PT", // Portugal
+  "RO", // Romania
+  "SE", // Sweden
+  "SI", // Slovenia
+  "SK", // Slovakia
+];
+
+export const countryCodesNoGroups = [
   // The following is a complete list of the 249 current officially assigned ISO 3166-1 alpha-2 codes,
   // see https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements
   "AD",
@@ -265,6 +292,14 @@ export const countryCodes = [
   "ZA",
   "ZM",
   "ZW",
+];
+
+export const countryCodes = [
+  // Additional codes:
+  "WW",
+  "EU",
+
+  ...countryCodesNoGroups,
 ];
 
 // Get all available country codes, but some Nations are mentioned twice:

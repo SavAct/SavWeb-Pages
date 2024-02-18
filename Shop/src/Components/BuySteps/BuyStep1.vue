@@ -269,6 +269,8 @@ export default Vue.defineComponent({
         userData.seller = props.seller.user;
         userData.sigDate = Date.now();
         userData.pubPgp = props.buyerKeys.pub;
+        userData.step = 1;
+        userData.rBy = "buyer";
 
         return JSON.stringify(userData);
       } catch (e) {

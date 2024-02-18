@@ -5,11 +5,12 @@
       v-if="!isFixAmount"
       label="Pieces"
       type="number"
-      v-model="pieces"
+      v-model="sPieces"
       outlined
       dense
       :min="minPieces"
       step="1"
+      :disable="disabled"
     ></q-input>
     <q-select
       class="col-grow"
@@ -17,7 +18,7 @@
       outlined
       dense
       :options="selectOptions"
-      :disable="selectOptions.length <= 1"
+      :disable="selectOptions.length <= 1 || disabled"
     >
       <template v-slot:option="scope">
         <q-item v-bind="scope.itemProps">
@@ -55,14 +56,21 @@ export default Vue.defineComponent({
       type: Number,
       default: 1,
     },
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ["update:modelValue", "update:pieces"],
   setup(props, context) {
     const options = Vue.ref(GetParamsFromTablePricePiece(props.pps));
-    const pieces = Vue.ref<number>(props.pieces);
+
+    const sPieces = Vue.ref<number>(props.pieces);
 
     const pricePiece = Vue.computed({
-      get: () => props.modelValue,
+      get: () => {
+        return props.modelValue;
+      },
       set: (value) => {
         context.emit("update:modelValue", value);
       },
@@ -111,19 +119,19 @@ export default Vue.defineComponent({
       () => pricePiece.value,
       (v) => {
         if (v?.pcs !== undefined) {
-          pieces.value = v.pcs;
+          sPieces.value = v.pcs;
         }
       }
     );
 
     Vue.watch(
-      () => pieces.value,
+      () => sPieces.value,
       (v) => {
         if (
           options.value.maxPieces !== undefined &&
           v > options.value.maxPieces
         ) {
-          pieces.value = options.value.maxPieces;
+          sPieces.value = options.value.maxPieces;
           return;
         }
 
@@ -145,10 +153,10 @@ export default Vue.defineComponent({
             pricePiece.value = fromPp;
           }
         }
-        if (pieces.value < minPieces.value) {
-          pieces.value = minPieces.value;
+        if (sPieces.value < minPieces.value) {
+          sPieces.value = minPieces.value;
         }
-        context.emit("update:pieces", pieces.value);
+        context.emit("update:pieces", sPieces.value);
       },
       { immediate: true }
     );
@@ -176,13 +184,19 @@ export default Vue.defineComponent({
       return `${isFixAmount.value ? "" : "From up of "}${opt.pcs} ${opt.pcs == 1 ? "piece" : "pieces"} for ${(Number(opt.p) / opt.pcs).toFixed(2)} $/pcs`;
     }
 
+    Vue.onMounted(() => {
+      if (props.pieces) {
+        sPieces.value = props.pieces;
+      }
+    });
+
     return {
       selected,
       selectOptions,
       ppLineHeader,
       ppLine,
       isFixAmount,
-      pieces,
+      sPieces,
       minPieces,
     };
   },

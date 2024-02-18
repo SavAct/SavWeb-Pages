@@ -44,11 +44,24 @@
         label="Postal Code"
         v-model="modelValue.postal"
       ></q-input>
-      <q-input
-        class="col-6 q-px-sm"
+
+      <q-select
+        class="col-6 q-px-sm self-end"
+        v-model="region"
         label="Country"
-        v-model="modelValue.country"
-      ></q-input>
+        outlined
+        :options="regionOptions"
+        @filter="filterRegionInput"
+        clearable
+        use-input
+        dense
+        input-debounce="0"
+        behavior="menu"
+        @keyup.enter="
+          if (regionOptions.length === 1) region = regionOptions[0];
+        "
+      >
+      </q-select>
     </div>
     <q-input
       class="full-width q-px-sm q-pt-md"
@@ -58,8 +71,9 @@
   </div>
 </template>
 <script lang="ts">
-import { PropType } from "vue";
+import { PropType, Ref } from "vue";
 import { Address } from "./Generator";
+import { countryCodesNoGroups, getRegion } from "./ConvertRegion";
 
 export default Vue.defineComponent({
   name: "addressInput",
@@ -69,8 +83,51 @@ export default Vue.defineComponent({
       required: true,
     },
   },
-  setup() {
-    return {};
+  setup(props, context) {
+    const region = Vue.computed({
+      get: () => {
+        return props.modelValue?.country !== undefined
+          ? {
+              label: getRegion(props.modelValue?.country.toUpperCase()) ?? "",
+              value: props.modelValue?.country,
+            }
+          : undefined;
+      },
+      set: (value) => {
+        context.emit("update:modelValue", {
+          ...props.modelValue,
+          country: value?.value ?? "",
+        });
+      },
+    });
+    const regionOptions = Vue.ref<Array<{ label: string; value: string }>>([]);
+    const countries = Vue.ref<Array<{ label: string; value: string }>>(
+      countryCodesNoGroups.map((c) => {
+        return { label: getRegion(c) ?? "", value: c };
+      })
+    );
+
+    function regionFilter(
+      search: string,
+      update: Function,
+      resultOptions: Ref<Array<{ label: string; value: string }>>
+    ) {
+      const needle = search.toLowerCase();
+      update(() => {
+        let options = [];
+        for (let c of countries.value) {
+          if (c.label.toLowerCase().includes(needle)) {
+            options.push(c);
+          }
+        }
+        resultOptions.value = options;
+      });
+    }
+
+    function filterRegionInput(search: string, update: Function) {
+      regionFilter(search, update, regionOptions);
+    }
+    return { region, regionOptions, filterRegionInput };
   },
 });
 </script>

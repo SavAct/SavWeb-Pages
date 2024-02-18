@@ -427,23 +427,25 @@ export default Vue.defineComponent({
       return (piecesPrice.value.p * pieces.value) / piecesPrice.value.pcs;
     });
 
-    const shiptTo = Vue.computed(() => {
-      if (item.value !== undefined) {
-        return item.value.shipTo.find((a) => a.rs == sRegion.value?.value);
+    const selectedShipTo = Vue.computed(() => {
+      if (shipTo.value !== undefined) {
+        return shipTo.value.find((a) =>
+          a.rs?.find((r) => r == sRegion.value?.value)
+        );
       }
       return undefined;
     });
 
     const shipDuration = Vue.computed(() => {
-      if (shiptTo.value !== undefined) {
-        return Number(shiptTo.value.t) / 3600 / 24 + " days";
+      if (selectedShipTo.value !== undefined) {
+        return Number(selectedShipTo.value.t) / 3600 / 24 + " days";
       }
       return undefined;
     });
 
     const shipPrice = Vue.computed(() => {
-      if (shiptTo.value !== undefined) {
-        return Number(shiptTo.value.p);
+      if (selectedShipTo.value !== undefined) {
+        return Number(selectedShipTo.value.p);
       }
       return undefined;
     });
@@ -472,7 +474,7 @@ export default Vue.defineComponent({
 
     const totalTokenStr = Vue.computed(() => {
       if (totalToken.value) {
-        return AssetToString(totalToken.value);
+        return "~ " + AssetToString(totalToken.value);
       }
       return undefined;
     });

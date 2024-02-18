@@ -23,6 +23,8 @@ export interface Address {
 }
 
 export interface UserData extends Address {
+  step: number;
+  rBy: string;
   buyer: string;
   pubPgp: string;
   item: { id: number; category: string | number };

@@ -141,7 +141,6 @@ import UserInput from "../Components/UserInput.vue";
 import UserLink from "../Components/UserLink.vue";
 import TokenSymbol from "../Components/TokenSymbol.vue";
 import RawDataBtn from "../Components/RawDataBtn.vue";
-import AddressInput from "../Components/AddressInput.vue";
 import BuyStep1 from "../Components/BuySteps/BuyStep1.vue";
 import BuyStep24SendData from "../Components/BuySteps/BuyStep24SendData.vue";
 import BuyStep3 from "../Components/BuySteps/BuyStep3.vue";
@@ -152,7 +151,7 @@ import { Address } from "../Components/Generator";
 import { ItemTable, UserTable } from "../Components/ContractInterfaces";
 import { PGP_Keys } from "../Components/AddPgpBtn.vue";
 import { LoadFromContract } from "../Components/MarketContractHandle";
-import { getRegion } from "../Components/ConvertRegion";
+import { countryCodesNoGroups, getRegion } from "../Components/ConvertRegion";
 import { GetQueryOrderRequest } from "../Components/queryHelper";
 
 export default Vue.defineComponent({
@@ -161,7 +160,6 @@ export default Vue.defineComponent({
     UserInput,
     UserLink,
     TokenSymbol,
-    AddressInput,
     RawDataBtn,
     BuyStep1,
     BuyStep24SendData,
@@ -323,6 +321,12 @@ export default Vue.defineComponent({
         token.value = orderRequest.token;
         pieces.value = orderRequest.pieces;
         toRegion.value = orderRequest.toRegion;
+        if (
+          toRegion.value &&
+          countryCodesNoGroups.includes(toRegion.value.toUpperCase())
+        ) {
+          address.value.country = toRegion.value;
+        }
       }
     });
 
@@ -332,7 +336,7 @@ export default Vue.defineComponent({
         firstName: "Sav",
         middleNames: "",
         lastName: "Act",
-        country: "Moon",
+        country: "de",
         state: "Front side",
         city: "Crater",
         postal: "12345",

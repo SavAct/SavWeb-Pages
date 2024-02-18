@@ -63,9 +63,10 @@
               <order-item
                 v-if="entry && userData"
                 :entry="entry"
-                :price="price"
+                v-model:price="price"
                 :token="userData.token"
                 :pieces="userData.pieces"
+                :to-region="userData.country"
               ></order-item>
               <q-input
                 v-if="note.length > 0"
@@ -199,6 +200,7 @@
               :price="price"
               :token="userData.token"
               :pieces="userData.pieces"
+              :to-region="userData.country"
             ></order-item>
           </q-card-section>
         </q-card>
@@ -257,21 +259,23 @@ export default Vue.defineComponent({
     const buyerResponse = Vue.computed<string>({
       get: () => _buyerResponse.value,
       set: (v) => {
-        _buyerResponse.value = v;
-        evaluateInput();
+        _buyerResponse.value = v.trim();
+        void evaluateInput();
       },
     });
     const isEncrypted = Vue.ref<boolean>(false);
     const keys = Vue.ref<PGP_Keys>({ passphrase: "", pri: "", pub: "" }); // TODO: Get the public key of the seller from blockchain
     const responseDecrypted = Vue.ref<string>("");
     const currentTokenPrice = Vue.ref<bigint>(BigInt(0));
-    const price = Vue.ref<number>(0); // TODO: Calculate current price, get price in payment token and compare
+    const price = Vue.ref<number>(0); // TODO: Compare the prices between buyer and seller
     const sellersNote = Vue.ref<string>("");
     const userData = Vue.ref<UserData>();
     const nextLoading = Vue.ref<boolean>(false);
 
     async function evaluateInput() {
-      if (buyerResponse.value.startsWith("-----BEGIN PGP MESSAGE-----")) {
+      if (
+        buyerResponse.value.trim().startsWith("-----BEGIN PGP MESSAGE-----")
+      ) {
         isEncrypted.value = true;
 
         if (keys.value.pri.length > 0) {
@@ -305,27 +309,39 @@ export default Vue.defineComponent({
             const id = response.item.id;
             const category = BigInt(response.item.category);
 
-            if (response.token) {
-              // TODO: Check all parameters like price, token, pieces
-              // TODO: Check if buyers public key is on blockchain and check if it is identical
-              userData.value = response;
-              buyerPubKey.value = response.pubPgp;
-              await findEntry(id, category);
-              if (response.note.length > 0) {
-                note.value = response.note;
-              }
-              memo.value = requestId.value;
-              step.value = 2;
-              return;
-            }
+            if (response.rBy === "buyer") {
+              switch (response.step) {
+                case 1:
+                  if (response.token) {
+                    // TODO: Check all parameters like price, token, pieces
+                    // TODO: Check if buyers public key is on blockchain and check if it is identical
+                    userData.value = Vue.reactive(response);
 
-            // TODO: Other responses
-          } else {
-            console.log("Invalid response");
+                    buyerPubKey.value = response.pubPgp;
+                    await findEntry(id, category);
+                    if (response.note.length > 0) {
+                      note.value = response.note;
+                    }
+                    memo.value = requestId.value;
+                    step.value = 2;
+
+                    return;
+                  } else {
+                    console.log("No token in response");
+                  }
+                  break;
+                default:
+                  console.log("Undefined step");
+              }
+            } else {
+              // TODO: Other responses
+              console.log("Not a response from buyer");
+            }
           }
         } catch (e) {
           console.log("Error on parsing JSON", e);
         }
+        console.log("finished evaluating input");
       }
       note.value = "";
       entry.value = undefined;
@@ -510,12 +526,10 @@ OO8I
       if (
         sellStepperEl.value?.$el.firstElementChild &&
         sellStepNavEl.value &&
-        state.mainHeaderRef.value &&
-        state.mainFooterRef.value
+        state.mainHeaderRef.value
       ) {
         subContentHeight.value =
           state.mainHeaderRef.value.$el.clientHeight +
-          state.mainFooterRef.value.$el.clientHeight +
           sellStepNavEl.value.$el.clientHeight +
           sellStepperEl.value.$el.firstElementChild.clientHeight +
           45;
@@ -570,6 +584,8 @@ OO8I
       loadTryPercentage,
       seller,
       loadingSeller,
+
+      subContentHeight,
     };
   },
 });

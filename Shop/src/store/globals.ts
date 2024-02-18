@@ -429,9 +429,8 @@ const defaultUserName = Vue.computed(() => {
 
 const uploadPageInputs = Vue.ref<AddItem | undefined>(undefined);
 
-// Elements of the main header and footer
+// Elements of the main header to calculate the window height
 const mainHeaderRef = Vue.ref<{ $el: HTMLElement } | null>(null);
-const mainFooterRef = Vue.ref<{ $el: HTMLElement } | null>(null);
 
 const thumbStyle: any = {
   borderRadius: "7px",
@@ -452,7 +451,6 @@ export const state = {
   user,
   defaultUserName,
   darkStyle,
-  mainFooterRef,
   mainHeaderRef,
   thumbStyle,
   barStyle,
