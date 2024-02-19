@@ -1,6 +1,6 @@
 <template>
   <q-chip
-    icon="person"
+    :icon="icon"
     :label="user"
     clickable
     @click="click"
@@ -27,6 +27,11 @@ export default Vue.defineComponent({
       type: Boolean,
       required: false,
       default: false,
+    },
+    icon: {
+      type: String,
+      required: false,
+      default: "person",
     },
   },
   setup(props) {

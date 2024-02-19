@@ -1,66 +1,112 @@
 <template>
   <div class="row" style="border: 1px solid #ddd; border-radius: 4px">
-    <div class="col-3">
+    <div :class="$q.screen.lt.sm ? 'col-12' : 'col-3'">
       <pro-img
+        :style="$q.screen.lt.sm ? 'max-height:120px' : 'max-height:220px'"
         v-if="entry.imgs.length > 0"
         :src="entry.imgs[0]"
         fit="contain"
         :class="darkStyle ? 'bg-grey-10' : 'bg-grey-2'"
       ></pro-img>
     </div>
-    <div class="col-9 q-px-md">
-      <div
-        class="text-bold q-py-sm q-pr-sm"
-        :class="$q.screen.gt.xs ? 'text-h6' : ''"
-      >
-        {{ entry.title }}
-      </div>
-      <div class="row justify-between">
+    <div
+      class="q-px-sm column"
+      :class="$q.screen.lt.sm ? 'col-12' : 'col-9 q-pl-md'"
+    >
+      <div class="row justify-end q-py-sm">
+        <div
+          class="col-grow text-bold"
+          :class="$q.screen.gt.xs ? 'text-h6' : ''"
+        >
+          {{ entry.title }}
+        </div>
         <div class="col-auto">
+          <user-link
+            class="q-mr-none"
+            :size="$q.screen.lt.sm ? 'sm' : ''"
+            icon="storefront"
+            :color="chipBgColor()"
+            :user="entry.seller"
+            internal
+          ></user-link>
+        </div>
+      </div>
+
+      <div v-if="excludedRegion" class="text-red col-auto">
+        The region {{ excludedRegion }} is excluded!
+      </div>
+      <div class="col-grow">
+        <span
+          class="row"
+          :class="$q.screen.lt.sm ? 'justify-between' : 'justify-left'"
+        >
+          <span :class="$q.screen.lt.sm ? '' : 'self-center'" class="col-auto"
+            >Price:</span
+          >
           <piece-price-select
-            class="q-mb-sm"
+            class="col-auto"
             label="Price option"
+            :size="$q.screen.lt.sm ? 'sm' : ''"
             :pps="entry.pp"
             v-model:pieces="pieces"
             v-model="piecesPrice"
             disabled
-            dense
+            chip
           ></piece-price-select>
-          <div v-if="excludedRegion" class="text-red">
-            The region {{ excludedRegion }} is excluded!
-          </div>
-          <div>
-            <span> {{ shouldItemsPrice?.toFixed(2) }} USD + </span>
-            <span :class="selectedShipTo === undefined ? 'text-red' : ''"
-              >Shipping to <span class="text-bold">{{ toRegionName }}</span> for
-              {{ shouldShipPrice?.toFixed(2) }} USD</span
+        </span>
+        <span
+          class="row"
+          :class="
+            (selectedShipTo === undefined ? 'text-red ' : '') +
+            ($q.screen.lt.sm ? 'justify-between' : 'justify-left q-mr-sm')
+          "
+        >
+          <span :class="$q.screen.lt.sm ? '' : 'self-center'" class="col-auto"
+            >Shipping to:</span
+          >
+          <q-chip
+            class="col-auto q-mr-none"
+            :size="$q.screen.lt.sm ? 'sm' : ''"
+            :color="chipBgColor()"
+            :label="
+              toRegionName + ' for ' + shouldShipPrice?.toFixed(2) + ' USD'
+            "
+          ></q-chip>
+        </span>
+      </div>
+      <div class="col-auto row q-pb-sm justify-end">
+        <div class="col-grow row">
+          <span
+            class="col-grow row"
+            :class="$q.screen.lt.sm ? 'justify-between' : 'justify-left'"
+          >
+            <span
+              class="col-auto"
+              :style="$q.screen.lt.sm ? '' : 'padding-top:7px'"
+              >Total price:</span
             >
-          </div>
-
-          <div>
-            Total price
             <q-chip
-              icon="attach_money"
+              class="col-auto q-mr-none"
+              :size="$q.screen.lt.sm ? 'sm' : ''"
+              :color="chipBgColor()"
               :label="price?.toFixed(2) + ' USD'"
             ></q-chip>
-            Current token price
-            <q-chip
-              icon="currency_bitcoin"
-              :label="totalAsset"
-              clickable
-              @click="updateTokenPrice"
-            ></q-chip>
-          </div>
+          </span>
         </div>
-        <user-link class="col-auto" :user="entry.seller"></user-link>
-      </div>
 
-      <token-symbol
-        :chain="token?.chain"
-        :contract="token?.contract"
-        :symbol="token?.symbol"
-        size="18px"
-      ></token-symbol>
+        <div class="col-auto self-end">
+          <token-symbol
+            class="q-mr-none"
+            :amount="Number(currentTokenPrice)"
+            :color="chipBgColor()"
+            :chain="token?.chain"
+            :contract="token?.contract"
+            :symbol="token?.symbol"
+            @click="updateTokenPrice"
+            size="18px"
+          ></token-symbol>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -68,15 +114,17 @@
 import ProImg from "../Components/ProImg.vue";
 import TokenSymbol from "./TokenSymbol.vue";
 import PiecePriceSelect from "./PiecePrice/PiecePriceSelect.vue";
+import UserLink from "../Components/UserLink.vue";
 import { PropType } from "vue";
 import { state } from "../store/globals";
-import { AssetToString, Token } from "./AntelopeHelpers";
+import { Token } from "./AntelopeHelpers";
 import { ItemTable, ToRegion } from "./ContractInterfaces";
 import { countryCodes, euCountryCodes, getRegion } from "./ConvertRegion";
+import { chipBgColor } from "./styleHelper";
 
 export default Vue.defineComponent({
   name: "orderItem",
-  components: { ProImg, TokenSymbol, PiecePriceSelect },
+  components: { ProImg, TokenSymbol, PiecePriceSelect, UserLink },
   emits: ["currentTokenPrice", "update:price"],
   props: {
     entry: {
@@ -181,14 +229,6 @@ export default Vue.defineComponent({
       // TODO: Combine with step 3
     }
 
-    const totalAsset = Vue.computed(() => {
-      const asset = AssetToString({
-        amount: currentTokenPrice.value,
-        symbol: props.token.symbol,
-      });
-      return asset;
-    });
-
     const toRegionName = Vue.computed(() => {
       if (props.toRegion !== undefined) {
         return getRegion(props.toRegion.toUpperCase());
@@ -211,7 +251,6 @@ export default Vue.defineComponent({
     return {
       darkStyle: state.darkStyle,
       updateTokenPrice,
-      totalAsset,
       piecesPrice,
       shouldItemsPrice,
       shouldShipPrice,
@@ -219,6 +258,8 @@ export default Vue.defineComponent({
       shipDuration,
       excludedRegion,
       toRegionName,
+      chipBgColor,
+      currentTokenPrice,
     };
   },
 });

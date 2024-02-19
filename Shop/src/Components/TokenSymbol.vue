@@ -1,6 +1,19 @@
 <template>
-  <q-chip square>
-    <span class="text-bold text-h5" v-if="symbol">{{ symbol.name }}</span>
+  <q-chip
+    square
+    @click="click"
+    clickable
+    :class="$q.screen.gt.xs || !amount ? '' : 'q-px-sm'"
+  >
+    <span v-if="amount && symbol" :class="$q.screen.gt.xs ? 'text-h5' : ''"
+      >{{ amount.toFixed(symbol.precision) }}&nbsp;</span
+    >
+    <span
+      class="text-bold"
+      :class="$q.screen.gt.xs || !amount ? 'text-h5' : ''"
+      v-if="symbol"
+      >{{ symbol.name }}</span
+    >
     <div class="text-caption q-ml-sm" style="line-height: 100%">
       <div>
         of <span class="text-bold">{{ contract }}</span>
@@ -29,9 +42,18 @@ export default Vue.defineComponent({
       type: String,
       required: true,
     },
+    amount: {
+      type: Number,
+      default: undefined,
+      required: false,
+    },
   },
-  setup() {
-    return {};
+  emits: ["click"],
+  setup(_, context) {
+    function click(v: any) {
+      context.emit("click", v);
+    }
+    return { click };
   },
 });
 </script>

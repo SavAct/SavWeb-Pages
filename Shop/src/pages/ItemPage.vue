@@ -207,7 +207,7 @@
                   v-model="piecesPrice"
                 ></piece-price-select>
 
-                <div class="row justify-between q-col-gutter-x-sm">
+                <div class="row justify-between q-col-gutter-x-sm q-mt-sm">
                   <div v-if="price" class="col-auto">
                     Price:
                     <q-chip
@@ -330,6 +330,7 @@ import {
 import { ItemTable, UserTable } from "../Components/ContractInterfaces";
 import { LoadFromContract } from "../Components/MarketContractHandle";
 import { categoryPathsById } from "../Components/Categories";
+import { chipBgColor } from "../Components/styleHelper";
 
 export default Vue.defineComponent({
   components: { Gallery, TokenSymbol, UserLink, PiecePriceSelect },
@@ -620,16 +621,6 @@ export default Vue.defineComponent({
       if (item.value && index < item.value.opts.length) {
         option.value = item.value.opts[index];
       }
-    }
-
-    function chipBgColor(selected = false) {
-      return state.darkStyle.value
-        ? selected
-          ? "grey-10"
-          : "grey-9"
-        : selected
-          ? "grey-1"
-          : "";
     }
 
     function chipBorderStyle(selected = false) {

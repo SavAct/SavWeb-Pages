@@ -1,5 +1,5 @@
 <template>
-  <div class="row q-col-gutter-sm">
+  <div v-show="!chip" class="row q-col-gutter-sm">
     <q-input
       class="col-auto"
       v-if="!isFixAmount"
@@ -11,6 +11,7 @@
       :min="minPieces"
       step="1"
       :disable="disabled"
+      :size="size"
     ></q-input>
     <q-select
       class="col-grow"
@@ -19,6 +20,7 @@
       dense
       :options="selectOptions"
       :disable="selectOptions.length <= 1 || disabled"
+      :size="size"
     >
       <template v-slot:option="scope">
         <q-item v-bind="scope.itemProps">
@@ -32,6 +34,13 @@
       </template>
     </q-select>
   </div>
+  <q-chip
+    class="q-mr-none"
+    v-if="chip"
+    :color="chipBgColor()"
+    :label="chipText"
+    :size="size"
+  ></q-chip>
 </template>
 <script lang="ts">
 import { PropType } from "vue";
@@ -40,6 +49,7 @@ import {
   GetParamsFromTablePricePiece,
   PriceOption,
 } from "./ContractTablePriceOption";
+import { chipBgColor } from "../styleHelper";
 
 export default Vue.defineComponent({
   name: "piecePriceSelect",
@@ -59,6 +69,14 @@ export default Vue.defineComponent({
     disabled: {
       type: Boolean,
       default: false,
+    },
+    chip: {
+      type: Boolean,
+      default: false,
+    },
+    size: {
+      type: String,
+      default: "",
     },
   },
   emits: ["update:modelValue", "update:pieces"],
@@ -190,6 +208,15 @@ export default Vue.defineComponent({
       }
     });
 
+    const chipText = Vue.computed(() => {
+      const p = selected.value?.value.p
+        ? " for " +
+          (Number(selected.value.value.p) * sPieces.value).toFixed(2) +
+          " USD"
+        : "";
+      return (sPieces.value == 1 ? "1 piece" : sPieces.value + " pieces") + p;
+    });
+
     return {
       selected,
       selectOptions,
@@ -198,6 +225,8 @@ export default Vue.defineComponent({
       isFixAmount,
       sPieces,
       minPieces,
+      chipBgColor,
+      chipText,
     };
   },
 });

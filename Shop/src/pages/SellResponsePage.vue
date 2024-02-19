@@ -68,9 +68,17 @@
                 :pieces="userData.pieces"
                 :to-region="userData.country"
               ></order-item>
+
+              <user-link
+                v-if="userData"
+                class="q-mt-md q-ml-none"
+                :color="chipBgColor()"
+                :user="userData.buyer"
+                internal
+              ></user-link>
               <q-input
                 v-if="note.length > 0"
-                class="q-mt-md"
+                class="q-mt-sm"
                 v-model="note"
                 outlined
                 readonly
@@ -81,7 +89,7 @@
                 <div class="col-grow">
                   <q-btn-toggle
                     push
-                    glossy
+                    :color="chipBgColor()"
                     size="md"
                     v-model="accept"
                     toggle-color="blue"
@@ -236,6 +244,7 @@
   </q-page>
 </template>
 <script lang="ts">
+import UserLink from "../Components/UserLink.vue";
 import OrderItem from "../Components/OrderItem.vue";
 import AddPgpBtn, { PGP_Keys } from "../Components/AddPgpBtn.vue";
 import RawDataBtn from "../Components/RawDataBtn.vue";
@@ -250,9 +259,10 @@ import { state } from "../store/globals";
 import { copy } from "../Components/QuasarHelpers";
 import { LoadFromContract } from "../Components/MarketContractHandle";
 import { ItemTable, UserTable } from "../Components/ContractInterfaces";
+import { chipBgColor } from "../Components/styleHelper";
 
 export default Vue.defineComponent({
-  components: { AddPgpBtn, OrderItem, RawDataBtn },
+  components: { AddPgpBtn, OrderItem, RawDataBtn, UserLink },
   name: "sellResponsePage",
   setup() {
     const _buyerResponse = Vue.ref<string>("");
@@ -492,6 +502,9 @@ OO8I
     // TODO: Open the history page of the SavAct app with the mentioned buyer as sender and seller as receiver
     // TODO: Possibility to enter a payment confirmation of the customer also in the first step and go automatically to the last step.
 
+    // TODO: Store step content while processing, so that you can go back after clicking on a user chip
+    // TODO: Display invalidation time
+
     const step = Vue.ref<number>(1);
     async function nextStep() {
       if (step.value == 1) {
@@ -577,6 +590,7 @@ OO8I
       thumbStyle: state.thumbStyle,
       barStyle: state.barStyle,
       nextLoading,
+      chipBgColor,
 
       // TODO: Show loading of the following
       loadMaxTries,
