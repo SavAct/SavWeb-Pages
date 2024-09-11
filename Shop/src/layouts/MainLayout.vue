@@ -201,11 +201,6 @@ export default Vue.defineComponent({
       set: (value) => (state.mainHeaderRef.value = value),
     });
 
-    const mainFooter = Vue.computed({
-      get: () => state.mainFooterRef.value,
-      set: (value) => (state.mainFooterRef.value = value),
-    });
-
     function menuClick() {
       if (leftDrawerOpen.value) {
         if (!miniDrawer.value) {
@@ -219,6 +214,8 @@ export default Vue.defineComponent({
       leftDrawerOpen.value = true;
     }
 
+
+
     return {
       canBack: router.canBack,
       canForward: router.canForward,
@@ -231,7 +228,6 @@ export default Vue.defineComponent({
       goForward,
       to: router.push,
       mainHeader,
-      mainFooter,
       menuClick,
       savConnected,
     };

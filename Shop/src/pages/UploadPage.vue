@@ -408,32 +408,29 @@ export default Vue.defineComponent({
     const options = Vue.ref<Array<Ref<string>>>(
       pIpt?.opts.map((o) => Vue.ref<string>(o)) ?? []
     );
-    const tempOptions = Vue.ref<string>("");
+    const tempOptions = Vue.ref<string>("");      
 
     function pushOption() {
       if (tempOptions.value.trim() === "") return;
       options.value.push(Vue.ref<string>(tempOptions.value));
       tempOptions.value = "";
     }
-
     const available = Vue.ref<boolean>(
       pIpt?.available !== undefined ? pIpt.available : true
     );
-
     const countries = Vue.ref<Array<{ label: string; value: string }>>(
       countryCodes.map((c) => {
         return { label: getRegion(c) ?? "", value: c };
       })
     );
     const fromRegion = Vue.ref<{ label: string; value: string } | undefined>(
-      pIpt?.fromR !== undefined
+      pIpt?.fromR !== undefined && pIpt.fromR !== ""
         ? {
             label: getRegion(pIpt.fromR.toUpperCase()) ?? "",
             value: pIpt.fromR,
           }
         : undefined
     );
-
     const _toRegions = Vue.ref<
       Array<{
         label: string; // Region name
@@ -491,7 +488,6 @@ export default Vue.defineComponent({
       imgSrcs.value.push({ id: imageSrcBiggestId++, src: trimmed });
       imageSrc.value = "";
     }
-
     function moveStringOneFieldBefore(index: number) {
       if (index > 0) {
         const item = imgSrcs.value.splice(index, 1)[0];
@@ -660,7 +656,7 @@ export default Vue.defineComponent({
         return;
       }
 
-      // Set User data to current state if user is in table
+      // Set user data to current state if user is in table
       const foundUser = await loadUser.loadUser(seller.value);
       if (foundUser) {
         state.user.value = userTableEntryToUser(foundUser);
@@ -762,9 +758,9 @@ export default Vue.defineComponent({
     }
 
     Vue.onMounted(() => {
-      // Load already uploaded shop by query id and category
+      // Load already uploaded shop by query id and category if parameters are not already setted
       const id_category = GetQueryIdAndCategory();
-      if (id_category?.category !== undefined && id_category?.category !== 0n) {
+      if (!pIpt && id_category?.category !== undefined && id_category?.category !== 0n) {
         id.value = id_category.id;
         category.value = id_category.category;
 
@@ -870,7 +866,7 @@ export default Vue.defineComponent({
           sd: NaN,
         });
       }
-    }
+    }    
 
     return {
       darkStyle: state.darkStyle,

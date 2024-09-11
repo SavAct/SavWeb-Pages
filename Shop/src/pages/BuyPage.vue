@@ -389,6 +389,9 @@ export default Vue.defineComponent({
       // "https://savact.app/#/_trx_/history?user=yearofthesav&to=savact&chain=eos";
     }
 
+    // TODO: Remove pgp encryption stuff for the first version
+    // TODO: Fix: Require selected token on refresh
+
     return {
       darkStyle: state.darkStyle,
       entry,

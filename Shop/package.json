@@ -21,7 +21,7 @@
     "quasar": "^2.11.7",
     "typescript": "^5.0.2",
     "vite": "^5.0.3",
-    "vite-plugin-minify": "^1.5.2",
+    "vite-plugin-minify": "^2.0.0",
     "vite-plugin-singlefile": "^2.0.0",
     "vue": "^3.2.47",
     "xxhash-wasm": "^1.0.2"
