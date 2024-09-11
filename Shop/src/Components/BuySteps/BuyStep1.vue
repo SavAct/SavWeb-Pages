@@ -298,8 +298,8 @@ export default Vue.defineComponent({
           json,
           props.seller.pgp,
           props.buyerKeys.pub,
-          props.buyerKeys.pri,
-          props.buyerKeys.passphrase
+          // props.buyerKeys.pri,
+          // props.buyerKeys.passphrase
         );
         if (typeof data == "string") {
           context.emit("update:buyerData", data);

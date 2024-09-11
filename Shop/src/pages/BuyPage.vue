@@ -153,6 +153,7 @@ import { PGP_Keys } from "../Components/AddPgpBtn.vue";
 import { LoadFromContract } from "../Components/MarketContractHandle";
 import { countryCodesNoGroups, getRegion } from "../Components/ConvertRegion";
 import { GetQueryOrderRequest } from "../Components/queryHelper";
+import { isPubKeyValid } from "../Components/pgpHelper";
 
 export default Vue.defineComponent({
   components: {
@@ -212,6 +213,18 @@ export default Vue.defineComponent({
       ) {
         loadingSeller.value = true;
         seller.value = await state.getUser(entry.value.seller, state.contract);
+        
+        if(seller.value?.pgp){
+          const isValidSellerKey = await isPubKeyValid(seller.value?.pgp)
+          if(isValidSellerKey !== true){
+            Quasar.Notify.create({
+              type: "negative",
+              message: "Seller's public key is invalid",
+              position: "top",
+            });
+          }
+        }
+
         loadingSeller.value = false;
       }
     }

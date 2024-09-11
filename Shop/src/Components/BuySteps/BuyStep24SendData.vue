@@ -67,7 +67,7 @@
             color="blue"
             @click="
               selectedContect !== undefined
-                ? openLinkOrMail(selectedContect.value)
+                ? openLinkOrMail(selectedContect.value, '_blank', encrypted)
                 : undefined
             "
           ></q-btn>

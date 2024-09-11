@@ -77,14 +77,31 @@ export function messengerShortName(startByDomain: string) {
   return found?.name;
 }
 
-export function openLinkOrMail(link: string, target = "_blank") {
+export function openLinkOrMail(link: string, target = "_blank", content = "", subject = "") {
   if (!link.startsWith("https://") && !link.startsWith("mailto:")) {
     if (link.startsWith("http://")) {
       link = "https://" + link.substring(7);
-    } else if (isValidEmail(link)) {
-      link = "mailto:" + link;
-    } else {
+    }
+    if (isValidEmail(link)) {
+      // Email
+      link = `mailto:${link}`;
+      if(subject.length > 0 || content.length > 0){
+        link += `?${subject.length > 0 ? `subject=${encodeURIComponent(subject)}` : ''}${content.length > 0 ? `&body=${encodeURIComponent(content)}` : ''}`
+      }
+    }
+    else {
       link = "https://" + link;
+    }
+
+    if(link.startsWith("https://t.me/") ){
+      // Telegram
+      if(subject.length > 0 || content.length > 0){
+        const predefinedText = `?text=${encodeURIComponent(subject.length > 0 && content.length > 0? subject + '\n' : '' + content)}`;
+        if(predefinedText.length < 2000) {
+          // Telegram has a limit of around 2000 characters
+          link += predefinedText;
+        }
+      }
     }
   }
   SavWeb.goTo(link, target);

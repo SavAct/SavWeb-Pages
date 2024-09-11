@@ -115,7 +115,7 @@ export interface PGP_Keys {
   pub: string;
   pri: string;
   passphrase: string;
-  fingerprint?: string;
+  fingerprint?: Promise<string>;
 }
 
 export default Vue.defineComponent({

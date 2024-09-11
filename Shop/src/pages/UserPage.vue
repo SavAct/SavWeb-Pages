@@ -358,9 +358,11 @@ export default Vue.defineComponent({
           position: "top",
         });
         return;
-      } else if (
-        pgpKey.value.fingerprint === undefined ||
-        pgpKey.value.fingerprint.length === 0
+      }
+      const fingerprint = await pgpKey.value?.fingerprint;
+      if (
+        fingerprint === undefined ||
+        fingerprint.length === 0
       ) {
         Quasar.Notify.create({
           message: "Public PGP key is invalid",
@@ -369,7 +371,7 @@ export default Vue.defineComponent({
           position: "top",
         });
         return;
-      }
+      }      
 
       if (isSeller.value && allowedTokens.value.length === 0) {
         Quasar.Notify.create({
