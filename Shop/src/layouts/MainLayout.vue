@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="hHh Lpr lff">
+  <q-layout view="hHh Lpr lff" id="immortal-shop">
     <q-header
       bordered
       :class="darkStyle ? 'bg-dark' : 'bg-grey-10'"
