@@ -9,3 +9,13 @@ export function chipBgColor(selected = false) {
       ? "grey-1"
       : "";
 }
+
+export function chipBorderStyle(selected = false) {
+  return state.darkStyle.value
+    ? selected
+      ? "border: 1px solid #333333"
+      : ""
+    : selected
+      ? "border: 1px solid #aaaaaa"
+      : "";
+}

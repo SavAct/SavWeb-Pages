@@ -223,7 +223,7 @@ export default Vue.defineComponent({
       }
     });
 
-    const isTextInput = Vue.ref<boolean>(false);
+    const isTextInput = Vue.ref<boolean>(true);
     const searchText = Vue.ref<string>("");
     const openLevel0Btn = Vue.ref<boolean>(false);
     const openLevel1Btn = Vue.ref<boolean>(false);

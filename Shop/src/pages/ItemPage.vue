@@ -330,7 +330,7 @@ import {
 import { ItemTable, UserTable } from "../Components/ContractInterfaces";
 import { LoadFromContract } from "../Components/MarketContractHandle";
 import { categoryPathsById } from "../Components/Categories";
-import { chipBgColor } from "../Components/styleHelper";
+import { chipBgColor, chipBorderStyle } from "../Components/styleHelper";
 
 export default Vue.defineComponent({
   components: { Gallery, TokenSymbol, UserLink, PiecePriceSelect },
@@ -623,15 +623,6 @@ export default Vue.defineComponent({
       }
     }
 
-    function chipBorderStyle(selected = false) {
-      return state.darkStyle.value
-        ? selected
-          ? "border: 1px solid #333333"
-          : ""
-        : selected
-          ? "border: 1px solid #aaaaaa"
-          : "";
-    }
     const hasImgs = Vue.computed(() => {
       return imgs.value && imgs.value.length > 0;
     });

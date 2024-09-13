@@ -293,7 +293,7 @@ export default Vue.defineComponent({
       const json = createJsonUserData();
       context.emit("update:jsonData", json);
 
-      if (props.seller) {
+      if (props.seller) {        
         const data = await encrypt(
           json,
           props.seller.pgp,
