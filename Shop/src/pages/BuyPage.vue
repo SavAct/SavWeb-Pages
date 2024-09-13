@@ -403,7 +403,7 @@ export default Vue.defineComponent({
     }
 
     // TODO: Remove pgp encryption stuff for the first version
-    // TODO: Fix: Require selected token on refresh
+    // TODO: Fix: Require selected token on refresh. Add payment method with preselected entry from item page, but alert if token is not on user accounts blockchain 
 
     return {
       darkStyle: state.darkStyle,

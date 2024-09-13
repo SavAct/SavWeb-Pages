@@ -241,6 +241,7 @@ import {
   userTableEntryToUser,
 } from "../Components/MarketContractHandle";
 import { PGP_Keys } from "../Components/AddPgpBtn.vue";
+import { isPubKeyValid } from "../Components/pgpHelper";
 
 export default Vue.defineComponent({
   name: "userPage",
@@ -359,17 +360,15 @@ export default Vue.defineComponent({
         });
         return;
       }
-      const fingerprint = await pgpKey.value?.fingerprint;
-      if (
-        fingerprint === undefined ||
-        fingerprint.length === 0
-      ) {
+      const isValidPupKey = await isPubKeyValid(pgpKey.value.pub)
+      if (isValidPupKey !== true) {
         Quasar.Notify.create({
           message: "Public PGP key is invalid",
           caption: "Please enter a valid public PGP key.",
           type: "negative",
           position: "top",
         });
+        console.log("Invalid public PGP key", isValidPupKey);
         return;
       }      
 

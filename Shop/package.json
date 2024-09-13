@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "show": "tsc && vite build --watch -c vite.config.show.ts --"
+    "show": "tsc && vite build --watch -c vite.config.show.ts --",
+    "live": "tsc && vite build --watch -c vite.config.live.ts --"
   },
   "devDependencies": {
     "@types/cypress": "^1.1.3",

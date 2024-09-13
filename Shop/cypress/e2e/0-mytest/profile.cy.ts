@@ -27,8 +27,9 @@ describe('profile', () => {
       // cy.get('@pupKey').then((pupKey) => {
       //   cy.log(typeof pupKey === 'string' ? pupKey : 'empty ' + typeof pupKey);        
       // });
-    });
 
+      cy.get('#immortal-shop').find('span').contains('Upload user data').click()
+    });
     // Check if key is valid
     cy.get('div[role="dialog"]').should('exist').should('be.visible').find('div').contains('Sign transaction on chain lamington').should('be.visible')
     cy.get('div[role="dialog"]').find('span').contains('OK').click()
