@@ -16,5 +16,11 @@
 // Import commands.js using ES2015 syntax:
 import './commands'
 
-// Alternatively you can use CommonJS syntax:
-// require('./commands')
+Cypress.on('uncaught:exception', (err) => {
+    if (err.message.includes('ResizeObserver loop completed with undelivered notifications')) {
+      // Wir ignorieren diesen spezifischen Fehler
+      return false
+    }
+    // Wir lassen andere Fehler normal durchlaufen
+    return true
+  })
