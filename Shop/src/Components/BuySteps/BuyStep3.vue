@@ -1,7 +1,9 @@
 <template>
   <q-card>
     <q-card-section>
-      <q-input
+      <q-checkbox v-model="sellerConfirms" label="The seller has responded to me and agreed to the purchase." />
+      <!-- Removed until pgp encrption should be implemented -->
+      <!-- <q-input
         type="textarea"
         :rows="sellerResponse.length > 1 ? 1 : 5"
         v-model="sellerResponse"
@@ -16,7 +18,7 @@
             class="cursor-pointer"
           />
         </template>
-      </q-input>
+      </q-input> -->
       <add-pgp-btn
         v-if="isEncrypted"
         class="q-px-sm q-mt-sm"
@@ -41,6 +43,7 @@
           :price="price"
           :token="token"
           :pieces="pieces"
+          :to-region="toRegion"
           @current-token-price="currentTokenPrice = $event"
         ></order-item>
         <div v-if="maxPayTime" class="q-mt-md q-mx-sm q-mb-sm">
@@ -122,6 +125,11 @@ export default Vue.defineComponent({
       type: Number,
       required: true,
       default: 0,
+    },
+    toRegion: {
+      type: String,
+      required: true,
+      default: "",
     },
     pieces: {
       type: Number,
@@ -326,27 +334,32 @@ export default Vue.defineComponent({
       const json = createInformJson();
       context.emit("update:jsonData", json);
       let fail = true;
-      if (props.seller && typeof props.seller.pgp == "string") {
-        // Encrypt
-        const data = await encrypt(
-          json,
-          props.seller.pgp,
-          props.buyerKeys.pub,
-          props.buyerKeys.pri,
-          props.buyerKeys.passphrase
-        );
-        if (typeof data == "string") {
-          context.emit("update:informData", data);
+      if (props.seller) {
+        if (state.DISABLE_ENCRYPTION) {
           fail = false;
-        } else if (data !== false) {
-          context.emit("update:informData", "");
-          fail = true;
-          Quasar.Notify.create({
-            position: "top",
-            type: "negative",
-            message: "Encryption failed",
-            caption: "error" in data ? data.error : undefined,
-          });
+          context.emit("update:informData", json);
+        } else {
+          // Encrypt
+          const data = await encrypt(
+            json,
+            props.seller.pgp,
+            props.buyerKeys.pub,
+            props.buyerKeys.pri,
+            props.buyerKeys.passphrase
+          );
+          if (typeof data == "string") {
+            context.emit("update:informData", data);
+            fail = false;
+          } else if (data !== false) {
+            context.emit("update:informData", "");
+            fail = true;
+            Quasar.Notify.create({
+              position: "top",
+              type: "negative",
+              message: "Encryption failed",
+              caption: "error" in data ? data.error : undefined,
+            });
+          }
         }
       } else {
         context.emit("update:informData", json);

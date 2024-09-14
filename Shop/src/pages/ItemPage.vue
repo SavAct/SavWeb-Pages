@@ -207,41 +207,13 @@
                   v-model="piecesPrice"
                 ></piece-price-select>
 
-                <div class="row justify-between q-col-gutter-x-sm q-mt-sm">
-                  <div v-if="price" class="col-auto">
-                    Price:
-                    <q-chip
-                      :color="chipBgColor()"
-                      :label="price?.toFixed(2) + ' USD'"
-                    ></q-chip>
-                  </div>
-                  <div v-if="shipPrice !== undefined" class="col-auto">
-                    Shipping:
-                    <q-chip
-                      :color="chipBgColor()"
-                      :label="
-                        'within ' +
-                        shipDuration +
-                        ' for ' +
-                        shipPrice?.toFixed(2) +
-                        ' USD'
-                      "
-                    ></q-chip>
-                  </div>
-                  <div v-if="totalPrice" class="col-auto">
-                    Total price:
-                    <q-chip
-                      :color="chipBgColor()"
-                      :label="totalPrice?.toFixed(2) + ' USD'"
-                    ></q-chip>
-                    <q-chip
-                      v-if="sToken"
-                      :color="chipBgColor()"
-                      :label="totalTokenStr"
-                    >
-                    </q-chip>
-                  </div>
-                </div>
+                <prices
+                  :token="sToken"
+                  :ship-to-price="selectedShipTo"
+                  :pieces-price="piecesPrice"
+                  :pieces="pieces"
+                  @total-price="totalPrice = $event"
+                ></prices>
               </q-card-section>
             </q-card>
             <q-card class="q-mt-lg">
@@ -312,14 +284,9 @@ import Gallery from "../Components/Gallery.vue";
 import TokenSymbol from "../Components/TokenSymbol.vue";
 import UserLink from "../Components/UserLink.vue";
 import PiecePriceSelect from "../Components/PiecePrice/PiecePriceSelect.vue";
+import Prices from "../Components/Prices.vue";
 import { state } from "../store/globals";
-import {
-  Asset,
-  AssetToString,
-  StringToSymbol,
-  Token,
-} from "../Components/AntelopeHelpers";
-import { getCurrentTokenPrice } from "../Components/ConvertPrices";
+import { StringToSymbol, Token } from "../Components/AntelopeHelpers";
 import { router } from "../router/simpleRouter";
 import { getRegion } from "../Components/ConvertRegion";
 import {
@@ -333,7 +300,7 @@ import { categoryPathsById } from "../Components/Categories";
 import { chipBgColor, chipBorderStyle } from "../Components/styleHelper";
 
 export default Vue.defineComponent({
-  components: { Gallery, TokenSymbol, UserLink, PiecePriceSelect },
+  components: { Gallery, TokenSymbol, UserLink, PiecePriceSelect, Prices },
   name: "itemPage",
   setup() {
     // TODO: Handle wait mode
@@ -344,6 +311,7 @@ export default Vue.defineComponent({
     const id = Vue.ref<number>();
     const category = Vue.ref<bigint>();
     const item = Vue.ref<ItemTable>();
+    const totalPrice = Vue.ref<number>();
 
     const imgs = Vue.computed(() => item.value?.imgs);
     const seller = Vue.ref<UserTable | undefined>(undefined);
@@ -429,53 +397,10 @@ export default Vue.defineComponent({
     });
 
     const selectedShipTo = Vue.computed(() => {
-      if (shipTo.value !== undefined) {
+      if (shipTo.value !== undefined) {       
         return shipTo.value.find((a) =>
           a.rs?.find((r) => r == sRegion.value?.value)
         );
-      }
-      return undefined;
-    });
-
-    const shipDuration = Vue.computed(() => {
-      if (selectedShipTo.value !== undefined) {
-        return Number(selectedShipTo.value.t) / 3600 / 24 + " days";
-      }
-      return undefined;
-    });
-
-    const shipPrice = Vue.computed(() => {
-      if (selectedShipTo.value !== undefined) {
-        return Number(selectedShipTo.value.p);
-      }
-      return undefined;
-    });
-
-    const totalPrice = Vue.computed(() => {
-      if (shipPrice.value !== undefined && price.value !== undefined) {
-        const p = shipPrice.value + price.value;
-        setTotalToken(p);
-        return p;
-      }
-      totalToken.value = undefined;
-      return undefined;
-    });
-
-    const totalToken = Vue.ref<Asset | undefined>();
-    async function setTotalToken(price: number) {
-      if (price !== undefined && sToken.value !== undefined) {
-        totalToken.value = await getCurrentTokenPrice(
-          price,
-          sToken.value.value
-        );
-      } else {
-        totalToken.value = undefined;
-      }
-    }
-
-    const totalTokenStr = Vue.computed(() => {
-      if (totalToken.value) {
-        return "~ " + AssetToString(totalToken.value);
       }
       return undefined;
     });
@@ -654,16 +579,12 @@ export default Vue.defineComponent({
       availableTo,
       sToken,
       acceptToken,
-      totalPrice,
-      totalTokenStr,
       tokenClick,
       regionClick,
       buyClick,
       pieces,
       piecesPrice,
       price,
-      shipPrice,
-      shipDuration,
       goBack,
       isPreview: mode == ItemPageMode.Preview,
       loadTryPercentage,
@@ -676,6 +597,8 @@ export default Vue.defineComponent({
       excluded,
       categoryName,
       clickCategory,
+      selectedShipTo,
+      totalPrice
     };
   },
 });

@@ -38,8 +38,8 @@
         active-icon="mark_email_read"
       >
         <buy-step-24-send-data
-          title="Make a request by sending the seller your encrypted data"
-          :encrypted="buyerData"
+          :title="DISABLE_ENCRYPTION?'Send the seller your order':'Make a request by sending the seller your encrypted data'"
+          :message="buyerData"
           :raw="requestJson"
           :seller="seller"
           v-model:contact="contact"
@@ -58,6 +58,7 @@
           :token="token"
           :price="usdPrice"
           :pieces="pieces"
+          :to-region="toRegion"
           :seller="seller"
           :buyer="buyerName"
           :buyer-keys="buyerKeys"
@@ -77,8 +78,8 @@
         active-icon="mark_email_read"
       >
         <buy-step-24-send-data
-          title="Better inform the seller about your payment by sending him this encrypted data"
-          :encrypted="informData"
+          :title="'Recommendation: Inform the seller about your payment by sending him this ' + (DISABLE_ENCRYPTION? 'JSON ':'encrypted ')+ 'message'"
+          :message="informData"
           :raw="informJson"
           :seller="seller"
           v-model:contact="contact"
@@ -123,6 +124,7 @@
         :price="usdPrice"
         :pieces="pieces"
         :seller="seller"
+        :to-region="toRegion"
         :inform-json="informJson"
       ></finished>
       <q-btn
@@ -343,66 +345,6 @@ export default Vue.defineComponent({
       }
     });
 
-    // Dev mode
-    if (true) {
-      address.value = {
-        firstName: "Sav",
-        middleNames: "",
-        lastName: "Act",
-        country: "de",
-        state: "Front side",
-        city: "Crater",
-        postal: "12345",
-        addressL1: "Sun street 12",
-        addressL2: "",
-        note: "With onions please",
-      };
-
-      //       buyerName.value = "savact";
-
-      //       buyerKeys.value.pri = `-----BEGIN PGP PRIVATE KEY BLOCK-----
-
-      // xVgEZHceshYJKwYBBAHaRw8BAQdAATe7K3EKTISl+ydnlYPRBt9/6umNrgHB
-      // 0IVX0MdF/b8AAQCGTxcG2PzIOf4VttpjY56QYNDNfcB7Im0GdnV5myGJEA9i
-      // zQDCjAQQFgoAPgWCZHcesgQLCQcICZD0y5TvjrHEvwMVCAoEFgACAQIZAQKb
-      // AwIeARYhBOTkwymjLFxmWn2QKPTLlO+OscS/AACsgQD+MGYZgrTFb16/c9Cj
-      // 08miHKAQu94gsN6ygCnYyXeenxYBAOalhOYVLkVSZaliCMLoUhcU026jdUD6
-      // nx0HYM6bOp0Gx10EZHceshIKKwYBBAGXVQEFAQEHQMXwAuKpAPalRmHi3uS+
-      // DIPuzN/nn4HuYDHE3bvKVLFUAwEIBwAA/3JjTLYhYmGpweNp2jjamtBDvvu0
-      // CuThqiZroEf6/rTYE+vCeAQYFggAKgWCZHcesgmQ9MuU746xxL8CmwwWIQTk
-      // 5MMpoyxcZlp9kCj0y5TvjrHEvwAAtdIBAMQcsynLyHx4gNvKIbVE7/6dezuH
-      // +Tii1Ro3cc+WYk9oAP9X3aTvv1GsDDvxBs1fp74WsEtJKL1wXKjuS6Avdvcv
-      // Cg==
-      // =Z/vq
-      // -----END PGP PRIVATE KEY BLOCK-----
-      // `;
-
-      //       buyerKeys.value.pub = `-----BEGIN PGP PUBLIC KEY BLOCK-----
-
-      // xjMEZHceshYJKwYBBAHaRw8BAQdAATe7K3EKTISl+ydnlYPRBt9/6umNrgHB
-      // 0IVX0MdF/b/NAMKMBBAWCgA+BYJkdx6yBAsJBwgJkPTLlO+OscS/AxUICgQW
-      // AAIBAhkBApsDAh4BFiEE5OTDKaMsXGZafZAo9MuU746xxL8AAKyBAP4wZhmC
-      // tMVvXr9z0KPTyaIcoBC73iCw3rKAKdjJd56fFgEA5qWE5hUuRVJlqWIIwuhS
-      // FxTTbqN1QPqfHQdgzps6nQbOOARkdx6yEgorBgEEAZdVAQUBAQdAxfAC4qkA
-      // 9qVGYeLe5L4Mg+7M3+efge5gMcTdu8pUsVQDAQgHwngEGBYIACoFgmR3HrIJ
-      // kPTLlO+OscS/ApsMFiEE5OTDKaMsXGZafZAo9MuU746xxL8AALXSAQDEHLMp
-      // y8h8eIDbyiG1RO/+nXs7h/k4otUaN3HPlmJPaAD/V92k779RrAw78QbNX6e+
-      // FrBLSSi9cFyo7kugL3b3Lwo=
-      // =XIte
-      // -----END PGP PUBLIC KEY BLOCK-----
-      // `;
-
-      //       contact.value = {
-      //         label: "Telegram",
-      //         value: "t.me/test3",
-      //       };
-
-      //       sellerResponse.value = `{ "confirm": true,"buyer": "savact", "time": 1706111323}`;
-      // trxLink.value =
-      // "https://savact.app/#/_trx_/history?user=yearofthesav&to=savact&chain=eos";
-    }
-
-    // TODO: Remove pgp encryption stuff for the first version
     // TODO: Fix: Require selected token on refresh. Add payment method with preselected entry from item page, but alert if token is not on user accounts blockchain 
 
     return {
@@ -413,6 +355,7 @@ export default Vue.defineComponent({
       nextStep,
       backStep,
       pieces,
+      toRegion,
       buyerName,
       token,
       buyerData,
@@ -430,6 +373,7 @@ export default Vue.defineComponent({
       sellerResponse,
       trxLink,
       item,
+      DISABLE_ENCRYPTION: state.DISABLE_ENCRYPTION,
 
       // TODO: Show loading of the following
       loadMaxTries,

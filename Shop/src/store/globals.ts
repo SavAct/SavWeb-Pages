@@ -445,6 +445,7 @@ const barStyle: any = {
 };
 
 export const state = {
+  DISABLE_ENCRYPTION: true,
   contract,
   savpayContract,
   loginUser,

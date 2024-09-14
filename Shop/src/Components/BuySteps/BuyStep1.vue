@@ -20,7 +20,8 @@
       </q-card>
     </q-expansion-item>
 
-    <q-expansion-item
+    <!-- Removed until pgp encrption should be implemented -->
+    <!-- <q-expansion-item
       expand-separator
       icon="enhanced_encryption"
       label="Your public PGP key"
@@ -32,7 +33,7 @@
           <set-pgp v-model="bKeys" :account="userName"></set-pgp>
         </q-card-section>
       </q-card>
-    </q-expansion-item>
+    </q-expansion-item> -->
 
     <q-expansion-item
       expand-separator
@@ -60,6 +61,7 @@ import { Token } from "../AntelopeHelpers";
 import { Address, UserData, encrypt } from "../Generator";
 import { PGP_Keys } from "../AddPgpBtn.vue";
 import { UserTable } from "../ContractInterfaces";
+import { state } from "../../store/globals";
 
 export default Vue.defineComponent({
   name: "buyStep1",
@@ -131,10 +133,10 @@ export default Vue.defineComponent({
   },
   setup(props, context) {
     const expBuyerName = Vue.ref<boolean>(props.buyerName.length > 0);
-    const expBuyerPgp = Vue.ref<boolean>(false);
+    // const expBuyerPgp = Vue.ref<boolean>(false);
     const expAddress = Vue.ref<boolean>(false);
     const validBuyerName = Vue.ref<boolean | undefined>();
-    const validBuyerPgp = Vue.ref<boolean | undefined>();
+    // const validBuyerPgp = Vue.ref<boolean | undefined>();
     const validAddress = Vue.ref<boolean | undefined>();
 
     const userName = Vue.computed({
@@ -186,11 +188,11 @@ export default Vue.defineComponent({
       () => {
         if (userName.value.length > 0) {
           expBuyerName.value = false;
-          if (props.buyerData.length > 0) {
-            // TODO: check if buyerData is valid and set expBuyerPgp
-          } else {
-            expBuyerPgp.value = true;
-          }
+          // if (props.buyerData.length > 0) {
+          //   // TODO: check if buyerData is valid and set expBuyerPgp
+          // } else {
+          //   expBuyerPgp.value = true;
+          // }
         }
       },
       { immediate: true }
@@ -198,10 +200,10 @@ export default Vue.defineComponent({
 
     function checkUserData() {
       validBuyerName.value = true;
-      validBuyerPgp.value = true;
+      // validBuyerPgp.value = true;
       validAddress.value = true;
       expBuyerName.value = false;
-      expBuyerPgp.value = false;
+      // expBuyerPgp.value = false;
       expAddress.value = false;
 
       if (!props.token) {
@@ -217,14 +219,15 @@ export default Vue.defineComponent({
         validBuyerName.value = false;
         expBuyerName.value = true;
         return "No valid buyer name entered";
-      } else if (
-        props.buyerKeys.pub === undefined ||
-        props.buyerKeys.pub.length == 0
-      ) {
-        validBuyerPgp.value = false;
-        expBuyerPgp.value = true;
-        return "No buyer public PGP key entered";
-      }
+      } 
+      // else if (
+      //   props.buyerKeys.pub === undefined ||
+      //   props.buyerKeys.pub.length == 0
+      // ) {
+      //   validBuyerPgp.value = false;
+      //   expBuyerPgp.value = true;
+      //   return "No buyer public PGP key entered";
+      // }
 
       // Check address
       let msg: string | undefined = undefined;
@@ -294,6 +297,10 @@ export default Vue.defineComponent({
       context.emit("update:jsonData", json);
 
       if (props.seller) {        
+        if(state.DISABLE_ENCRYPTION) {
+          context.emit("update:buyerData", json);
+          return true;
+        }
         const data = await encrypt(
           json,
           props.seller.pgp,
@@ -315,16 +322,16 @@ export default Vue.defineComponent({
           });
         }
       }
-      validBuyerPgp.value = false;
+      // validBuyerPgp.value = false;
       return false;
     }
 
     return {
       expBuyerName,
-      expBuyerPgp,
+      // expBuyerPgp,
       expAddress,
       validBuyerName,
-      validBuyerPgp,
+      // validBuyerPgp,
       validAddress,
       userName,
       bKeys,

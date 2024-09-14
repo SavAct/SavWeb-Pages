@@ -22,7 +22,7 @@
               color="blue"
               size="sm"
               class="q-ml-sm"
-              @click="copy(encrypted, 'Copy PGP message to clipboard')"
+              @click="copy(message, 'Copy ' + (DISABLE_ENCRYPTION?'JSON ':'PGP ') + 'message to clipboard')"
               icon="content_copy"
             ></q-btn>
           </div>
@@ -31,9 +31,9 @@
       <q-input
         type="textarea"
         readonly
-        :model-value="encrypted"
+        :model-value="message"
         outlined
-        label="Encrypted data"
+        :label="DISABLE_ENCRYPTION?'Message in JSON format':'Encrypted data'"
       ></q-input>
 
       <q-input class="q-mt-md" readonly :model-value="selectedContect?.value">
@@ -67,7 +67,7 @@
             color="blue"
             @click="
               selectedContect !== undefined
-                ? openLinkOrMail(selectedContect.value, '_blank', encrypted)
+                ? openLinkOrMail(selectedContect.value, '_blank', message)
                 : undefined
             "
           ></q-btn>
@@ -86,6 +86,7 @@ import {
   urlStartByDomainName,
 } from "../LinkConverter";
 import { UserTable } from "../ContractInterfaces";
+import { state } from "../../store/globals";
 
 export default Vue.defineComponent({
   name: "buyStep24SendData",
@@ -104,7 +105,7 @@ export default Vue.defineComponent({
       required: true,
       default: "",
     },
-    encrypted: {
+    message: {
       type: String,
       required: true,
       default: "",
@@ -161,6 +162,7 @@ export default Vue.defineComponent({
     }
 
     return {
+      DISABLE_ENCRYPTION: state.DISABLE_ENCRYPTION,
       copy,
       contactOptions,
       selectedContect,

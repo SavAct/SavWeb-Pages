@@ -50,8 +50,8 @@
         <div>
           If the time limit ends, the transaction will be finalized
           automatically and you can no longer burn the payment. So, clear any
-          problem with the seller in before.<br />[You can contact the seller
-          here]
+          problem with the seller in before.
+          <!-- <br />[You can contact the seller here] -->
         </div>
 
         <!-- <div>
@@ -78,10 +78,10 @@
         :entry="entry"
         :price="price"
         :token="token"
+        :to-region="toRegion"
         :pieces="pieces"
       ></order-item>
 
-      [Store this data to look over it on a later time]
       <!-- <div class="col-grow q-pb-md row justify-end">
           <div class="col-auto">
             <raw-data-btn
@@ -105,12 +105,25 @@
           </div>
         </div> -->
 
+        <div class="q-mt-md row">
+          <div class="col-grow">Store this data to look over it on a later time</div>
+          <div class="col-auto">
+              <q-btn
+                round
+                color="blue"
+                size="sm"
+                class="q-ml-sm"
+                @click="copy(DISABLE_ENCRYPTION?allDataJson:messageToStore, 'Copy ' + (DISABLE_ENCRYPTION?'JSON ':'PGP ') + 'message to clipboard')"
+                icon="content_copy"
+              ></q-btn>
+            </div>
+        </div>
       <q-input
         type="textarea"
         readonly
-        :model-value="encrypted"
+        :model-value="DISABLE_ENCRYPTION?allDataJson:messageToStore"
         outlined
-        label="Encrypted data"
+        :label="DISABLE_ENCRYPTION?'JSON data':'Encrypted data'"
       ></q-input>
     </q-card-section>
   </q-card>
@@ -126,6 +139,7 @@ import { encrypt } from "../Generator";
 import { savWeb } from "../../store/connect";
 import { ItemTable, UserTable } from "../ContractInterfaces";
 import { PGP_Keys } from "../AddPgpBtn.vue";
+import { state } from "../../store/globals";
 
 export default Vue.defineComponent({
   name: "finished",
@@ -153,6 +167,11 @@ export default Vue.defineComponent({
       type: Number,
       required: true,
       default: 1,
+    },
+    toRegion: {
+      type: String,
+      required: true,
+      default: "",
     },
     informJson: {
       type: String,
@@ -204,13 +223,17 @@ export default Vue.defineComponent({
       };
     });
 
-    const allDataJson = Vue.computed(() => {
+    const allDataJson = Vue.computed(() => {      
       const json = JSON.stringify(allData.value);
-      delayEncryption();
+      if(state.DISABLE_ENCRYPTION){
+        messageToStore.value = json;
+      } else {
+        delayEncryption();
+      }
       return json;
     });
 
-    const encrypted = Vue.ref<string>("");
+    const messageToStore = Vue.ref<string>("");
     let createAndEncryptId = 0;
     function delayEncryption() {
       createAndEncryptId++;
@@ -223,19 +246,20 @@ export default Vue.defineComponent({
     }
 
     async function encryption() {
-      if (props.seller && typeof props.seller.pgp == "string") {
-        // Encrypt
-        const data = await encrypt(
-          allDataJson.value,
-          props.seller.pgp,
-          props.buyerKeys.pub,
-          props.buyerKeys.pri,
-          props.buyerKeys.passphrase
-        );
-        if (typeof data == "string") {
-          encrypted.value = data;
-        } else if (data !== false) {
-          encrypted.value = "";
+      if (props.seller && typeof props.seller.pgp == "string") {{
+          // Encrypt
+          const data = await encrypt(
+            allDataJson.value,
+            props.seller.pgp,
+            props.buyerKeys.pub,
+            props.buyerKeys.pri,
+            props.buyerKeys.passphrase
+          );
+          if (typeof data == "string") {
+            messageToStore.value = data;
+          } else if (data !== false) {
+            messageToStore.value = "";
+          }
         }
       }
     }
@@ -270,7 +294,9 @@ export default Vue.defineComponent({
       formatDuration,
       openTrx,
       trxData,
-      encrypted,
+      messageToStore,
+      allDataJson,
+      DISABLE_ENCRYPTION: state.DISABLE_ENCRYPTION,
     };
   },
 });
