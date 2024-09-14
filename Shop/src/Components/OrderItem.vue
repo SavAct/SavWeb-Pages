@@ -97,7 +97,7 @@
         <div class="col-auto self-end">
           <token-symbol
             class="q-mr-none"
-            :amount="Number(currentTokenPrice)"
+            :amount="totalToken? (Number(totalToken?.amount) / 10 ** totalToken.symbol.precision): undefined"
             :color="chipBgColor()"
             :chain="token?.chain"
             :contract="token?.contract"
@@ -117,15 +117,16 @@ import PiecePriceSelect from "./PiecePrice/PiecePriceSelect.vue";
 import UserLink from "../Components/UserLink.vue";
 import { PropType } from "vue";
 import { state } from "../store/globals";
-import { Token } from "./AntelopeHelpers";
+import { Asset, Token } from "./AntelopeHelpers";
 import { ItemTable, ToRegion } from "./ContractInterfaces";
 import { countryCodes, euCountryCodes, getRegion } from "./ConvertRegion";
 import { chipBgColor } from "./styleHelper";
+import { getCurrentTokenPrice } from "./ConvertPrices";
 
 export default Vue.defineComponent({
   name: "orderItem",
   components: { ProImg, TokenSymbol, PiecePriceSelect, UserLink },
-  emits: ["currentTokenPrice", "update:price"],
+  emits: ["update:totalToken", "update:price"],
   props: {
     entry: {
       type: Object as PropType<ItemTable>,
@@ -221,10 +222,21 @@ export default Vue.defineComponent({
       return undefined;
     });
 
-    const currentTokenPrice = Vue.ref(BigInt(0));
+    const totalToken = Vue.ref<Asset | undefined>();
+    async function setTotalToken(price: number) {
+      if (price !== undefined && props.token !== undefined) {
+        totalToken.value = await getCurrentTokenPrice(
+          price,
+          props.token
+        );
+      } else {
+        totalToken.value = undefined;
+      }
+    }
+
     async function updateTokenPrice() {
-      currentTokenPrice.value = BigInt(Math.round(props.price)); // TODO: Calculate the real current token price like in ItemPage.vue
-      context.emit("currentTokenPrice", currentTokenPrice.value);
+      await setTotalToken(props.price);
+      context.emit("update:totalToken", totalToken);
       // TODO: Warn if price changed below -5% that the seller might not accept the payment
       // TODO: Combine with step 3
     }
@@ -245,9 +257,10 @@ export default Vue.defineComponent({
       }
     );
 
-    // TODO: Smartphone view by putting the image on an own line
-    // TODO: EOS Price before the symbol button
 
+
+    // TODO: Smartphone view by putting the image on an own line
+  
     return {
       darkStyle: state.darkStyle,
       updateTokenPrice,
@@ -259,7 +272,7 @@ export default Vue.defineComponent({
       excludedRegion,
       toRegionName,
       chipBgColor,
-      currentTokenPrice,
+      totalToken,
     };
   },
 });

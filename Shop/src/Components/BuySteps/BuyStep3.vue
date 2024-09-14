@@ -40,7 +40,7 @@
       <div v-if="entry && sellerConfirms" class="q-mt-sm">
         <order-item
           :entry="entry"
-          :price="price"
+          v-model:price="usdPrice"
           :token="token"
           :pieces="pieces"
           :to-region="toRegion"
@@ -109,6 +109,7 @@ export default Vue.defineComponent({
     "update:link",
     "update:jsonData",
     "update:informData",
+    "update:price",
   ],
   props: {
     entry: {
@@ -187,6 +188,15 @@ export default Vue.defineComponent({
       set(v) {
         checkResponse(v.trim());
         _sellerResponse.value = v;
+      },
+    });
+
+    const usdPrice = Vue.computed({
+      get() {
+        return props.price;
+      },
+      set(v) {
+        context.emit("update:price", v);
       },
     });
 
@@ -437,6 +447,7 @@ export default Vue.defineComponent({
       restTime,
       formatDuration,
       currentTokenPrice,
+      usdPrice
     };
   },
 });

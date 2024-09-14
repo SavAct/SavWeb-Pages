@@ -211,7 +211,7 @@ export default Vue.defineComponent({
     const chipText = Vue.computed(() => {
       const p = selected.value?.value.p
         ? " for " +
-          (Number(selected.value.value.p) * sPieces.value).toFixed(2) +
+          ((Number(selected.value.value.p) * sPieces.value) / selected.value.value.pcs).toFixed(2) +
           " USD"
         : "";
       return (sPieces.value == 1 ? "1 piece" : sPieces.value + " pieces") + p;

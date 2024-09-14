@@ -56,7 +56,7 @@
         <buy-step3
           :entry="entry"
           :token="token"
-          :price="usdPrice"
+          v-model:price="usdPrice"
           :pieces="pieces"
           :to-region="toRegion"
           :seller="seller"
@@ -121,7 +121,7 @@
         class="q-mb-lg"
         :entry="entry"
         :token="token"
-        :price="usdPrice"
+        v-model:price="usdPrice"
         :pieces="pieces"
         :seller="seller"
         :to-region="toRegion"
@@ -180,15 +180,7 @@ export default Vue.defineComponent({
     const pieces = Vue.ref<number>();
     const toRegion = Vue.ref<string>(); // Compare with data entry
 
-    const usdPrice = Vue.computed(() => {
-      // TODO:
-      // if (entry.value) {
-      //   console.log("---price---", pieces.value * entry.value.price);
-
-      //   return pieces.value * entry.value.price; // TODO: Calculate and add delivery price
-      // }
-      return -1;
-    });
+    const usdPrice = Vue.ref<number>();
 
     const entry = Vue.ref<ItemTable>();
 
