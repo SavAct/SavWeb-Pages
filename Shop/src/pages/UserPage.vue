@@ -34,16 +34,38 @@
       </q-slide-transition>
     </q-card>
     <q-card class="my-card q-mt-md" flat bordered>
-      <q-card-section>
-        <set-pgp v-model="pgpKey"></set-pgp>
-      </q-card-section>
+      <q-card-actions>
+        <div class="q-ml-sm">Encryption</div>
+        <div class="q-pl-sm">
+          <span v-if="fingerprint.length > 0" class="text-secondary" v-show="expander !== 1">{{ fingerprint.substring(0, 12) }}</span>
+          <span class="text-grey" v-else-if="pgpKey.pub.trim().length === 0">(optional)</span>
+        </div>
+
+        <q-space />
+        <q-btn
+          color="grey"
+          round
+          flat
+          dense
+          :icon="expander === 1 ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"
+          @click="expander = expander === 1 ? -1 : 1"
+        />
+      </q-card-actions>
+      <q-slide-transition>
+        <div v-show="expander === 1">
+          <q-separator />
+          <q-card-section>
+            <set-pgp v-model="pgpKey" @fingerprint="(v) => fingerprint = v"></set-pgp>
+          </q-card-section>
+        </div>
+      </q-slide-transition>
     </q-card>
     <q-card class="my-card q-mt-md" flat bordered>
       <q-card-actions :class="isBanned ? 'bg-red' : ''">
         <div class="q-ml-sm text-h6" v-if="isBanned">
           You are banned as seller!
         </div>
-        <div class="q-ml-sm" v-else @click="expander = expander === 1 ? -1 : 1">
+        <div class="q-ml-sm" v-else @click="expander = expander === 2 ? -1 : 2">
           I am a seller
         </div>
         <q-toggle
@@ -58,13 +80,13 @@
           round
           flat
           dense
-          :icon="expander === 1 ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"
-          @click="expander = expander === 1 ? -1 : 1"
+          :icon="expander === 2 ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"
+          @click="expander = expander === 2 ? -1 : 2"
         />
       </q-card-actions>
 
       <q-slide-transition>
-        <div v-show="expander === 1">
+        <div v-show="expander === 2">
           <q-separator />
 
           <div class="row q-ma-md">
@@ -172,7 +194,7 @@
           round
           flat
           dense
-          :icon="expander === 0 ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"
+          :icon="expander === 3 ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"
           @click="expander = expander === 3 ? -1 : 3"
         />
       </q-card-actions>
@@ -272,6 +294,7 @@ export default Vue.defineComponent({
       pri: "",
       passphrase: "",
     });
+    const fingerprint = Vue.ref<string>("");
     const expander = Vue.ref<number>(-1);
     const allowedTokens = Vue.ref<Array<Token>>([]);
     const note = Vue.ref<string>("");
@@ -290,6 +313,25 @@ export default Vue.defineComponent({
     const showPgpInput = Vue.computed<boolean>(() => {
       return pgpKey && pgpKey.value.pub.length > 0;
     });
+
+    // Vue.watch(
+    //   () => pgpKey.value.pub,
+    //   async () => {
+    //     const key = pgpKey.value.pub.trim();
+    //     if (key.length > 0 && key.startsWith("-----BEGIN PGP PUBLIC KEY BLOCK-----")) {
+    //       try{
+    //         const fp = await pgpKey.value.fingerprint;
+    //         if(typeof fp === 'string'){
+    //           fingerprint.value = fp;
+    //         }
+    //       } catch(e){
+    //         fingerprint.value = "";
+    //       }
+    //     } else {
+    //       fingerprint.value = "";
+    //     }
+    //   }
+    // );
 
     interface Token {
       label: string;
@@ -351,26 +393,29 @@ export default Vue.defineComponent({
         return;
       }
 
-      if (pgpKey.value.pub.length === 0) {
-        Quasar.Notify.create({
-          message: "Public PGP key is missing",
-          caption: "Please enter a public PGP key.",
-          type: "negative",
-          position: "top",
-        });
-        return;
+      // Should be allowed for now
+      // if (pgpKey.value.pub.length === 0) {
+      //   Quasar.Notify.create({
+      //     message: "Public PGP key is missing",
+      //     caption: "Please enter a public PGP key.",
+      //     type: "negative",
+      //     position: "top",
+      //   });
+      //   return;
+      // }
+      if (pgpKey.value.pub.length !== 0) {
+        const isValidPupKey = await isPubKeyValid(pgpKey.value.pub)
+        if (isValidPupKey !== true) {
+          Quasar.Notify.create({
+            message: "Public PGP key is invalid",
+            caption: "Please enter a valid public PGP key.",
+            type: "negative",
+            position: "top",
+          });
+          console.log("Invalid public PGP key", isValidPupKey);
+          return;
+        }      
       }
-      const isValidPupKey = await isPubKeyValid(pgpKey.value.pub)
-      if (isValidPupKey !== true) {
-        Quasar.Notify.create({
-          message: "Public PGP key is invalid",
-          caption: "Please enter a valid public PGP key.",
-          type: "negative",
-          position: "top",
-        });
-        console.log("Invalid public PGP key", isValidPupKey);
-        return;
-      }      
 
       if (isSeller.value && allowedTokens.value.length === 0) {
         Quasar.Notify.create({
@@ -613,6 +658,7 @@ export default Vue.defineComponent({
       formatItem,
       openItem,
       isSeller,
+      fingerprint,
     };
   },
 });

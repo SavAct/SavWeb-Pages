@@ -30,7 +30,7 @@
       v-if="showUploadBtn"
       class="q-mt-sm q-px-md"
       :disable="
-        !(validModel && modelValue !== undefined && modelValue.pub.length > 0)
+        !(hasAccount && modelValue !== undefined && modelValue.pub.length > 0)
       "
       :label="(editPGP ? 'Update' : 'Store') + ' PGP key on chain [TODO]'"
       @click="setPgpOnChain"
@@ -81,7 +81,10 @@ export default Vue.defineComponent({
   },
   setup(props, context) {
     const keys = Vue.computed({
-      get: () => props.modelValue,
+      get: () => {
+        getFingerprint(props.modelValue.pub)
+        return props.modelValue
+      },
       set: (v) => {
         context.emit("update:model-value", {
           pub: v.pub,
@@ -93,7 +96,7 @@ export default Vue.defineComponent({
     });
     const hasPGP = Vue.ref<boolean>(false);
     const editPGP = Vue.ref<boolean>(false);
-    const validModel = Vue.computed(() => {
+    const hasAccount = Vue.computed(() => {
       return typeof props.account == "string" && props.account.length > 0;
     });
 
@@ -108,7 +111,7 @@ export default Vue.defineComponent({
       get: () => props.modelValue.pub,
       set: (v: string) => {
         v = v.trim();
-        if (v !== props.modelValue.pub.trim()) {
+        if (v !== props.modelValue.pub.trim() || v.length === 0) {
           context.emit("update:model-value", {
             pri: "",
             passphrase: "",
@@ -122,30 +125,41 @@ export default Vue.defineComponent({
     const fingerprint = Vue.ref<string>("");
 
     async function getFingerprint(pub: string) {
-      if (pub.length > 0) {
+      const trimPub = pub.trim();
+      if (trimPub.length > 0 && trimPub.startsWith("-----BEGIN PGP PUBLIC KEY BLOCK-----") && trimPub.endsWith("-----END PGP PUBLIC KEY BLOCK-----")) {
         try {
+          const oldVal = fingerprint.value;
           fingerprint.value = (
-            await openpgp.readKey({ armoredKey: pub })
+            await openpgp.readKey({ armoredKey: trimPub })
           ).getFingerprint();
+          if(oldVal !== fingerprint.value){
+            context.emit("fingerprint", fingerprint.value);
+          }
         } catch (e) {
-          fingerprint.value = "";
+          if(fingerprint.value.length > 0) {
+            context.emit("fingerprint", "");
+            fingerprint.value = "";
+          }
         }
+      } else if(fingerprint.value.length > 0) {
+        context.emit("fingerprint", "");
+        fingerprint.value = "";
       }
       return fingerprint.value;
     }
 
     Vue.onMounted(() => {
-      if (validModel.value && fingerprint.value.length === 0) {
-        getFingerprint(props.modelValue.pub);
-      }
+        getFingerprint(props.modelValue.pub);        
     });
+
+  
 
     return {
       keys,
       hasPGP,
       editPGP,
       setPgpOnChain,
-      validModel,
+      hasAccount,
       publicKey,
       fingerprint,
     };
