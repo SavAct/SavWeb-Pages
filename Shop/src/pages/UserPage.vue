@@ -314,25 +314,6 @@ export default Vue.defineComponent({
       return pgpKey && pgpKey.value.pub.length > 0;
     });
 
-    // Vue.watch(
-    //   () => pgpKey.value.pub,
-    //   async () => {
-    //     const key = pgpKey.value.pub.trim();
-    //     if (key.length > 0 && key.startsWith("-----BEGIN PGP PUBLIC KEY BLOCK-----")) {
-    //       try{
-    //         const fp = await pgpKey.value.fingerprint;
-    //         if(typeof fp === 'string'){
-    //           fingerprint.value = fp;
-    //         }
-    //       } catch(e){
-    //         fingerprint.value = "";
-    //       }
-    //     } else {
-    //       fingerprint.value = "";
-    //     }
-    //   }
-    // );
-
     interface Token {
       label: string;
       symbol: { precision?: number; name: string };
