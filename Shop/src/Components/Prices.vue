@@ -12,8 +12,8 @@
     <q-chip
       :color="chipBgColor()"
       :label="
-        'within ' +
-        shipDuration +
+        'Within ' +
+        shipDurationStr +
         ' for ' +
         shipPrice?.toFixed(2) +
         ' USD'
@@ -53,7 +53,12 @@ export default Vue.defineComponent({
     shipToPrice: {
       type: Object as PropType<{ t: number; p: number }>,
       required: false,
-      default: undefined,
+      default: true,
+    },
+    prepTime: {
+      type: Number,
+      required: true,
+      default: 0,
     },
     piecesPrice: {
       type: Object as PropType<{ p: number; pcs: number }>,
@@ -68,9 +73,9 @@ export default Vue.defineComponent({
   },
   setup(props, contex) {
    
-    const shipDuration = Vue.computed(() => {
+    const shipDurationStr = Vue.computed(() => {
       if (props.shipToPrice !== undefined) {
-        return Number(props.shipToPrice.t) / 3600 / 24 + " days";
+        return Number(props.shipToPrice.t) + Number(props.prepTime) / 3600 / 24 + " days";
       }
       return undefined;
     });
@@ -118,7 +123,7 @@ export default Vue.defineComponent({
 
     return {
       chipBgColor,
-      shipDuration,
+      shipDurationStr,
       totalPrice,
       shipPrice,
       totalTokenStr,

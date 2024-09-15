@@ -44,7 +44,9 @@
           :token="token"
           :pieces="pieces"
           :to-region="toRegion"
-          @current-token-price="currentTokenPrice = $event"
+          @total-token ="currentTokenPrice = $event"
+          @ship-duration="shipDuration = $event"
+          ref="orderItemElement"
         ></order-item>
         <div v-if="maxPayTime" class="q-mt-md q-mx-sm q-mb-sm">
           <span class="q-mr-sm"> Payment must be sent before </span>
@@ -79,6 +81,7 @@
         outlined
         dense
       ></q-input>
+      orderId {{ orderId }}
     </q-card-section>
   </q-card>
 </template>
@@ -87,13 +90,12 @@ import AddPgpBtn, { PGP_Keys } from "../AddPgpBtn.vue";
 import OrderItem from "../OrderItem.vue";
 import { PropType } from "vue";
 import { state } from "../../store/globals";
-import { AssetToString, InformSellerData, Token } from "../AntelopeHelpers";
+import { Asset, AssetToString, InformSellerData, Token } from "../AntelopeHelpers";
 import { formatDuration } from "../ConvertTime";
 import {
   SellerResponse,
   decrypt,
   encrypt,
-  generateRandomString,
 } from "../Generator";
 import { savWeb } from "../../store/connect";
 import { ItemTable, UserTable } from "../ContractInterfaces";
@@ -110,6 +112,7 @@ export default Vue.defineComponent({
     "update:jsonData",
     "update:informData",
     "update:price",
+    "update:orderId"
   ],
   props: {
     entry: {
@@ -150,7 +153,6 @@ export default Vue.defineComponent({
     buyer: {
       type: String,
       required: true,
-      default: "",
     },
     response: {
       type: String,
@@ -165,17 +167,18 @@ export default Vue.defineComponent({
     informData: {
       type: String,
       required: true,
-      default: "",
     },
     jsonData: {
       type: String,
       required: true,
-      default: "",
     },
     buyerKeys: {
       type: Object as PropType<PGP_Keys>,
       required: true,
-      default: "",
+    },
+    orderId: {
+      type: String,
+      required: true,
     },
   },
   setup(props, context) {
@@ -219,6 +222,7 @@ export default Vue.defineComponent({
       if (text.length > 0) {
         try {
           response.value = JSON.parse(text) as SellerResponse;
+          // TODO: When pgp is activated use a seller response textbox and us his transmitted data
           if (response.value.confirm) {
             if (response.value.buyer == props.buyer) {
               if (typeof response.value.time == "number") {
@@ -251,28 +255,36 @@ export default Vue.defineComponent({
     });
 
     const responseDecrypted = Vue.ref<string>("");
-    const currentTokenPrice = Vue.ref<bigint>(BigInt(0));
-    const totalAsset = Vue.computed(() => {
-      return AssetToString({
-        amount: currentTokenPrice.value,
-        symbol: props.token.symbol,
-      });
-    });
+    const currentTokenPrice = Vue.ref<Asset | undefined>(undefined);
 
     const memo = Vue.ref<string>(
-      response.value?.memo ? response.value.memo : generateRandomString(8)
-    ); // TODO: all further messages should contain the same memo
+      response.value?.memo ? response.value.memo : props.orderId
+    );
+
+    const shipDuration = Vue.ref<number|undefined>(undefined);
+    const orderItemElement = Vue.ref<InstanceType<typeof OrderItem> | null>(null)
 
     async function sendPayment() {
-      await updateTokenPrice();
-      const assetStr = `${totalAsset.value} ${props.token.contract}`;
+      await orderItemElement.value?.updateTokenPrice();
+
+      if(!currentTokenPrice.value) {
+        Quasar.Notify.create({
+          position: "top",
+          type: "negative",
+          message: "No token price available",
+        });
+        return;
+      }
+      
+      const assetStr = `${AssetToString(currentTokenPrice.value)} ${props.token.contract}`;
       waitForTrans.value = true;
+      
       const result = await savWeb.payment({
         chain: props.token.chain,
         to: props.entry.seller,
         pay: assetStr,
         memo: memo.value,
-        // TODO: Use SavPay instead of a normal payment
+        dt: shipDuration.value !== undefined? + shipDuration.value + (3*24*3600): undefined, // Add three days to cancel the payment
       });
 
       if (result) {
@@ -384,12 +396,7 @@ export default Vue.defineComponent({
         });
       }
     }
-
-    async function updateTokenPrice() {
-      currentTokenPrice.value = BigInt(Math.round(props.price)); // TODO: Calculate the real current token price
-      // TODO: Warn if price changed below -5% that the seller might not accept the payment
-    }
-    updateTokenPrice();
+    // TODO: Warn if price changed below -5% that the seller might not accept the payment
 
     const restTime = Vue.ref<number>(0);
     let timerActive = false;
@@ -441,13 +448,13 @@ export default Vue.defineComponent({
       isEncrypted,
       responseDecrypted,
       decrypt,
-      updateTokenPrice,
-      totalAsset,
       maxPayTime,
       restTime,
       formatDuration,
       currentTokenPrice,
-      usdPrice
+      usdPrice,
+      shipDuration,
+      orderItemElement
     };
   },
 });

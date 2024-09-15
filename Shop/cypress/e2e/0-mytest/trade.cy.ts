@@ -55,9 +55,16 @@ describe('trade', () => {
       // Send payment
       cy.get('main.q-page span').contains('Send Payment').click()
     })
+
+    // Create eosio key
+    cy.get('main.q-page div.q-checkbox').first().next().find('button').should('be.visible').click()
+    cy.get('.q-dialog div.q-checkbox').first().should('be.visible').click()
+    cy.get('.q-dialog i.q-icon').contains('rotate_left').should('be.visible').click()
+    cy.get('.q-dialog .q-card__actions button').first().should('be.visible').click()
+
     // Set to already paid
-    // scroll down
-    cy.get('main.q-page span.q-btn__content').last().click()
+    cy.get('main.q-page button.q-btn--dense span.q-btn__content').contains('rans').should('be.visible').last().click()
+
     cy.iframe().within(() => {  
       cy.get('div.q-toolbar__title').contains('Buy').should('be.visible')
       cy.get('div.q-notification__message').contains('Looks fine. Now continue to inform the seller.').should('exist').should('be.visible')

@@ -69,7 +69,7 @@
             :size="$q.screen.lt.sm ? 'sm' : ''"
             :color="chipBgColor()"
             :label="
-              toRegionName + ' for ' + shouldShipPrice?.toFixed(2) + ' USD'
+              toRegionName + ' for ' + shouldShipPrice?.toFixed(2) + ' USD within ' + shipDurationStr 
             "
           ></q-chip>
         </span>
@@ -93,7 +93,6 @@
             ></q-chip>
           </span>
         </div>
-
         <div class="col-auto self-end">
           <token-symbol
             class="q-mr-none"
@@ -126,7 +125,7 @@ import { getCurrentTokenPrice } from "./ConvertPrices";
 export default Vue.defineComponent({
   name: "orderItem",
   components: { ProImg, TokenSymbol, PiecePriceSelect, UserLink },
-  emits: ["update:totalToken", "update:price"],
+  emits: ["update:price", "totalToken", "shipDuration"],
   props: {
     entry: {
       type: Object as PropType<ItemTable>,
@@ -208,9 +207,11 @@ export default Vue.defineComponent({
       return undefined;
     });
 
-    const shipDuration = Vue.computed(() => {
+    const shipDurationStr = Vue.computed(() => {
       if (selectedShipTo.value !== undefined) {
-        return Number(selectedShipTo.value.t) / 3600 / 24 + " days";
+        const t = Number(selectedShipTo.value.t) + Number(props.entry.prepT);
+        context.emit("shipDuration", t);
+        return t / 3600 / 24 + " days";
       }
       return undefined;
     });
@@ -236,10 +237,10 @@ export default Vue.defineComponent({
 
     async function updateTokenPrice() {
       await setTotalToken(props.price);
-      context.emit("update:totalToken", totalToken);
+      context.emit("totalToken", totalToken.value);
       // TODO: Warn if price changed below -5% that the seller might not accept the payment
-      // TODO: Combine with step 3
     }
+    context.expose({ updateTokenPrice });
 
     const toRegionName = Vue.computed(() => {
       if (props.toRegion !== undefined) {
@@ -268,7 +269,7 @@ export default Vue.defineComponent({
       shouldItemsPrice,
       shouldShipPrice,
       selectedShipTo,
-      shipDuration,
+      shipDurationStr,
       excludedRegion,
       toRegionName,
       chipBgColor,

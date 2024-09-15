@@ -212,6 +212,7 @@
                   :ship-to-price="selectedShipTo"
                   :pieces-price="piecesPrice"
                   :pieces="pieces"
+                  :prep-time="item.prepT"
                   @total-price="totalPrice = $event"
                 ></prices>
               </q-card-section>

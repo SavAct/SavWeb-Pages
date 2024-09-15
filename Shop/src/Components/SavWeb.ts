@@ -697,6 +697,10 @@ export class SavWeb {
       pay: string;
       memo: string;
       from?: string | undefined;
+      t?: number;
+      dt?: number;
+      T?: string;
+      DT?: string;
     },
     maxWaitMs: number = 0
   ) {

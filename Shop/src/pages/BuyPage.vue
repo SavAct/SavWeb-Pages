@@ -52,8 +52,9 @@
         :done="step > 3"
         :title="$q.screen.gt.xs ? 'Payment' : ''"
         active-icon="currency_bitcoin"
-      >
+        >
         <buy-step3
+          v-model:order-id="orderId"
           :entry="entry"
           :token="token"
           v-model:price="usdPrice"
@@ -149,7 +150,7 @@ import BuyStep3 from "../Components/BuySteps/BuyStep3.vue";
 import Finished from "../Components/BuySteps/Finished.vue";
 import { state } from "../store/globals";
 import { Token } from "../Components/AntelopeHelpers";
-import { Address } from "../Components/Generator";
+import { Address, generateRandomString } from "../Components/Generator";
 import { ItemTable, UserTable } from "../Components/ContractInterfaces";
 import { PGP_Keys } from "../Components/AddPgpBtn.vue";
 import { LoadFromContract } from "../Components/MarketContractHandle";
@@ -175,6 +176,7 @@ export default Vue.defineComponent({
       id: -1,
       category: 0n,
     });
+    const orderId = Vue.ref<string>(generateRandomString(8));
 
     const token = Vue.ref<Token>();
     const pieces = Vue.ref<number>();
@@ -336,7 +338,6 @@ export default Vue.defineComponent({
         }
       }
     });
-
     // TODO: Fix: Require selected token on refresh. Add payment method with preselected entry from item page, but alert if token is not on user accounts blockchain 
 
     return {
@@ -366,6 +367,7 @@ export default Vue.defineComponent({
       trxLink,
       item,
       DISABLE_ENCRYPTION: state.DISABLE_ENCRYPTION,
+      orderId,
 
       // TODO: Show loading of the following
       loadMaxTries,
