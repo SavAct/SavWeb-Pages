@@ -7,14 +7,14 @@
       :label="price?.toFixed(2) + ' USD'"
     ></q-chip>
   </div>
-  <div v-if="shipPrice !== undefined" class="col-auto">
+  <div v-if="shipPrice !== undefined && shipDuration !== undefined && !Number.isNaN(shipPrice) && !Number.isNaN(shipDuration)" class="col-auto">
     Shipping:
     <q-chip
       :color="chipBgColor()"
       :label="
         'Within ' +
-        shipDurationStr +
-        ' for ' +
+        (shipDuration / 3600 / 24) +
+        'days for ' +
         shipPrice?.toFixed(2) +
         ' USD'
       "
@@ -73,9 +73,9 @@ export default Vue.defineComponent({
   },
   setup(props, contex) {
    
-    const shipDurationStr = Vue.computed(() => {
+    const shipDuration = Vue.computed(() => {
       if (props.shipToPrice !== undefined) {
-        return Number(props.shipToPrice.t) + Number(props.prepTime) / 3600 / 24 + " days";
+        return Number(props.shipToPrice.t) + Number(props.prepTime)
       }
       return undefined;
     });
@@ -123,7 +123,7 @@ export default Vue.defineComponent({
 
     return {
       chipBgColor,
-      shipDurationStr,
+      shipDuration,
       totalPrice,
       shipPrice,
       totalTokenStr,

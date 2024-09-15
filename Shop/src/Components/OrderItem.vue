@@ -258,10 +258,6 @@ export default Vue.defineComponent({
       }
     );
 
-
-
-    // TODO: Smartphone view by putting the image on an own line
-  
     return {
       darkStyle: state.darkStyle,
       updateTokenPrice,

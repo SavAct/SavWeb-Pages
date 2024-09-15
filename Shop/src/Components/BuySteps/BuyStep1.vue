@@ -148,7 +148,7 @@ export default Vue.defineComponent({
           validBuyerName.value = true;
         }
         context.emit("update:buyerName", value);
-        // TODO: Check if there is a public key of the buyer on blockchain and use it if there is one
+        // TODO: Check if there is a public key of the buyer on blockchain and use it if there is no one
       },
     });
 

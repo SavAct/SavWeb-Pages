@@ -81,7 +81,6 @@
         outlined
         dense
       ></q-input>
-      orderId {{ orderId }}
     </q-card-section>
   </q-card>
 </template>
