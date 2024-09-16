@@ -71,7 +71,7 @@ export default Vue.defineComponent({
       default: 1,
     },
   },
-  setup(props, contex) {
+  setup(props, context) {
    
     const shipDuration = Vue.computed(() => {
       if (props.shipToPrice !== undefined) {
@@ -91,7 +91,7 @@ export default Vue.defineComponent({
       if (shipPrice.value !== undefined && price.value !== undefined) {
         const p = shipPrice.value + price.value;
         setTotalToken(p);
-        contex.emit("totalPrice", p);
+        context.emit("totalPrice", p);
         return p;
       }
       totalToken.value = undefined;

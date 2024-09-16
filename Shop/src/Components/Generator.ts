@@ -32,6 +32,7 @@ export interface UserData extends Address {
   token: Token;
   seller: string;
   sigDate: number;
+  rId: string;
 }
 
 export function generateRandomString(length: number) {

@@ -4,6 +4,10 @@
   border-radius: 10%;
 }
 
+.link-btn .q-icon{
+  margin-right: 10px;
+}
+
 .vue-text-color {
   color: #64b586;
 }

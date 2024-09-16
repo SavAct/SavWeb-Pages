@@ -157,7 +157,7 @@ interface Transaction_idNull extends Omit<Transaction, "id"> {
   id: string | null;
 }
 
-export interface VerifiyId {
+export interface VerifyId {
   f: "verifyId";
   idToken: string;
   alt?: string; // if idToken is not equal, then goto alt otherwise load the last requested html file
@@ -196,7 +196,7 @@ export type Query = { [k: string]: string | null | Array<string | null> };
 
 export interface PageAction {
   SavWeb:
-    | VerifiyId
+    | VerifyId
     | GoTo
     | Payment
     | Transaction
@@ -209,7 +209,7 @@ export interface PageAction {
 
 interface PageAction_idNull {
   SavWeb:
-    | VerifiyId
+    | VerifyId
     | GoTo
     | Payment_idNull
     | Transaction_idNull
@@ -667,13 +667,13 @@ export class SavWeb {
   }
 
   /**
-   * Verifiy the given idToken
+   * Verify the given idToken
    */
-  verifiy() {
+  verify() {
     window.parent.postMessage(
       {
         SavWeb: {
-          f: "verifiyId",
+          f: "verifyId",
           idToken: this.idToken,
         },
       },

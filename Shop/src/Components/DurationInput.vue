@@ -34,13 +34,13 @@ export default Vue.defineComponent({
   },
   setup(props, { emit }) {
     const iniDuration = getInitialDuration(props.modelValue);
-    const _duractionUnit = Vue.ref<
+    const _durationUnit = Vue.ref<
       "months" | "weeks" | "days" | "hours" | "minutes"
     >(iniDuration.unit);
     const durationUnit = Vue.computed({
-      get: () => _duractionUnit.value,
+      get: () => _durationUnit.value,
       set: (value) => {
-        _duractionUnit.value = value;
+        _durationUnit.value = value;
         emit("update:modelValue", duration.value);
         emit("update:modelValue", getDuration(value, durationNumber.value));
       },

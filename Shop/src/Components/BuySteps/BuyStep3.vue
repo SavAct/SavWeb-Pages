@@ -111,7 +111,7 @@ export default Vue.defineComponent({
     "update:jsonData",
     "update:informData",
     "update:price",
-    "update:orderId"
+    "update:requestId"
   ],
   props: {
     entry: {
@@ -175,7 +175,7 @@ export default Vue.defineComponent({
       type: Object as PropType<PGP_Keys>,
       required: true,
     },
-    orderId: {
+    requestId: {
       type: String,
       required: true,
     },
@@ -257,7 +257,7 @@ export default Vue.defineComponent({
     const currentTokenPrice = Vue.ref<Asset | undefined>(undefined);
 
     const memo = Vue.ref<string>(
-      response.value?.memo ? response.value.memo : props.orderId
+      response.value?.memo ? response.value.memo : props.requestId
     );
 
     const shipDuration = Vue.ref<number|undefined>(undefined);

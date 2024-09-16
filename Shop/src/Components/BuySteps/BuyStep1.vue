@@ -20,7 +20,7 @@
       </q-card>
     </q-expansion-item>
 
-    <!-- Removed until pgp encrption should be implemented -->
+    <!-- Removed until pgp encryption should be implemented -->
     <!-- <q-expansion-item
       expand-separator
       icon="enhanced_encryption"
@@ -129,6 +129,10 @@ export default Vue.defineComponent({
       type: String,
       required: true,
       default: "",
+    },
+    requestId: {
+      type: String,
+      required: true,
     },
   },
   setup(props, context) {
@@ -274,6 +278,7 @@ export default Vue.defineComponent({
         userData.pubPgp = props.buyerKeys.pub;
         userData.step = 1;
         userData.rBy = "buyer";
+        userData.rId = props.requestId;
 
         return JSON.stringify(userData);
       } catch (e) {

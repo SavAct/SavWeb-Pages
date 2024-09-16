@@ -36,12 +36,12 @@
         :label="DISABLE_ENCRYPTION?'Message in JSON format':'Encrypted data'"
       ></q-input>
 
-      <q-input class="q-mt-md" readonly :model-value="selectedContect?.value">
+      <q-input class="q-mt-md" readonly :model-value="selectedContact?.value">
         <template v-slot:before>
           <q-select
             label="Contact"
             outlined
-            v-model="selectedContect"
+            v-model="selectedContact"
             :options="contactOptions"
           ></q-select>
         </template>
@@ -52,8 +52,8 @@
             icon="content_copy"
             @click="
               copy(
-                selectedContect?.value,
-                'Copy ' + selectedContect?.label + ' address to clipboard'
+                selectedContact?.value,
+                'Copy ' + selectedContact?.label + ' address to clipboard'
               )
             "
           ></q-btn>
@@ -66,8 +66,8 @@
             icon="send"
             color="blue"
             @click="
-              selectedContect !== undefined
-                ? openLinkOrMail(selectedContect.value, '_blank', message)
+              selectedContact !== undefined
+                ? openLinkOrMail(selectedContact.value, '_blank', message)
                 : undefined
             "
           ></q-btn>
@@ -133,27 +133,27 @@ export default Vue.defineComponent({
       });
     });
 
-    const _selectedContect = Vue.ref<{ label: string; value: string }>();
+    const _selectedContact = Vue.ref<{ label: string; value: string }>();
     if (props.contact) {
-      _selectedContect.value = {
+      _selectedContact.value = {
         value: props.contact.value,
         label: props.contact.label,
       };
     }
-    const selectedContect = Vue.computed({
+    const selectedContact = Vue.computed({
       get() {
-        return _selectedContect.value;
+        return _selectedContact.value;
       },
       set(value) {
         console.log("selected", value);
 
-        _selectedContect.value = value;
+        _selectedContact.value = value;
         context.emit("update:contact", value);
         plopAnimation();
       },
     });
 
-    const showSend = Vue.ref(selectedContect.value !== undefined);
+    const showSend = Vue.ref(selectedContact.value !== undefined);
     function plopAnimation() {
       showSend.value = false;
       setTimeout(() => {
@@ -165,7 +165,7 @@ export default Vue.defineComponent({
       DISABLE_ENCRYPTION: state.DISABLE_ENCRYPTION,
       copy,
       contactOptions,
-      selectedContect,
+      selectedContact,
       openLinkOrMail,
       showSend,
     };

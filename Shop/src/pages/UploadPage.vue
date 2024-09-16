@@ -758,7 +758,7 @@ export default Vue.defineComponent({
     }
 
     Vue.onMounted(() => {
-      // Load already uploaded shop by query id and category if parameters are not already setted
+      // Load already uploaded shop by query id and category if parameters are not already set
       const id_category = GetQueryIdAndCategory();
       if (!pIpt && id_category?.category !== undefined && id_category?.category !== 0n) {
         id.value = id_category.id;

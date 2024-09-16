@@ -60,6 +60,7 @@
             :thumb-style="thumbStyle"
           >
             <q-card-section>
+              <div class="q-mb-md">The customer may not know if you are still an active seller. Therefore, inform the customer that you will accept his payment by answering on his request in your chat.</div>
               <order-item
                 v-if="entry && userData"
                 :entry="entry"
@@ -67,25 +68,21 @@
                 :token="userData.token"
                 :pieces="userData.pieces"
                 :to-region="userData.country"
+                :buyer="userData.buyer"
               ></order-item>
-
-              <user-link
-                v-if="userData"
-                class="q-mt-md q-ml-none"
-                :color="chipBgColor()"
-                :user="userData.buyer"
-                internal
-              ></user-link>
               <q-input
                 v-if="note.length > 0"
                 class="q-mt-sm"
                 v-model="note"
                 outlined
                 readonly
+                dense
                 label="Customers note"
               ></q-input>
 
-              <div class="q-mt-md row">
+
+              <!-- Implement when encryption is activated -->
+              <!-- <div class="q-mt-md row">
                 <div class="col-grow">
                   <q-btn-toggle
                     push
@@ -107,12 +104,13 @@
                     ]"
                   />
                 </div>
-              </div>
+              </div> -->
             </q-card-section>
           </q-scroll-area>
         </q-card>
       </q-step>
-      <q-step
+      <!-- Implement when encryption is activated -->
+      <!-- <q-step
         :name="3"
         prefix="3"
         :done="step > 3"
@@ -184,7 +182,7 @@
             ></q-input>
           </q-card-section>
         </q-card>
-      </q-step>
+      </q-step> -->
       <q-step
         :name="5"
         prefix="5"
@@ -198,10 +196,9 @@
               {{
                 isPaid
                   ? "Send the article to the customer"
-                  : "Wait until the customer made the transaction and then send the article"
+                  : "Wait until the customer made the SavPay transaction and then send the article"
               }}
             </div>
-            <div>Click here to check if the customer made the payment</div>
             <order-item
               v-if="entry && userData"
               :entry="entry"
@@ -209,6 +206,7 @@
               :token="userData.token"
               :pieces="userData.pieces"
               :to-region="userData.country"
+              :buyer="userData.buyer"
             ></order-item>
           </q-card-section>
         </q-card>
@@ -227,6 +225,21 @@
             v-if="
               step > 2 ||
               (step === 1 && userData) ||
+              (step === 2)
+            "
+            :class="{ 'q-ml-sm': step > 1, 'q-pr-sm': step !== 5}"
+            outline
+            @click="nextStep"
+            color="blue"
+            :label="step === 2 ? 'I have responded to the seller' : step === 5 ? 'Check payment':'Next'"
+            :icon-right="step < 5?'arrow_forward_ios':undefined"
+            :loading="nextLoading"
+          />
+          <!-- Implement when encryption is activated -->
+          <!-- <q-btn
+            v-if="
+              step > 2 ||
+              (step === 1 && userData) ||
               (step === 2 && accept !== null)
             "
             :class="{ 'q-ml-sm': step > 1 }"
@@ -237,10 +250,40 @@
             :label="step === 4 ? 'I have responded' : 'Next'"
             icon-right="arrow_forward_ios"
             :loading="nextLoading"
-          />
+          /> -->
         </q-stepper-navigation>
       </template>
     </q-stepper>
+    <q-dialog v-model="checkPaymentDialog" class="full-width">
+      <q-card class="text-center">
+        <q-card-section class="text-h6">
+          Look for a transaction from <span class="text-bold">{{ userData?.buyer }}</span> with <br>memo <span class="text-bold">{{ userData?.rId }}</span>.
+        </q-card-section>
+        <q-card-section>
+          <div class="text-h6">
+            Send the article to the customer as soon as you find the payment here:
+          </div>
+          <div class="q-gutter-sm row justify-center q-mt-sm">
+            <q-btn class="link-btn" v-if="userData?.seller" color="primary" icon="storefront" @click="checkPayment('savpay', 'seller')">SavPay history</q-btn><span v-if="userData?.buyer && userData?.seller" class="q-px-sm">or</span><q-btn class="link-btn" color="secondary" v-if="userData?.buyer" icon="person" @click="checkPayment('savpay', 'buyer')">Customer SavPay history</q-btn>
+          </div>
+          <div class="q-mt-lg text-subtitle1">
+            Burned, refunded or early finalized transactions may not be listed in the SavPay history. For that you can check the full history of your blockchain accounts here:
+          </div>
+          <div class="q-gutter-sm row justify-center q-mt-sm">
+            <q-btn class="link-btn" v-if="userData?.seller && userData.seller.length <= 13" color="primary" icon="storefront" @click="checkPayment('bloks.io', 'seller')">Account history</q-btn> <q-btn class="link-btn" color="secondary" v-if="userData?.buyer && userData.buyer.length <= 13" icon="person" @click="checkPayment('bloks.io', 'buyer')">Customers account history</q-btn>
+          </div>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn
+            flat
+            color="red"
+            label="Close"
+            @click="checkPaymentDialog = false"
+            v-close-popup
+          ></q-btn>
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 <script lang="ts">
@@ -253,13 +296,14 @@ import {
   UserData,
   decrypt,
   encrypt,
-  generateRandomString,
 } from "../Components/Generator";
 import { state } from "../store/globals";
 import { copy } from "../Components/QuasarHelpers";
 import { LoadFromContract } from "../Components/MarketContractHandle";
 import { ItemTable, UserTable } from "../Components/ContractInterfaces";
 import { chipBgColor } from "../Components/styleHelper";
+import { savWeb } from "../store/connect";
+import { SavWeb } from "../Components/SavWeb";
 
 export default Vue.defineComponent({
   components: { AddPgpBtn, OrderItem, RawDataBtn, UserLink },
@@ -281,6 +325,8 @@ export default Vue.defineComponent({
     const sellersNote = Vue.ref<string>("");
     const userData = Vue.ref<UserData>();
     const nextLoading = Vue.ref<boolean>(false);
+
+    const checkPaymentDialog = Vue.ref<boolean>(false);
 
     async function evaluateInput() {
       if (
@@ -318,7 +364,6 @@ export default Vue.defineComponent({
           ) {
             const id = response.item.id;
             const category = BigInt(response.item.category);
-
             if (response.rBy === "buyer") {
               switch (response.step) {
                 case 1:
@@ -332,7 +377,9 @@ export default Vue.defineComponent({
                     if (response.note.length > 0) {
                       note.value = response.note;
                     }
-                    memo.value = requestId.value;
+                    memo.value = userData.value.rId;
+
+                    // TODO: Decide for step                    
                     step.value = 2;
 
                     return;
@@ -359,8 +406,6 @@ export default Vue.defineComponent({
     }
 
     const note = Vue.ref<string>("");
-
-    const requestId = Vue.ref<string>(generateRandomString(8));
 
     const entry = Vue.ref<ItemTable>();
     const memo = Vue.ref<string>("");
@@ -460,44 +505,6 @@ export default Vue.defineComponent({
       encryptedAnswer.value = "";
     }
 
-    // dev mode
-    if (true) {
-      (keys.value.pub = `-----BEGIN PGP PUBLIC KEY BLOCK-----
-
-xjMEZMwzBBYJKwYBBAHaRw8BAQdA/+/C8lm299s9AZ8YOya+FbbuPFpV3JHr
-V2mbEoQoPz7NAMKMBBAWCgA+BYJkzDMEBAsJBwgJkBQ0wwB7GCsCAxUICgQW
-AAIBAhkBApsDAh4BFiEENlDVzQ1pptmiGBU+FDTDAHsYKwIAACWqAP9Pu+PK
-b0cP6U4hdfFpg/ajAt6XThcFZPw5+E616apN6wEAjWi4Amd/HPBERnzFaLKb
-aBkaGlhPJZf4RN8w7uBZ+QvOOARkzDMEEgorBgEEAZdVAQUBAQdANBbouTlY
-uHJUZYhe0El8D+caQ5iXJREvTcpCk15+30cDAQgHwngEGBYIACoFgmTMMwQJ
-kBQ0wwB7GCsCApsMFiEENlDVzQ1pptmiGBU+FDTDAHsYKwIAAGLkAP9CBgwY
-U2WliTCVyjBUwZH4Dq+7ldEvYdw+UdHL0jw24AD/dfh8vv6YurfvqPRNwJnz
-WkrmPMQ2vCNN/vfNRi447wg=
-=Vfmh
------END PGP PUBLIC KEY BLOCK-----
-
-`),
-        (keys.value.pri = `-----BEGIN PGP PRIVATE KEY BLOCK-----
-
-xYYEZMwzBBYJKwYBBAHaRw8BAQdA/+/C8lm299s9AZ8YOya+FbbuPFpV3JHr
-V2mbEoQoPz7+CQMIV/9D7bpVhl3gFklYCb60b2FRBlg1G2DC8BPM3JfWI/2f
-DjcmEHQFqv8oPpWcGMIPupj37NJO5qu67QzXZ4OBLBAsObi9wr8NsHnX6Ho3
-3c0AwowEEBYKAD4FgmTMMwQECwkHCAmQFDTDAHsYKwIDFQgKBBYAAgECGQEC
-mwMCHgEWIQQ2UNXNDWmm2aIYFT4UNMMAexgrAgAAJaoA/0+748pvRw/pTiF1
-8WmD9qMC3pdOFwVk/Dn4TrXpqk3rAQCNaLgCZ38c8ERGfMVosptoGRoaWE8l
-l/hE3zDu4Fn5C8eLBGTMMwQSCisGAQQBl1UBBQEBB0A0Fui5OVi4clRliF7Q
-SXwP5xpDmJclES9NykKTXn7fRwMBCAf+CQMIjxocGQKmzZPg+ENih7UkHjeM
-qwKsl/Vdcg4xb/vDRZ1kgSoF6vSfRyPkRnlw1pjnXIsVce/7+2/XDhPNDMuk
-Q+d/+zrW5JwhjfmSch4MisJ4BBgWCAAqBYJkzDMECZAUNMMAexgrAgKbDBYh
-BDZQ1c0NaabZohgVPhQ0wwB7GCsCAABi5AD/QgYMGFNlpYkwlcowVMGR+A6v
-u5XRL2HcPlHRy9I8NuAA/3X4fL7+mLq376j0TcCZ81pK5jzENrwjTf73zUYu
-OO8I
-=pGPL
------END PGP PRIVATE KEY BLOCK-----
-`);
-      keys.value.passphrase = "abc";
-    }
-
     // TODO: Display buyer and memo on last step
     // TODO: Display textarea to enter buyers payment confirmation on last step, change last step wait status to deliver status by setting isPaid = true
     // TODO: Open the history page of the SavAct app with the mentioned buyer as sender and seller as receiver
@@ -505,6 +512,27 @@ OO8I
 
     // TODO: Store step content while processing, so that you can go back after clicking on a user chip
     // TODO: Display invalidation time
+
+    async function checkPayment(type: "savpay" | "bloks.io", role: "seller" | "buyer") {
+      if(!userData.value){
+        Quasar.Notify.create({
+          type: "negative",
+          message: "Missing user data",
+          position: "top",
+        });
+        return;
+      }
+      // https://savact.app/#/_trx_/history?user=whatdevssaid
+      if(type == "savpay") {
+        savWeb.openHistory({
+          chain: userData.value?.token.chain,
+          user: role == "seller" ? userData.value?.seller : userData.value?.buyer,
+          to: role == "seller" ? userData.value?.buyer : undefined,
+        });
+      } else {
+        SavWeb.goTo(`https://bloks.io/account/${role == "seller" ? userData.value?.seller : userData.value?.buyer}`, '_blank');
+      }
+    }
 
     const step = Vue.ref<number>(1);
     async function nextStep() {
@@ -521,9 +549,20 @@ OO8I
         step.value++;
         return;
       }
+      if(state.DISABLE_ENCRYPTION && step.value == 2) {
+        step.value = 5;
+        return;
+      }
+      if(step.value == 5) {
+        checkPaymentDialog.value = true;
+      }
       if (step.value < 5) step.value++;
     }
     function backStep() {
+      if(state.DISABLE_ENCRYPTION && step.value == 5) {
+        step.value = 2;
+        return;
+      }
       if (step.value > 1) step.value--;
     }
 
@@ -563,7 +602,6 @@ OO8I
       buyerResponse,
       isEncrypted,
       keys,
-      requestId,
       responseDecrypted,
       currentTokenPrice,
       entry,
@@ -592,6 +630,9 @@ OO8I
       barStyle: state.barStyle,
       nextLoading,
       chipBgColor,
+      DISABLE_ENCRYPTION: state.DISABLE_ENCRYPTION,
+      checkPaymentDialog,
+      checkPayment,
 
       // TODO: Show loading of the following
       loadingCompleted,

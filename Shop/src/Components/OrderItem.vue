@@ -22,6 +22,14 @@
         </div>
         <div class="col-auto">
           <user-link
+            v-if="buyer"
+            :size="$q.screen.lt.sm ? 'sm' : ''"
+            class="q-mr-sm"
+            :color="chipBgColor()"
+            :user="buyer"
+            internal
+          ></user-link>
+          <user-link
             class="q-mr-none"
             :size="$q.screen.lt.sm ? 'sm' : ''"
             icon="storefront"
@@ -146,6 +154,11 @@ export default Vue.defineComponent({
     toRegion: {
       type: String,
       required: true,
+    },
+    buyer: {
+      type: String,
+      required: false,
+      default: "",
     },
   },
   setup(props, context) {

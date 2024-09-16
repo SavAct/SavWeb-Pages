@@ -164,7 +164,11 @@ export const router = {
   back: () => {
     if (recordIndex.value > 0 && record.length > 0) {
       console.log("back", recordIndex.value, recordIndex.value - 1, record);
-
+      if(record[recordIndex.value].name === 'buy'){
+        if(!confirm('Are you sure you want to leave the payment process?')){
+          return false;
+        }
+      }
       recordIndex.value--;
       return true;
     }
@@ -173,6 +177,11 @@ export const router = {
   forward: () => {
     if (recordIndex.value < record.length - 1) {
       console.log("forward", recordIndex.value, recordIndex.value + 1, record);
+      if(record[recordIndex.value].name === 'buy'){
+        if(!confirm('Are you sure you want to leave the payment process?')){
+          return false;
+        }
+      }
       recordIndex.value++;
       return true;
     }

@@ -20,7 +20,7 @@
         :done="step > 1"
         :title="$q.screen.gt.xs ? 'User' : ''"
         active-icon="account_circle"
-      >
+        >
         <buy-step1
           v-model:buyer-data="buyerData"
           v-model:json-data="requestJson"
@@ -33,6 +33,7 @@
           :pieces="pieces"
           :token="token"
           @encrypted="step = 2"
+          :request-id="requestId"
         ></buy-step1>
       </q-step>
 
@@ -60,7 +61,7 @@
         active-icon="currency_bitcoin"
         >
         <buy-step3
-          v-model:order-id="orderId"
+          v-model:request-id="requestId"
           :entry="entry"
           :token="token"
           v-model:price="usdPrice"
@@ -69,7 +70,7 @@
           :seller="seller"
           :buyer="buyerName"
           :buyer-keys="buyerKeys"
-          v-model:completed="setp3Completed"
+          v-model:completed="step3Completed"
           v-model:response="sellerResponse"
           v-model:link="trxLink"
           v-model:inform-data="informData"
@@ -107,7 +108,7 @@
             v-if="
               step < 2 ||
               (step === 2 && contact) ||
-              (step === 3 && setp3Completed) ||
+              (step === 3 && step3Completed) ||
               step == 4
             "
             :class="{ 'q-ml-sm': step > 1 }"
@@ -115,7 +116,7 @@
             outline
             @click="nextStep"
             color="blue"
-            :label="forwardNaviLabel"
+            :label="forwardNavLabel"
             icon-right="arrow_forward_ios"
             :loading="doEncryption"
             :disable="doEncryption"
@@ -183,7 +184,7 @@ export default Vue.defineComponent({
       id: -1,
       category: 0n,
     });
-    const orderId = Vue.ref<string>(generateRandomString(8));
+    const requestId = Vue.ref<string>(generateRandomString(8));
 
     const token = Vue.ref<Token>();
     const pieces = Vue.ref<number>();
@@ -299,12 +300,12 @@ export default Vue.defineComponent({
       pri: "",
       passphrase: "",
     });
-    const setp3Completed = Vue.ref<boolean>(false);
+    const step3Completed = Vue.ref<boolean>(false);
 
     const sellerResponse = Vue.ref<string>("");
     const trxLink = Vue.ref<string>("");
 
-    const forwardNaviLabel = Vue.computed(() => {
+    const forwardNavLabel = Vue.computed(() => {
       switch (step.value) {
         case 2:
           return "Got a response";
@@ -356,15 +357,15 @@ export default Vue.defineComponent({
       requestJson,
       informJson,
       address,
-      setp3Completed,
+      step3Completed,
       usdPrice,
       contact,
-      forwardNaviLabel,
+      forwardNavLabel,
       sellerResponse,
       trxLink,
       item,
       DISABLE_ENCRYPTION: state.DISABLE_ENCRYPTION,
-      orderId,
+      requestId,
       loadTryPercentage,
       loadingCompleted,
     };
