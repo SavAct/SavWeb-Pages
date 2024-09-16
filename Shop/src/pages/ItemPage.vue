@@ -8,13 +8,13 @@
       outline
       @click="goBack()"
     ></q-btn>
-    <div class="full-width q-px-md" style="max-width: 1200px">
-      <q-inner-loading
-        :showing="loadTryPercentage != 100"
-        :label="loadTryPercentage + '%'"
-        label-class="text-teal"
-        style="z-index: 99; background-color: #000000a0"
-      />
+    <div class="full-width q-px-md" style="max-width: 1200px"> 
+    <q-inner-loading
+      :showing="!loadingCompleted"
+      :label="loadTryPercentage + '%'"
+      label-class="text-teal"
+      style="z-index: 99; background-color: #000000a0"
+    />
       <div class="q-py-md full-width">
         <div class="row full-width">
           <div class="col text-h5 q-pr-sm no-text-overflow">
@@ -442,16 +442,16 @@ export default Vue.defineComponent({
       }
     }
 
-    const loadMaxTries = Vue.ref<number>(0);
+    const loadMaxTries = 3;
     const loadTries = Vue.ref<number>(0);
+    const loadingCompleted = Vue.ref<boolean>(false);
     const loadTryPercentage = Vue.computed(() => {
-      if (loadMaxTries.value > 0) {
-        return Math.round(
-          (1 - (loadMaxTries.value - loadTries.value) / loadMaxTries.value) *
-            100
-        );
+      if(loadingCompleted.value){
+        return 100;
       }
-
+      if (loadMaxTries > 0) {
+        return Math.round((loadTries.value / loadMaxTries) * 100);
+      }
       return 100;
     });
 
@@ -502,13 +502,12 @@ export default Vue.defineComponent({
           category.value = id_category.category;
 
           (async () => {
-            item.value = await new LoadFromContract(
-              loadMaxTries,
-              loadTries
-            ).loadItem({
+            loadingCompleted.value = false;
+            item.value = await new LoadFromContract(loadTries).loadItem({
               ...id_category,
               ...state.contract,
-            });
+            }, loadMaxTries);            
+            loadingCompleted.value = true;
             if (!item.value) {
               // No entry found
               Quasar.Notify.create({
@@ -599,7 +598,8 @@ export default Vue.defineComponent({
       categoryName,
       clickCategory,
       selectedShipTo,
-      totalPrice
+      totalPrice,
+      loadingCompleted
     };
   },
 });

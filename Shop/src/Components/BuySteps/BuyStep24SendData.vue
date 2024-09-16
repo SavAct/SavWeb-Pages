@@ -78,7 +78,7 @@
 </template>
 <script lang="ts">
 import RawDataBtn from "../RawDataBtn.vue";
-import { PropType } from "vue";
+import type { PropType } from "vue";
 import { copy } from "../QuasarHelpers";
 import {
   messengerShortName,

@@ -335,7 +335,7 @@ import CategoryInput from "../Components/CategoryInput.vue";
 import PriceOptionsInput from "../Components/PiecePrice/PriceOptionsInput.vue";
 import { countryCodes, getRegion } from "../Components/ConvertRegion";
 import { state } from "../store/globals";
-import { Ref } from "vue";
+import type { Ref } from "vue";
 import {
   AddItem,
   ItemTable,

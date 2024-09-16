@@ -55,7 +55,7 @@ import UserInput from "../UserInput.vue";
 import SetPgp from "../SetPgp.vue";
 import AddressInput from "../AddressInput.vue";
 
-import { PropType } from "vue";
+import type { PropType } from "vue";
 import { Token } from "../AntelopeHelpers";
 
 import { Address, UserData, encrypt } from "../Generator";

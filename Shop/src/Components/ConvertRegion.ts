@@ -1,11 +1,11 @@
 export const regionName = new Intl.DisplayNames(["en"], { type: "region" });
 export function getRegion(code: string) {
+  if(code.length < 2) return undefined;
   // Additional codes
   switch (code) {
     case "WW":
       return "World Wide";
-  }
-
+    }
   const c = regionName.of(code);
   return c;
 }
@@ -320,7 +320,7 @@ export const countryCodes = [
 // export const countryCodes = getAllCodes()
 // console.log('countryCodes', countryCodes);
 
-export function combineCountryCodes(codes: string[]) {
+export function combineCountryCodes(codes: string[]) {  
   const result = codes
     .map((code) => {
       const c = getRegion(code);

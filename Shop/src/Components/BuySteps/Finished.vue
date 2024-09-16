@@ -132,7 +132,7 @@
 import OrderItem from "../OrderItem.vue";
 import RawDataBtn from "../RawDataBtn.vue";
 import { copy } from "../QuasarHelpers";
-import { PropType } from "vue";
+import type { PropType } from "vue";
 import { InformSellerData, Token } from "../AntelopeHelpers";
 import { formatDuration } from "../ConvertTime";
 import { encrypt } from "../Generator";

@@ -26,7 +26,7 @@
 </template>
 <script lang="ts">
 import { AssetSymbol } from "./AntelopeHelpers";
-import { PropType } from "vue";
+import type { PropType } from "vue";
 export default Vue.defineComponent({
   name: "tokenSymbol",
   props: {

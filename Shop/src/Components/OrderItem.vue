@@ -114,7 +114,7 @@ import ProImg from "../Components/ProImg.vue";
 import TokenSymbol from "./TokenSymbol.vue";
 import PiecePriceSelect from "./PiecePrice/PiecePriceSelect.vue";
 import UserLink from "../Components/UserLink.vue";
-import { PropType } from "vue";
+import type { PropType } from "vue";
 import { state } from "../store/globals";
 import { Asset, Token } from "./AntelopeHelpers";
 import { ItemTable, ToRegion } from "./ContractInterfaces";
@@ -225,7 +225,7 @@ export default Vue.defineComponent({
 
     const totalToken = Vue.ref<Asset | undefined>();
     async function setTotalToken(price: number) {
-      if (price !== undefined && props.token !== undefined) {
+      if (price !== undefined && !Number.isNaN(price) && props.token !== undefined) {
         totalToken.value = await getCurrentTokenPrice(
           price,
           props.token

@@ -1,5 +1,11 @@
 <template>
   <q-page class="column">
+    <q-inner-loading
+        :showing="!loadingCompleted"
+        :label="loadTryPercentage + '%'"
+        label-class="text-teal"
+        style="z-index: 99; background-color: #000000a0"
+      />
     <q-stepper
       class="col fit"
       v-model="step"
@@ -154,9 +160,10 @@ import { Address, generateRandomString } from "../Components/Generator";
 import { ItemTable, UserTable } from "../Components/ContractInterfaces";
 import { PGP_Keys } from "../Components/AddPgpBtn.vue";
 import { LoadFromContract } from "../Components/MarketContractHandle";
-import { countryCodesNoGroups, getRegion } from "../Components/ConvertRegion";
+import { countryCodesNoGroups } from "../Components/ConvertRegion";
 import { GetQueryOrderRequest } from "../Components/queryHelper";
 import { isPubKeyValid } from "../Components/pgpHelper";
+
 
 export default Vue.defineComponent({
   components: {
@@ -186,16 +193,17 @@ export default Vue.defineComponent({
 
     const entry = Vue.ref<ItemTable>();
 
-    const loadMaxTries = Vue.ref<number>(0);
+    const loadMaxTries = 3; 
+    
     const loadTries = Vue.ref<number>(0);
+    const loadingCompleted = Vue.ref<boolean>(false);
     const loadTryPercentage = Vue.computed(() => {
-      if (loadMaxTries.value > 0) {
-        return Math.round(
-          (1 - (loadMaxTries.value - loadTries.value) / loadMaxTries.value) *
-            100
-        );
+      if(loadingCompleted.value){
+        return 100;
       }
-
+      if (loadMaxTries > 0) {
+        return Math.round((loadTries.value / loadMaxTries) * 100);
+      }
       return 100;
     });
 
@@ -230,14 +238,13 @@ export default Vue.defineComponent({
       category: bigint,
       contract = state.contract
     ) {
-      entry.value = await new LoadFromContract(
-        loadMaxTries,
-        loadTries
-      ).loadItem({
+      loadingCompleted.value = false;
+      entry.value = await new LoadFromContract(loadTries).loadItem({
         id,
         category,
         ...contract,
-      });
+      }, loadMaxTries);
+      loadingCompleted.value = true;
       if (!entry.value || entry.value.id != id) {
         // No entry found
         Quasar.Notify.create({
@@ -265,15 +272,6 @@ export default Vue.defineComponent({
 
     function backStep() {
       if (step.value > 1) step.value--;
-    }
-
-    function getRegions(r: string) {
-      return r !== undefined
-        ? r
-            .split(" ")
-            .map((v) => getRegion(v))
-            .join(", ")
-        : undefined;
     }
 
     const buyerName = Vue.ref<string>("");
@@ -343,7 +341,6 @@ export default Vue.defineComponent({
     return {
       darkStyle: state.darkStyle,
       entry,
-      getRegions,
       step,
       nextStep,
       backStep,
@@ -368,12 +365,8 @@ export default Vue.defineComponent({
       item,
       DISABLE_ENCRYPTION: state.DISABLE_ENCRYPTION,
       orderId,
-
-      // TODO: Show loading of the following
-      loadMaxTries,
-      loadTries,
       loadTryPercentage,
-      loadingSeller,
+      loadingCompleted,
     };
   },
 });

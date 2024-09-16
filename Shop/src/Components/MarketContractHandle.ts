@@ -1,4 +1,4 @@
-import { Ref } from "vue";
+import type { Ref } from "vue";
 import { MarketContract, state } from "../store/globals";
 import { ItemTable, TokenSymbol } from "./ContractInterfaces";
 import { UserTable } from "./ContractInterfaces";
@@ -31,10 +31,8 @@ export function userTableEntryToUser(userTableEntry: UserTable) {
 
 export class LoadFromContract {
   constructor(
-    public loadMaxTries: Ref<number> = Vue.ref(1),
     public loadTries: Ref<number> = Vue.ref(-1)
   ) {
-    loadMaxTries.value = 1;
     loadTries.value = -1;
   }
 
@@ -53,13 +51,11 @@ export class LoadFromContract {
     maxTries = 3,
     waitTime = 1000
   ) {
-    this.loadMaxTries.value = maxTries;
     this.loadTries.value = 0;
 
     for (let i = 0; i < maxTries; i++) {
       const tbUser = await state.getUser(user, contract);
       if (tbUser) {
-        this.loadMaxTries.value = this.loadTries.value;
         return tbUser as UserTable;
       } else {
         // Wait before trying again
@@ -83,13 +79,11 @@ export class LoadFromContract {
     maxTries = 3,
     waitTime = 1000
   ) {
-    this.loadMaxTries.value = maxTries;
     this.loadTries.value = 0;
 
     for (let i = 0; i < maxTries; i++) {
       const article = await state.getArticle(data);
       if (article) {
-        this.loadMaxTries.value = this.loadTries.value;
         return article as ItemTable;
       } else {
         // Wait before trying again

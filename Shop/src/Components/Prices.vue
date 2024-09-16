@@ -14,7 +14,7 @@
       :label="
         'Within ' +
         (shipDuration / 3600 / 24) +
-        'days for ' +
+        ' days for ' +
         shipPrice?.toFixed(2) +
         ' USD'
       "
@@ -100,7 +100,7 @@ export default Vue.defineComponent({
 
     const totalToken = Vue.ref<Asset | undefined>();
     async function setTotalToken(price: number) {
-      if (price !== undefined && props.token !== undefined) {
+      if (price !== undefined && !Number.isNaN(price) && props.token !== undefined) {
         totalToken.value = await getCurrentTokenPrice(
           price,
           props.token.value

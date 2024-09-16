@@ -59,7 +59,7 @@
   </div>
 </template>
 <script lang="ts">
-import { Ref } from "vue";
+import type { Ref } from "vue";
 import { countryCodes, getRegion } from "./ConvertRegion";
 
 export interface FilterValues {

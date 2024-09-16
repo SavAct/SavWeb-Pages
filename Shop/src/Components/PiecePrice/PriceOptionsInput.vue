@@ -63,7 +63,7 @@
   </div>
 </template>
 <script lang="ts">
-import { PropType, Ref } from "vue";
+import type { PropType, Ref } from "vue";
 import { PiecesPrice } from "../ContractInterfaces";
 import PiecePriceInput from "./PiecePriceInput.vue";
 import { state } from "../../store/globals";

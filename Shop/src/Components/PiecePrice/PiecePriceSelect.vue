@@ -43,7 +43,7 @@
   ></q-chip>
 </template>
 <script lang="ts">
-import { PropType } from "vue";
+import type { PropType } from "vue";
 import { PiecesPrice } from "../ContractInterfaces";
 import {
   GetParamsFromTablePricePiece,

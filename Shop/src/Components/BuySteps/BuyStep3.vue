@@ -87,7 +87,7 @@
 <script lang="ts">
 import AddPgpBtn, { PGP_Keys } from "../AddPgpBtn.vue";
 import OrderItem from "../OrderItem.vue";
-import { PropType } from "vue";
+import type { PropType } from "vue";
 import { state } from "../../store/globals";
 import { Asset, AssetToString, InformSellerData, Token } from "../AntelopeHelpers";
 import { formatDuration } from "../ConvertTime";

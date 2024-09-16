@@ -86,7 +86,7 @@ export default Vue.defineComponent({
   setup(props, context) {
     const region = Vue.computed({
       get: () => {
-        return props.modelValue?.country !== undefined
+        return props.modelValue?.country
           ? {
               label: getRegion(props.modelValue?.country.toUpperCase()) ?? "",
               value: props.modelValue?.country,

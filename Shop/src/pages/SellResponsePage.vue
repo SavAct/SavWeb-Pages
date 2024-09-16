@@ -365,16 +365,16 @@ export default Vue.defineComponent({
     const entry = Vue.ref<ItemTable>();
     const memo = Vue.ref<string>("");
 
-    const loadMaxTries = Vue.ref<number>(0);
+    const loadMaxTries = 3;
     const loadTries = Vue.ref<number>(0);
+    const loadingCompleted = Vue.ref<boolean>(false);
     const loadTryPercentage = Vue.computed(() => {
-      if (loadMaxTries.value > 0) {
-        return Math.round(
-          (1 - (loadMaxTries.value - loadTries.value) / loadMaxTries.value) *
-            100
-        );
+      if(loadingCompleted.value) {
+        return 100;
       }
-
+      if (loadMaxTries > 0) {
+        return Math.round((loadTries.value / loadMaxTries) * 100);
+      }
       return 100;
     });
 
@@ -397,14 +397,15 @@ export default Vue.defineComponent({
       category: bigint,
       contract = state.contract
     ) {
+      loadingCompleted.value = false;
       entry.value = await new LoadFromContract(
-        loadMaxTries,
         loadTries
       ).loadItem({
         id,
         category,
         ...contract,
       });
+      loadingCompleted.value = true;
       if (!entry.value) {
         // No entry found
         Quasar.Notify.create({
@@ -593,8 +594,7 @@ OO8I
       chipBgColor,
 
       // TODO: Show loading of the following
-      loadMaxTries,
-      loadTries,
+      loadingCompleted,
       loadTryPercentage,
       seller,
       loadingSeller,

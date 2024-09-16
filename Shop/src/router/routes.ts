@@ -1,4 +1,4 @@
-import { Component } from "vue";
+import type { Component } from "vue";
 import home from "../pages/IndexPage.vue";
 import ads from "../pages/AdsPage.vue";
 import item from "../pages/ItemPage.vue";
