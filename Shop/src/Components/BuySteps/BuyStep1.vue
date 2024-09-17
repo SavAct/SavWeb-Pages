@@ -108,7 +108,7 @@ export default Vue.defineComponent({
     // const validBuyerPgp = Vue.ref<boolean | undefined>();
     const validAddress = Vue.ref<boolean | undefined>();
     
-    const address = Vue.ref<Address>({
+    const address = Vue.ref<Address>(props.modelValue.buyer?.address ?? {
       firstName: "",
       middleNames: "",
       lastName: "",
@@ -122,7 +122,7 @@ export default Vue.defineComponent({
     });
     
     // Apply country from selected region if possible 
-    if(props.toRegion !== undefined){
+    if(props.toRegion !== undefined && address.value.country.length === 0) {
       const upperToRegion = props.toRegion.toUpperCase();
       const country = countryCodesNoGroups.includes(upperToRegion)? upperToRegion : ""
       address.value.country = country;
@@ -228,7 +228,7 @@ export default Vue.defineComponent({
         const json = {
           ...orderMsg.value,
           buyer: {
-            ...address.value,
+            address: address.value,
             acc: props.buyerName,
             sigDate: Date.now(),
             pubPgp: props.buyerKeys.pub,

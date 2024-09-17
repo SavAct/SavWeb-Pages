@@ -30,7 +30,7 @@ export interface OrderMsg {
   seller: string;
   token: Token;
   pieces: number;
-  buyer?: { acc: string, pubPgp: string, sigDate: number} & Address;
+  buyer?: { acc: string, pubPgp: string, sigDate: number, address: Address};
   trx?: PayParams
 }
 

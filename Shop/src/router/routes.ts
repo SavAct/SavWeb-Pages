@@ -44,7 +44,7 @@ export const routes: Array<{
   {
     name: "response",
     component: sellResponse,
-    title: "Response to a customer",
+    title: "Message Center",
     color: "blue-12",
   },
   {
