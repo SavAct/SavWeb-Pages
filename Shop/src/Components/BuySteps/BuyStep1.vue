@@ -13,7 +13,7 @@
       <q-card>
         <q-card-section>
           <user-input
-            :fix-chain="typeof token?.chain === 'string'"
+            :fix-chain="typeof orderMsg.token.chain === 'string'"
             v-model="userName"
           ></user-input>
         </q-card-section>
@@ -44,7 +44,7 @@
     >
       <q-card>
         <q-card-section>
-          <address-input v-model="addr"></address-input>
+          <address-input v-model="address"></address-input>
         </q-card-section>
       </q-card>
     </q-expansion-item>
@@ -56,24 +56,20 @@ import SetPgp from "../SetPgp.vue";
 import AddressInput from "../AddressInput.vue";
 
 import type { PropType } from "vue";
-import { Token } from "../AntelopeHelpers";
-
-import { Address, UserData, encrypt } from "../Generator";
+import { Address, OrderMsg, encrypt } from "../Generator";
 import { PGP_Keys } from "../AddPgpBtn.vue";
-import { UserTable } from "../ContractInterfaces";
 import { state } from "../../store/globals";
+import { UserTable } from "../ContractInterfaces";
+import { countryCodesNoGroups } from "../ConvertRegion";
 
 export default Vue.defineComponent({
   name: "buyStep1",
   components: { AddressInput, UserInput, SetPgp },
   emits: [
-    "update:encrypt",
-    "update:buyerData",
-    "update:jsonData",
     "update:buyerName",
     "update:buyerKeys",
     "update:address",
-    "encrypted",
+    "update:modelValue",
   ],
   props: {
     buyerName: {
@@ -90,49 +86,18 @@ export default Vue.defineComponent({
         passphrase: "",
       },
     },
-    address: {
-      type: Object as PropType<Address>,
-      required: true,
-      default: "",
-    },
-    token: {
-      type: Object as PropType<Token>,
-      required: true,
-      default: undefined,
-    },
-    encrypt: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
     seller: {
       type: Object as PropType<UserTable>,
       required: true,
+    },
+    modelValue: {
+      type: Object as PropType<OrderMsg>,
+      required: true,
+    },
+    toRegion: {
+      type: String,
+      required: false,
       default: undefined,
-    },
-    item: {
-      type: Object as PropType<{ id: number; category: bigint }>,
-      required: true,
-      default: undefined,
-    },
-    pieces: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
-    buyerData: {
-      type: String,
-      required: true,
-      default: "",
-    },
-    jsonData: {
-      type: String,
-      required: true,
-      default: "",
-    },
-    requestId: {
-      type: String,
-      required: true,
     },
   },
   setup(props, context) {
@@ -142,6 +107,26 @@ export default Vue.defineComponent({
     const validBuyerName = Vue.ref<boolean | undefined>();
     // const validBuyerPgp = Vue.ref<boolean | undefined>();
     const validAddress = Vue.ref<boolean | undefined>();
+    
+    const address = Vue.ref<Address>({
+      firstName: "",
+      middleNames: "",
+      lastName: "",
+      country: "",
+      state: "",
+      city: "",
+      postal: "",
+      addressL1: "",
+      addressL2: "",
+      note: "",
+    });
+    
+    // Apply country from selected region if possible 
+    if(props.toRegion !== undefined){
+      const upperToRegion = props.toRegion.toUpperCase();
+      const country = countryCodesNoGroups.includes(upperToRegion)? upperToRegion : ""
+      address.value.country = country;
+    }
 
     const userName = Vue.computed({
       get() {
@@ -156,6 +141,15 @@ export default Vue.defineComponent({
       },
     });
 
+    const orderMsg = Vue.computed({
+      get() {
+        return props.modelValue;
+      },
+      set(value: OrderMsg) {
+        context.emit("update:modelValue", value);
+      },
+    });
+
     const bKeys = Vue.computed({
       get() {
         return props.buyerKeys;
@@ -164,28 +158,6 @@ export default Vue.defineComponent({
         context.emit("update:buyerKeys", value);
       },
     });
-
-    const addr = Vue.computed({
-      get() {
-        return props.address;
-      },
-      set(value: Address) {
-        context.emit("update:address", value);
-      },
-    });
-
-    Vue.watch(
-      () => props.encrypt,
-      async () => {
-        if (props.encrypt) {
-          const result = await createAndEncrypt();
-          context.emit("update:encrypt", false);
-          if (result === true) {
-            context.emit("encrypted");
-          }
-        }
-      }
-    );
 
     Vue.watch(
       userName,
@@ -210,16 +182,7 @@ export default Vue.defineComponent({
       // expBuyerPgp.value = false;
       expAddress.value = false;
 
-      if (!props.token) {
-        return "No token selected";
-      } else if (
-        props.item?.id === undefined ||
-        props.item?.id < 0 ||
-        props.item.category === undefined ||
-        typeof props.item.category !== "bigint"
-      ) {
-        return "No item selected";
-      } else if (props.buyerName === undefined || props.buyerName.length == 0) {
+      if (props.buyerName === undefined || props.buyerName.length == 0) {
         validBuyerName.value = false;
         expBuyerName.value = true;
         return "No valid buyer name entered";
@@ -235,21 +198,21 @@ export default Vue.defineComponent({
 
       // Check address
       let msg: string | undefined = undefined;
-      if (!props.address) {
+      if (!address) {
         msg = "No address entered";
-      } else if (props.address.firstName.length == 0) {
+      } else if (address.value.firstName.length == 0) {
         msg = "No first name entered";
-      } else if (props.address.lastName.length == 0) {
+      } else if (address.value.lastName.length == 0) {
         msg = "No last name entered";
-      } else if (props.address.country.length == 0) {
+      } else if (address.value.country.length == 0) {
         msg = "No country entered";
-      } else if (props.address.state.length == 0) {
+      } else if (address.value.state.length == 0) {
         msg = "No state entered";
-      } else if (props.address.city.length == 0) {
+      } else if (address.value.city.length == 0) {
         msg = "No city entered";
-      } else if (props.address.postal.length == 0) {
+      } else if (address.value.postal.length == 0) {
         msg = "No postal code entered";
-      } else if (props.address.addressL1.length == 0) {
+      } else if (address.value.addressL1.length == 0) {
         msg = "No address line 1 entered";
       }
       if (msg !== undefined) {
@@ -262,32 +225,29 @@ export default Vue.defineComponent({
     }
     function createJsonUserData() {
       try {
-        if (props.token === undefined) throw new Error("No token");
-        if (props.seller === undefined) throw new Error("No seller");
-        if (props.item === undefined) throw new Error("No item");
-        const userData = props.address as UserData;
-        userData.buyer = props.buyerName;
-        userData.item = {
-          id: props.item.id,
-          category: String(props.item.category),
+        const json = {
+          ...orderMsg.value,
+          buyer: {
+            ...address.value,
+            acc: props.buyerName,
+            sigDate: Date.now(),
+            pubPgp: props.buyerKeys.pub,
+          },
+          step: 1,
         };
-        userData.pieces = props.pieces;
-        userData.token = props.token;
-        userData.seller = props.seller.user;
-        userData.sigDate = Date.now();
-        userData.pubPgp = props.buyerKeys.pub;
-        userData.step = 1;
-        userData.rBy = "buyer";
-        userData.rId = props.requestId;
-
-        return JSON.stringify(userData);
+        return JSON.stringify(json);
       } catch (e) {
         console.log("Error on stringify", e);
+        orderMsg.value = {
+          ...orderMsg.value,
+          buyer: undefined,
+          step: 0,
+        };
         return "";
       }
     }
 
-    async function createAndEncrypt() {
+    async function createAndEncrypt() : Promise<{ json: string; encrypted?: string } | false> {
       const result = checkUserData();
       if (typeof result === "string") {
         Quasar.Notify.create({
@@ -295,16 +255,19 @@ export default Vue.defineComponent({
           type: "negative",
           message: result,
         });
-        context.emit("update:jsonData", "");
+        orderMsg.value = {
+          ...orderMsg.value,
+          buyer: undefined,
+          step: 0,
+        };
         return false;
       }
-      const json = createJsonUserData();
-      context.emit("update:jsonData", json);
+      const json = createJsonUserData();      
+      orderMsg.value = JSON.parse(json);
 
       if (props.seller) {        
         if(state.DISABLE_ENCRYPTION) {
-          context.emit("update:buyerData", json);
-          return true;
+          return { json };
         }
         const data = await encrypt(
           json,
@@ -314,11 +277,8 @@ export default Vue.defineComponent({
           // props.buyerKeys.passphrase
         );
         if (typeof data == "string") {
-          context.emit("update:buyerData", data);
-
-          return true;
+          return { json, encrypted: data };
         } else if (data !== false) {
-          context.emit("update:buyerData", "");
           Quasar.Notify.create({
             position: "top",
             type: "negative",
@@ -327,7 +287,6 @@ export default Vue.defineComponent({
           });
         }
       }
-      // validBuyerPgp.value = false;
       return false;
     }
 
@@ -340,7 +299,9 @@ export default Vue.defineComponent({
       validAddress,
       userName,
       bKeys,
-      addr,
+      address,
+      createAndEncrypt,
+      orderMsg,
     };
   },
 });

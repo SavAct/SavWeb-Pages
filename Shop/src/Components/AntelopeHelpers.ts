@@ -17,13 +17,6 @@ export interface Token {
   chain: string;
 }
 
-export interface InformSellerData {
-  buyer: string;
-  seller: string;
-  token: Token;
-  memo: string;
-}
-
 export function StringToSymbol(symbol_str: string): AssetSymbol {
   const [precision_str, name] = symbol_str.split(",");
   return { precision: parseInt(precision_str), name };

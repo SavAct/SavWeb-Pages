@@ -13,9 +13,8 @@
               >to <span class="text-bold">{{ seller.user }}</span
               >&nbsp;</template
             >
-            <template v-if="trxData && trxData.memo.length > 0">
-              with the memo "
-              <span class="text-bold">{{ trxData.memo }}</span
+            <template v-if="orderData">
+              with the memo "<span class="text-bold">{{ orderData.rId }}</span
               >"&nbsp;
             </template>
             should be in your
@@ -133,9 +132,9 @@ import OrderItem from "../OrderItem.vue";
 import RawDataBtn from "../RawDataBtn.vue";
 import { copy } from "../QuasarHelpers";
 import type { PropType } from "vue";
-import { InformSellerData, Token } from "../AntelopeHelpers";
+import { Token } from "../AntelopeHelpers";
 import { formatDuration } from "../ConvertTime";
-import { encrypt } from "../Generator";
+import { encrypt, OrderMsg } from "../Generator";
 import { savWeb } from "../../store/connect";
 import { ItemTable, UserTable } from "../ContractInterfaces";
 import { PGP_Keys } from "../AddPgpBtn.vue";
@@ -147,6 +146,7 @@ export default Vue.defineComponent({
     RawDataBtn,
     OrderItem,
   },
+  emits: ["update:modelValue"],
   props: {
     entry: {
       type: Object as PropType<ItemTable>,
@@ -173,11 +173,6 @@ export default Vue.defineComponent({
       required: true,
       default: "",
     },
-    informJson: {
-      type: String,
-      required: true,
-      default: "",
-    },
     seller: {
       type: Object as PropType<UserTable>,
       required: true,
@@ -198,33 +193,31 @@ export default Vue.defineComponent({
       required: true,
       default: "",
     },
+    modelValue: {
+      type: Object as PropType<OrderMsg>,
+      required: true,
+    },
     // deadline: {
     //   type: Number,
     //   required: true,
     //   default: 0,
     // },
   },
-  setup(props) {
+  setup(props, context) {
     const restTime = Vue.ref<number>(0);
 
-    const trxData = Vue.computed(() => {
-      try {
-        return JSON.parse(props.informJson) as InformSellerData | undefined;
-      } catch (e) {
-        return undefined;
-      }
+    const orderData = Vue.computed({
+      get() {
+        return props.modelValue;
+      },
+      set(value) {
+        context.emit("update:modelValue", value);
+      },
     });
-
-    const allData = Vue.computed(() => {
-      return {
-        ...trxData.value,
-        pieces: props.pieces,
-        entry: props.entry,
-      };
-    });
+    orderData.value.step = 5;
 
     const allDataJson = Vue.computed(() => {      
-      const json = JSON.stringify(allData.value);
+      const json = JSON.stringify(orderData.value);
       if(state.DISABLE_ENCRYPTION){
         messageToStore.value = json;
       } else {
@@ -281,10 +274,11 @@ export default Vue.defineComponent({
     // startTimer();
 
     function openTrx() {
+      if(!orderData.value.trx || !orderData.value.buyer) return;
       savWeb.openHistory({
-        chain: trxData.value?.token.chain,
-        user: trxData.value?.buyer,
-        to: trxData.value?.seller,
+        chain: orderData.value.trx.chain,
+        user: orderData.value.trx.from !== undefined? orderData.value.trx.from: orderData.value.buyer.acc,
+        to: orderData.value.trx.to !== undefined? orderData.value.trx.to: orderData.value.seller,
       });
     }
 
@@ -293,9 +287,9 @@ export default Vue.defineComponent({
       restTime,
       formatDuration,
       openTrx,
-      trxData,
       messageToStore,
       allDataJson,
+      orderData,
       DISABLE_ENCRYPTION: state.DISABLE_ENCRYPTION,
     };
   },

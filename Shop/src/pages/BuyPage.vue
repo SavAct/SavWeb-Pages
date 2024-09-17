@@ -22,18 +22,14 @@
         active-icon="account_circle"
         >
         <buy-step1
-          v-model:buyer-data="buyerData"
-          v-model:json-data="requestJson"
-          v-model:encrypt="doEncryption"
-          v-model:address="address"
+          v-if="orderData && seller"
           v-model:buyer-name="buyerName"
           v-model:buyer-keys="buyerKeys"
-          :item="item"
           :seller="seller"
-          :pieces="pieces"
-          :token="token"
-          @encrypted="step = 2"
+          :to-region="toRegion"
           :request-id="requestId"
+          v-model="orderData"
+          ref="step1Ref"
         ></buy-step1>
       </q-step>
 
@@ -46,8 +42,8 @@
       >
         <buy-step-24-send-data
           :title="DISABLE_ENCRYPTION?'Send the seller your order':'Make a request by sending the seller your encrypted data'"
-          :message="buyerData"
-          :raw="requestJson"
+          :message="step2Msg"
+          :raw="step2RawMsg"
           :seller="seller"
           v-model:contact="contact"
         ></buy-step-24-send-data>
@@ -61,20 +57,18 @@
         active-icon="currency_bitcoin"
         >
         <buy-step3
-          v-model:request-id="requestId"
+          v-if="orderData && 'buyer' in orderData"
           :entry="entry"
-          :token="token"
           v-model:price="usdPrice"
-          :pieces="pieces"
           :to-region="toRegion"
           :seller="seller"
-          :buyer="buyerName"
           :buyer-keys="buyerKeys"
           v-model:completed="step3Completed"
           v-model:response="sellerResponse"
           v-model:link="trxLink"
-          v-model:inform-data="informData"
-          v-model:json-data="informJson"
+          @inform-data="step3Msg = $event"
+          @inform-raw="step3MsgRaw = $event"
+          v-model="orderData"
         ></buy-step3>
       </q-step>
 
@@ -87,8 +81,8 @@
       >
         <buy-step-24-send-data
           :title="'Recommendation: Inform the seller about your payment by sending him this ' + (DISABLE_ENCRYPTION? 'JSON ':'encrypted ')+ 'message'"
-          :message="informData"
-          :raw="informJson"
+          :message="step3Msg"
+          :raw="step3MsgRaw"
           :seller="seller"
           v-model:contact="contact"
         ></buy-step-24-send-data>
@@ -118,14 +112,15 @@
             color="blue"
             :label="forwardNavLabel"
             icon-right="arrow_forward_ios"
-            :loading="doEncryption"
-            :disable="doEncryption"
+            :loading="isCompletingStep"
+            :disable="isCompletingStep"
           />
         </q-stepper-navigation>
       </template>
     </q-stepper>
     <div v-else class="q-ma-lg">
       <finished
+        v-if="orderData && 'trx' in orderData && 'buyer' in orderData"
         class="q-mb-lg"
         :entry="entry"
         :token="token"
@@ -133,7 +128,7 @@
         :pieces="pieces"
         :seller="seller"
         :to-region="toRegion"
-        :inform-json="informJson"
+        :model-value="orderData"
       ></finished>
       <q-btn
         outline
@@ -157,11 +152,10 @@ import BuyStep3 from "../Components/BuySteps/BuyStep3.vue";
 import Finished from "../Components/BuySteps/Finished.vue";
 import { state } from "../store/globals";
 import { Token } from "../Components/AntelopeHelpers";
-import { Address, generateRandomString } from "../Components/Generator";
+import { generateRandomString, OrderMsg } from "../Components/Generator";
 import { ItemTable, UserTable } from "../Components/ContractInterfaces";
 import { PGP_Keys } from "../Components/AddPgpBtn.vue";
 import { LoadFromContract } from "../Components/MarketContractHandle";
-import { countryCodesNoGroups } from "../Components/ConvertRegion";
 import { GetQueryOrderRequest } from "../Components/queryHelper";
 import { isPubKeyValid } from "../Components/pgpHelper";
 
@@ -189,6 +183,8 @@ export default Vue.defineComponent({
     const token = Vue.ref<Token>();
     const pieces = Vue.ref<number>();
     const toRegion = Vue.ref<string>(); // Compare with data entry
+
+    const orderData = Vue.ref<OrderMsg>();
 
     const usdPrice = Vue.ref<number>();
 
@@ -259,13 +255,34 @@ export default Vue.defineComponent({
     }
 
     const step = Vue.ref<number>(1);
+    const step1Ref = Vue.ref<InstanceType<typeof BuyStep1> | null>(null);
 
-    const doEncryption = Vue.ref<boolean>(false);
+    const isCompletingStep = Vue.ref<boolean>(false);
     const contact = Vue.ref<{ label: string; value: string }>();
+
+    const step2RawMsg = Vue.ref<string>("");
+    const step2Msg = Vue.ref<string>("");
 
     async function nextStep() {
       if (step.value == 1) {
-        doEncryption.value = true;
+        if(!step1Ref.value){
+          return;
+        }
+        isCompletingStep.value = true;
+        try{
+          const result = await step1Ref.value.createAndEncrypt();
+          if(result !== false){
+            step2RawMsg.value = result.json;
+            step2Msg.value = result.encrypted? result.encrypted: result.json;
+            step.value++;
+          } else {
+            step2RawMsg.value = "";
+            step2Msg.value = "";
+          }
+        } catch(e){
+          console.error("Error on step 1", e);
+        }
+        isCompletingStep.value = false;
         return;
       }
       if (step.value < 5) step.value++;
@@ -276,24 +293,8 @@ export default Vue.defineComponent({
     }
 
     const buyerName = Vue.ref<string>("");
-
-    const buyerData = Vue.ref<string>("");
-    const informData = Vue.ref<string>("");
-
-    const requestJson = Vue.ref<string>("");
-    const informJson = Vue.ref<string>("");
-    const address = Vue.ref<Address>({
-      firstName: "",
-      middleNames: "",
-      lastName: "",
-      country: "",
-      state: "",
-      city: "",
-      postal: "",
-      addressL1: "",
-      addressL2: "",
-      note: "",
-    });
+    const step3Msg = Vue.ref<string>("");
+    const step3MsgRaw = Vue.ref<string>("");
 
     const buyerKeys = Vue.ref<PGP_Keys>({
       pub: "",
@@ -318,29 +319,81 @@ export default Vue.defineComponent({
 
     Vue.onMounted(async () => {
       const orderRequest = GetQueryOrderRequest();
+      
       if (
-        orderRequest?.id !== undefined &&
-        orderRequest.category !== undefined
+        orderRequest?.id === undefined ||
+        orderRequest.id < 0 ||
+        orderRequest.category === undefined ||
+        typeof orderRequest.category !== "bigint"
       ) {
-        item.value.id = orderRequest.id;
-        item.value.category = orderRequest.category;
-        await findEntry(item.value.id, item.value.category);
+        Quasar.Notify.create({
+          type: "negative",
+          message: "No item selected",
+          position: "top",
+        });
+        return;
+      } 
 
-        token.value = orderRequest.token;
-        pieces.value = orderRequest.pieces;
-        toRegion.value = orderRequest.toRegion;
-        if (
-          toRegion.value &&
-          countryCodesNoGroups.includes(toRegion.value.toUpperCase())
-        ) {
-          address.value.country = toRegion.value;
-        }
+      if (!orderRequest.token) {
+        Quasar.Notify.create({
+          type: "negative",
+          message: "No token selected",
+          position: "top",
+        });
+        return;
+      }
+
+      if(!orderRequest.pieces || orderRequest.pieces < 1){
+        Quasar.Notify.create({
+          type: "negative",
+          message: "No pieces selected",
+          position: "top",
+        });
+        return;
+      }
+
+      if(!orderRequest.toRegion){
+        Quasar.Notify.create({
+          type: "negative",
+          message: "No region selected",
+          position: "top",
+        });
+        return;
+      }
+      
+      item.value.id = orderRequest.id;
+      item.value.category = orderRequest.category;
+      await findEntry(item.value.id, item.value.category);
+
+      if(!entry.value){
+        Quasar.Notify.create({
+          type: "negative",
+          message: "No entry found",
+          position: "top",
+        });
+        return;
+      }
+
+      token.value = orderRequest.token; // TODO: Replace with orderData
+      pieces.value = orderRequest.pieces; // TODO: Replace with orderData
+      toRegion.value = orderRequest.toRegion; // TODO: Replace with orderData
+
+      if(entry.value){
+        orderData.value = {
+            step: 0,
+            item: { id: orderRequest.id, category: String(orderRequest.category) },
+            rId: requestId.value,
+            seller: entry.value.seller,
+            token: orderRequest.token,
+            pieces: orderRequest.pieces,
+          };
       }
     });
     // TODO: Fix: Require selected token on refresh. Add payment method with preselected entry from item page, but alert if token is not on user accounts blockchain 
 
     return {
       darkStyle: state.darkStyle,
+      step1Ref,
       entry,
       step,
       nextStep,
@@ -349,14 +402,9 @@ export default Vue.defineComponent({
       toRegion,
       buyerName,
       token,
-      buyerData,
-      informData,
-      doEncryption,
+      isCompletingStep,
       buyerKeys,
       seller,
-      requestJson,
-      informJson,
-      address,
       step3Completed,
       usdPrice,
       contact,
@@ -368,6 +416,11 @@ export default Vue.defineComponent({
       requestId,
       loadTryPercentage,
       loadingCompleted,
+      orderData,
+      step2RawMsg,
+      step2Msg,
+      step3Msg,
+      step3MsgRaw
     };
   },
 });

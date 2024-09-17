@@ -62,13 +62,13 @@
             <q-card-section>
               <div class="q-mb-md">The customer may not know if you are still an active seller. Therefore, inform the customer that you will accept his payment by answering on his request in your chat.</div>
               <order-item
-                v-if="entry && userData"
+                v-if="entry && userData?.buyer"
                 :entry="entry"
                 v-model:price="price"
                 :token="userData.token"
                 :pieces="userData.pieces"
-                :to-region="userData.country"
-                :buyer="userData.buyer"
+                :to-region="userData.buyer.country"
+                :buyer="userData.buyer.acc"
               ></order-item>
               <q-input
                 v-if="note.length > 0"
@@ -200,13 +200,13 @@
               }}
             </div>
             <order-item
-              v-if="entry && userData"
+              v-if="entry && userData?.buyer"
               :entry="entry"
               :price="price"
               :token="userData.token"
               :pieces="userData.pieces"
-              :to-region="userData.country"
-              :buyer="userData.buyer"
+              :to-region="userData.buyer.country"
+              :buyer="userData.buyer.acc"
             ></order-item>
           </q-card-section>
         </q-card>
@@ -257,20 +257,20 @@
     <q-dialog v-model="checkPaymentDialog" class="full-width">
       <q-card class="text-center">
         <q-card-section class="text-h6">
-          Look for a transaction from <span class="text-bold">{{ userData?.buyer }}</span> with <br>memo <span class="text-bold">{{ userData?.rId }}</span>.
+          Look for a transaction from <span class="text-bold">{{ buyerPayAccount }}</span> with <br>memo <span class="text-bold">{{ userData?.rId }}</span>.
         </q-card-section>
         <q-card-section>
           <div class="text-h6">
             Send the article to the customer as soon as you find the payment here:
           </div>
           <div class="q-gutter-sm row justify-center q-mt-sm">
-            <q-btn class="link-btn" v-if="userData?.seller" color="primary" icon="storefront" @click="checkPayment('savpay', 'seller')">SavPay history</q-btn><span v-if="userData?.buyer && userData?.seller" class="q-px-sm">or</span><q-btn class="link-btn" color="secondary" v-if="userData?.buyer" icon="person" @click="checkPayment('savpay', 'buyer')">Customer SavPay history</q-btn>
+            <q-btn class="link-btn" v-if="userData?.seller !== undefined" color="primary" icon="storefront" @click="checkPayment('savpay', 'seller')">SavPay history</q-btn><span v-if="buyerPayAccount !== undefined && userData?.seller !== undefined" class="q-px-sm">or</span><q-btn class="link-btn" color="secondary" v-if="buyerPayAccount !== undefined" icon="person" @click="checkPayment('savpay', 'buyer')">Customer SavPay history</q-btn>
           </div>
           <div class="q-mt-lg text-subtitle1">
             Burned, refunded or early finalized transactions may not be listed in the SavPay history. For that you can check the full history of your blockchain accounts here:
           </div>
           <div class="q-gutter-sm row justify-center q-mt-sm">
-            <q-btn class="link-btn" v-if="userData?.seller && userData.seller.length <= 13" color="primary" icon="storefront" @click="checkPayment('bloks.io', 'seller')">Account history</q-btn> <q-btn class="link-btn" color="secondary" v-if="userData?.buyer && userData.buyer.length <= 13" icon="person" @click="checkPayment('bloks.io', 'buyer')">Customers account history</q-btn>
+            <q-btn class="link-btn" v-if="userData?.seller && userData.seller.length <= 13" color="primary" icon="storefront" @click="checkPayment('bloks.io', 'seller')">Account history</q-btn> <q-btn class="link-btn" color="secondary" v-if="buyerPayAccount !== undefined && buyerPayAccount.length <= 13" icon="person" @click="checkPayment('bloks.io', 'buyer')">Customers account history</q-btn>
           </div>
         </q-card-section>
         <q-card-actions align="right">
@@ -293,7 +293,7 @@ import AddPgpBtn, { PGP_Keys } from "../Components/AddPgpBtn.vue";
 import RawDataBtn from "../Components/RawDataBtn.vue";
 import {
   SellerResponse,
-  UserData,
+  OrderMsg,
   decrypt,
   encrypt,
 } from "../Components/Generator";
@@ -323,7 +323,7 @@ export default Vue.defineComponent({
     const currentTokenPrice = Vue.ref<bigint>(BigInt(0));
     const price = Vue.ref<number>(0); // TODO: Compare the prices between buyer and seller
     const sellersNote = Vue.ref<string>("");
-    const userData = Vue.ref<UserData>();
+    const userData = Vue.ref<OrderMsg>();
     const nextLoading = Vue.ref<boolean>(false);
 
     const checkPaymentDialog = Vue.ref<boolean>(false);
@@ -353,7 +353,7 @@ export default Vue.defineComponent({
 
       if (responseDecrypted.value) {
         try {
-          const response = JSON.parse(responseDecrypted.value) as UserData;
+          const response = JSON.parse(responseDecrypted.value) as OrderMsg;
           if (
             response.item?.id != undefined &&
             typeof response.item.id == "number" &&
@@ -364,18 +364,18 @@ export default Vue.defineComponent({
           ) {
             const id = response.item.id;
             const category = BigInt(response.item.category);
-            if (response.rBy === "buyer") {
+            // if (response.rBy === "buyer") {
               switch (response.step) {
                 case 1:
-                  if (response.token) {
+                  if (response.token && response.buyer) {
                     // TODO: Check all parameters like price, token, pieces
                     // TODO: Check if buyers public key is on blockchain and check if it is identical
                     userData.value = Vue.reactive(response);
 
-                    buyerPubKey.value = response.pubPgp;
+                    buyerPubKey.value = response.buyer.pubPgp;
                     await findEntry(id, category);
-                    if (response.note.length > 0) {
-                      note.value = response.note;
+                    if (response.buyer.note.length > 0) {
+                      note.value = response.buyer.note;
                     }
                     memo.value = userData.value.rId;
 
@@ -394,7 +394,7 @@ export default Vue.defineComponent({
               // TODO: Other responses
               console.log("Not a response from buyer");
             }
-          }
+          // }
         } catch (e) {
           console.log("Error on parsing JSON", e);
         }
@@ -409,6 +409,18 @@ export default Vue.defineComponent({
 
     const entry = Vue.ref<ItemTable>();
     const memo = Vue.ref<string>("");
+
+    const buyerPayAccount = Vue.computed(() => {
+      if (userData.value) {
+        if(userData.value.trx?.from !== undefined) {
+          return userData.value.trx.from;
+        }
+        if(userData.value.buyer) {
+          return userData.value.buyer.acc;
+        }
+      }
+      return "";
+    });
 
     const loadMaxTries = 3;
     const loadTries = Vue.ref<number>(0);
@@ -474,10 +486,10 @@ export default Vue.defineComponent({
     });
     const buyerPubKey = Vue.ref<string>("");
     const rawAnswer = Vue.computed(() => {
-      if (accept.value !== null && userData.value) {
+      if (accept.value !== null && userData.value?.buyer) {
         return JSON.stringify({
           confirm: accept.value,
-          buyer: userData.value.buyer,
+          buyer: userData.value.buyer.acc,
           memo: memo.value,
           note: sellersNote.value,
           sigTime: Math.round(Date.now() / 1000),
@@ -514,7 +526,7 @@ export default Vue.defineComponent({
     // TODO: Display invalidation time
 
     async function checkPayment(type: "savpay" | "bloks.io", role: "seller" | "buyer") {
-      if(!userData.value){
+      if(!userData.value?.buyer){
         Quasar.Notify.create({
           type: "negative",
           message: "Missing user data",
@@ -526,11 +538,11 @@ export default Vue.defineComponent({
       if(type == "savpay") {
         savWeb.openHistory({
           chain: userData.value?.token.chain,
-          user: role == "seller" ? userData.value?.seller : userData.value?.buyer,
-          to: role == "seller" ? userData.value?.buyer : undefined,
+          user: role == "seller" ? userData.value?.seller : buyerPayAccount.value,
+          to: role == "seller" ? '' : userData.value?.seller,
         });
       } else {
-        SavWeb.goTo(`https://bloks.io/account/${role == "seller" ? userData.value?.seller : userData.value?.buyer}`, '_blank');
+        SavWeb.goTo(`https://bloks.io/account/${role == "seller" ? userData.value?.seller : buyerPayAccount.value}`, '_blank');
       }
     }
 
@@ -641,6 +653,7 @@ export default Vue.defineComponent({
       loadingSeller,
 
       subContentHeight,
+      buyerPayAccount,
     };
   },
 });

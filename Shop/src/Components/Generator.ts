@@ -1,4 +1,5 @@
 import { Token } from "./AntelopeHelpers";
+import { PayParams } from "./SavWeb";
 
 export interface SellerResponse {
   confirm: boolean;
@@ -22,17 +23,15 @@ export interface Address {
   note: string;
 }
 
-export interface UserData extends Address {
+export interface OrderMsg {
   step: number;
-  rBy: string;
-  buyer: string;
-  pubPgp: string;
   item: { id: number; category: string | number };
-  pieces: number;
-  token: Token;
-  seller: string;
-  sigDate: number;
   rId: string;
+  seller: string;
+  token: Token;
+  pieces: number;
+  buyer?: { acc: string, pubPgp: string, sigDate: number} & Address;
+  trx?: PayParams
 }
 
 export function generateRandomString(length: number) {

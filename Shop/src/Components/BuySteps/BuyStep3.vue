@@ -2,7 +2,7 @@
   <q-card>
     <q-card-section>
       <q-checkbox v-model="sellerConfirms" label="The seller has responded to me and agreed to the purchase." />
-      <!-- Removed until pgp encrption should be implemented -->
+      <!-- Removed until pgp encryption should be implemented -->
       <!-- <q-input
         type="textarea"
         :rows="sellerResponse.length > 1 ? 1 : 5"
@@ -41,12 +41,12 @@
         <order-item
           :entry="entry"
           v-model:price="usdPrice"
-          :token="token"
-          :pieces="pieces"
+          :token="orderData.token"
+          :pieces="orderData.pieces"
           :to-region="toRegion"
           @total-token ="currentTokenPrice = $event"
           @ship-duration="shipDuration = $event"
-          ref="orderItemElement"
+          ref="orderItemRef"
         ></order-item>
         <div v-if="maxPayTime" class="q-mt-md q-mx-sm q-mb-sm">
           <span class="q-mr-sm"> Payment must be sent before </span>
@@ -89,15 +89,17 @@ import AddPgpBtn, { PGP_Keys } from "../AddPgpBtn.vue";
 import OrderItem from "../OrderItem.vue";
 import type { PropType } from "vue";
 import { state } from "../../store/globals";
-import { Asset, AssetToString, InformSellerData, Token } from "../AntelopeHelpers";
+import { Asset, AssetToString } from "../AntelopeHelpers";
 import { formatDuration } from "../ConvertTime";
 import {
+  OrderMsg,
   SellerResponse,
   decrypt,
   encrypt,
 } from "../Generator";
 import { savWeb } from "../../store/connect";
 import { ItemTable, UserTable } from "../ContractInterfaces";
+import { PayParams } from "../SavWeb";
 
 export default Vue.defineComponent({
   name: "buyStep3",
@@ -108,19 +110,14 @@ export default Vue.defineComponent({
     "update:completed",
     "update:response",
     "update:link",
-    "update:jsonData",
-    "update:informData",
+    "informData",
+    "informRaw",
     "update:price",
-    "update:requestId"
+    "update:modelValue"
   ],
   props: {
     entry: {
       type: Object as PropType<ItemTable>,
-      required: true,
-      default: null,
-    },
-    token: {
-      type: Object as PropType<Token>,
       required: true,
       default: null,
     },
@@ -134,11 +131,6 @@ export default Vue.defineComponent({
       required: true,
       default: "",
     },
-    pieces: {
-      type: Number,
-      required: true,
-      default: 1,
-    },
     completed: {
       type: Boolean,
       required: false,
@@ -148,10 +140,6 @@ export default Vue.defineComponent({
       type: Object as PropType<UserTable>,
       required: true,
       default: undefined,
-    },
-    buyer: {
-      type: String,
-      required: true,
     },
     response: {
       type: String,
@@ -163,20 +151,12 @@ export default Vue.defineComponent({
       required: false,
       default: "",
     },
-    informData: {
-      type: String,
-      required: true,
-    },
-    jsonData: {
-      type: String,
-      required: true,
-    },
     buyerKeys: {
       type: Object as PropType<PGP_Keys>,
       required: true,
     },
-    requestId: {
-      type: String,
+    modelValue: {
+      type: Object as PropType<OrderMsg> | PropType<OrderMsg>,
       required: true,
     },
   },
@@ -204,6 +184,16 @@ export default Vue.defineComponent({
 
     const response = Vue.ref<SellerResponse | undefined>();
     const maxPayTime = Vue.ref<number>();
+    const trx = Vue.ref<PayParams|undefined>();
+
+    const orderData = Vue.computed({
+      get() {
+        return props.modelValue;
+      },
+      set(value) {
+        context.emit("update:modelValue", value);
+      },
+    });
 
     async function checkResponse(text: string) {
       if (!props.seller) return;
@@ -223,7 +213,7 @@ export default Vue.defineComponent({
           response.value = JSON.parse(text) as SellerResponse;
           // TODO: When pgp is activated use a seller response textbox and us his transmitted data
           if (response.value.confirm) {
-            if (response.value.buyer == props.buyer) {
+            if (response.value.buyer == orderData.value.buyer?.acc) {
               if (typeof response.value.time == "number") {
                 maxPayTime.value = response.value.time;
                 startTimer();
@@ -231,7 +221,7 @@ export default Vue.defineComponent({
               sellerConfirms.value = true;
               return;
             }
-            console.log("Wrong buyer", response.value.buyer, props.buyer);
+            console.log("Wrong buyer", response.value.buyer, orderData.value.buyer?.acc);
             Quasar.Notify.create({
               position: "top",
               type: "negative",
@@ -256,15 +246,11 @@ export default Vue.defineComponent({
     const responseDecrypted = Vue.ref<string>("");
     const currentTokenPrice = Vue.ref<Asset | undefined>(undefined);
 
-    const memo = Vue.ref<string>(
-      response.value?.memo ? response.value.memo : props.requestId
-    );
-
     const shipDuration = Vue.ref<number|undefined>(undefined);
-    const orderItemElement = Vue.ref<InstanceType<typeof OrderItem> | null>(null)
+    const orderItemRef = Vue.ref<InstanceType<typeof OrderItem> | null>(null)
 
     async function sendPayment() {
-      await orderItemElement.value?.updateTokenPrice();
+      await orderItemRef.value?.updateTokenPrice();
 
       if(!currentTokenPrice.value) {
         Quasar.Notify.create({
@@ -275,26 +261,27 @@ export default Vue.defineComponent({
         return;
       }
       
-      const assetStr = `${AssetToString(currentTokenPrice.value)} ${props.token.contract}`;
+      const assetStr = `${AssetToString(currentTokenPrice.value)} ${orderData.value.token.contract}`;
       waitForTrans.value = true;
+
+      
       
       const result = await savWeb.payment({
-        chain: props.token.chain,
+        chain: orderData.value.token.chain,
         to: props.entry.seller,
         pay: assetStr,
-        memo: memo.value,
+        memo: orderData.value.rId,
         dt: shipDuration.value !== undefined? + shipDuration.value + (3*24*3600): undefined, // Add three days to cancel the payment
       });
 
-      if (result) {
+      if (result && "to" in result && "chain" in result && "pay" in result) {
+        trx.value = result as PayParams;
         let link = "";
-        if ("to" in result && "chain" in result) {
-          let from = "from" in result ? result.from : props.buyer;
-          if ("index" in result) {
-            link = `https://savact.app/#/_trx_/action?user=${from}&to=${result.to}&id=${result.index}&chain=${result.chain}`;
-          } else {
-            link = `https://savact.app/#/_trx_/history?user=${result.to}&to=${from}&chain=${result.chain}`;
-          }
+        let from = "from" in result ? result.from : orderData.value.buyer?.acc;
+        if ("index" in result) {
+          link = `https://savact.app/#/_trx_/action?user=${from}&to=${result.to}&id=${result.index}&chain=${result.chain}`;
+        } else {
+          link = `https://savact.app/#/_trx_/history?user=${result.to}&to=${from}&chain=${result.chain}`;
         }
         transLink.value = link;
       } else {
@@ -324,7 +311,7 @@ export default Vue.defineComponent({
           context.emit("update:response", sellerResponse.value);
           context.emit("update:link", transLink.value);
 
-          delayedCreatAndEncrypt();
+          delayedCreateAndEncrypt();
         }
         return true;
       }
@@ -341,7 +328,7 @@ export default Vue.defineComponent({
     });
 
     let createAndEncryptId = 0;
-    function delayedCreatAndEncrypt() {
+    function delayedCreateAndEncrypt() {
       createAndEncryptId++;
       const encryptId = createAndEncryptId;
       setTimeout(() => {
@@ -353,12 +340,13 @@ export default Vue.defineComponent({
 
     async function createAndEncrypt() {
       const json = createInformJson();
-      context.emit("update:jsonData", json);
+      orderData.value = JSON.parse(json);
+
       let fail = true;
       if (props.seller) {
         if (state.DISABLE_ENCRYPTION) {
           fail = false;
-          context.emit("update:informData", json);
+          context.emit("informData", json);
         } else {
           // Encrypt
           const data = await encrypt(
@@ -369,10 +357,10 @@ export default Vue.defineComponent({
             props.buyerKeys.passphrase
           );
           if (typeof data == "string") {
-            context.emit("update:informData", data);
+            context.emit("informData", data);
             fail = false;
           } else if (data !== false) {
-            context.emit("update:informData", "");
+            context.emit("informData", "");
             fail = true;
             Quasar.Notify.create({
               position: "top",
@@ -383,7 +371,7 @@ export default Vue.defineComponent({
           }
         }
       } else {
-        context.emit("update:informData", json);
+        context.emit("informData", json);
         fail = false;
       }
       context.emit("update:completed", !fail);
@@ -393,6 +381,9 @@ export default Vue.defineComponent({
           type: "positive",
           message: "Looks fine. Now continue to inform the seller.",
         });
+        context.emit("informRaw", "");
+      } else {
+        context.emit("informRaw", json);
       }
     }
     // TODO: Warn if price changed below -5% that the seller might not accept the payment
@@ -414,20 +405,18 @@ export default Vue.defineComponent({
 
     function createInformJson() {
       try {
-        if (props.token === undefined) throw new Error("No token");
-        if (props.seller === undefined) throw new Error("No seller");
-        if (props.buyer === undefined) throw new Error("No buyer");
-        if (memo.value === undefined) throw new Error("No memo");
-        const jsonData: InformSellerData = {
-          buyer: props.buyer,
-          seller: props.seller.user,
-          token: props.token,
-          memo: memo.value,
+        if(trx.value === undefined) throw new Error("No transaction");
+        const jsonData: OrderMsg = {
+          ...orderData.value,
+          step: 3,
+          trx: trx.value,
         };
+        context.emit("update:modelValue", jsonData);
 
         return JSON.stringify(jsonData);
       } catch (e) {
         console.log("Error on stringify", e);
+        context.emit("update:modelValue", undefined);
         return "";
       }
     }
@@ -453,7 +442,8 @@ export default Vue.defineComponent({
       currentTokenPrice,
       usdPrice,
       shipDuration,
-      orderItemElement
+      orderItemRef,
+      orderData
     };
   },
 });
