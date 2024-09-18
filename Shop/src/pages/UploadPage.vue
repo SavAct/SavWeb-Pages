@@ -199,10 +199,7 @@
             use-input
             input-debounce="0"
             behavior="menu"
-            @keyup.enter="
-              if (excludeOptions.length === 1)
-                excludeRegions.push(excludeOptions[0]);
-            "
+            @keyup.enter="enterExcludeRegionsClick"
             @clear="excludeRegions = []"
           />
           <duration-input
@@ -300,6 +297,7 @@
               color="primary"
               icon-right="send"
               size="md"
+              :loading="loadingSend"
             />
           </div>
         </div>
@@ -640,60 +638,66 @@ export default Vue.defineComponent({
 
     const loadUser = new LoadFromContract();
 
+    const loadingSend = Vue.ref<boolean>(false);
     async function send() {
-      const settings = getAndCheckAllSettings();
-      if (settings.error.length > 0) {
-        Quasar.Notify.create({
-          message: settings.error[0].message,
-          caption: settings.error[0].caption,
-          color: "red",
-          position: "top",
-        });
-        return;
-      }
-      // Check if user exists and handle error messages
-      if (!(await checkUserOnline(seller.value))) {
-        return;
-      }
+      if(loadingSend.value) return;
+      loadingSend.value = true;
+      await (async ()=>{
+        const settings = getAndCheckAllSettings();
+        if (settings.error.length > 0) {
+          Quasar.Notify.create({
+            message: settings.error[0].message,
+            caption: settings.error[0].caption,
+            color: "red",
+            position: "top",
+          });
+          return;
+        }
+        // Check if user exists and handle error messages
+        if (!(await checkUserOnline(seller.value))) {
+          return;
+        }
 
-      // Set user data to current state if user is in table
-      const foundUser = await loadUser.loadUser(seller.value);
-      if (foundUser) {
-        state.user.value = userTableEntryToUser(foundUser);
-      } else {
-        Quasar.Dialog.create({
-          title: "Seller settings are not set",
-          message:
-            "Provide contact details in order for your customers to contact you in a secure way.",
-          cancel: true,
-          persistent: true,
-          ok: {
-            label: "Yes",
-            color: "primary",
-          },
-        }).onOk(() => {
-          // Go to user page
-          router.push({ name: "user", query: { request: true } });
-        });
-        return;
-      }
-      settings.data.category = settings.data.category.toString();
+        // Set user data to current state if user is in table
+        const foundUser = await loadUser.loadUser(seller.value);
+        if (foundUser) {
+          state.user.value = userTableEntryToUser(foundUser);
+        } else {
+          Quasar.Dialog.create({
+            title: "Seller settings are not set",
+            message:
+              "Provide contact details in order for your customers to contact you in a secure way.",
+            cancel: true,
+            persistent: true,
+            ok: {
+              label: "Yes",
+              color: "primary",
+            },
+          }).onOk(() => {
+            // Go to user page
+            router.push({ name: "user", query: { request: true } });
+          });
+          return;
+        }
+        settings.data.category = settings.data.category.toString();
 
-      const result = await savWeb.transaction({
-        chain: state.contract.chain,
-        contract: state.contract.account,
-        action: state.contract.actions.addItem,
-        data: settings.data,
-      });
-
-      if (result !== undefined) {
-        state.uploadPageInputs.value = undefined;
-        router.push({
-          name: "item",
-          query: { settings: settings, mode: ItemPageMode.Wait },
+        const result = await savWeb.transaction({
+          chain: state.contract.chain,
+          contract: state.contract.account,
+          action: state.contract.actions.addItem,
+          data: settings.data,
         });
-        return;
-      }
+
+        if (result !== undefined) {
+          state.uploadPageInputs.value = undefined;
+          router.push({
+            name: "item",
+            query: { settings: settings, mode: ItemPageMode.Wait },
+          });
+          return;
+        }
+      })()
+      loadingSend.value = false;
     }
 
     function showPreview() {
@@ -858,7 +862,7 @@ export default Vue.defineComponent({
     }
 
     function enterToRegionsClick() {
-      if (shipToOptions.value.length === 1) {
+      if (shipToOptions.value.length === 1 && !toRegions.value.find((r) => r.value === shipToOptions.value[0].value)) {
         toRegions.value.push({
           label: shipToOptions.value[0].label,
           value: shipToOptions.value[0].value,
@@ -867,6 +871,15 @@ export default Vue.defineComponent({
         });
       }
     }    
+
+    function enterExcludeRegionsClick() {
+      if (excludeOptions.value.length === 1 && !excludeRegions.value.find((r) => r.value === excludeOptions.value[0].value)) {
+        excludeRegions.value.push({
+          label: excludeOptions.value[0].label,
+          value: excludeOptions.value[0].value,
+        });
+      }
+    }
 
     return {
       darkStyle: state.darkStyle,
@@ -907,6 +920,8 @@ export default Vue.defineComponent({
       excludeOptions,
       fromOptions,
       enterToRegionsClick,
+      enterExcludeRegionsClick,
+      loadingSend
     };
   },
 });

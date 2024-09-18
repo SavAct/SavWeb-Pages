@@ -107,7 +107,7 @@ export default Vue.defineComponent({
 
     const isMaxPcs = Vue.ref<boolean>(false);
     const maxPcs = Vue.ref<number>(2);
-
+    const debounceUpdate = Quasar.debounce(update, 500);
     Vue.watch(
       () => isMaxPcs.value,
       () => {
@@ -116,14 +116,15 @@ export default Vue.defineComponent({
           const max = getMaxPcsFromOptions();
           maxPcs.value = max > 1 && maxPcs.value < max ? max : maxPcs.value;
         }
-        update();
+        
+        debounceUpdate();
       }
     );
 
     Vue.watch(
       () => pp.value,
       () => {
-        update();
+        debounceUpdate();
       },
       { deep: true }
     );
@@ -134,14 +135,14 @@ export default Vue.defineComponent({
         if (option.value !== PriceOption.One && pp.value.length === 1) {
           addPriceWithUnit();
         }
-        update();
+        debounceUpdate();
       }
     );
 
     Vue.watch(
       () => maxPcs.value,
       () => {
-        update();
+        debounceUpdate();
       }
     );
 
