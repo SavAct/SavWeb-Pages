@@ -93,12 +93,7 @@ export default Vue.defineComponent({
     modelValue: {
       type: Object as PropType<OrderMsg>,
       required: true,
-    },
-    toRegion: {
-      type: String,
-      required: false,
-      default: undefined,
-    },
+    }
   },
   setup(props, context) {
     const expBuyerName = Vue.ref<boolean>(props.buyerName.length > 0);
@@ -122,8 +117,8 @@ export default Vue.defineComponent({
     });
     
     // Apply country from selected region if possible 
-    if(props.toRegion !== undefined && address.value.country.length === 0) {
-      const upperToRegion = props.toRegion.toUpperCase();
+    if(props.modelValue.to !== undefined && address.value.country.length === 0) {
+      const upperToRegion = props.modelValue.to.toUpperCase();
       const country = countryCodesNoGroups.includes(upperToRegion)? upperToRegion : ""
       address.value.country = country;
     }

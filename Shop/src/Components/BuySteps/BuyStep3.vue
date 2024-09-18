@@ -42,8 +42,8 @@
           :entry="entry"
           v-model:price="usdPrice"
           :token="orderData.token"
-          :pieces="orderData.pieces"
-          :to-region="toRegion"
+          :pieces="orderData.pcs"
+          :to-region="orderData.to"
           @total-token ="currentTokenPrice = $event"
           @ship-duration="shipDuration = $event"
           ref="orderItemRef"
@@ -125,11 +125,6 @@ export default Vue.defineComponent({
       type: Number,
       required: true,
       default: 0,
-    },
-    toRegion: {
-      type: String,
-      required: true,
-      default: "",
     },
     completed: {
       type: Boolean,

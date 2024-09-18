@@ -77,7 +77,7 @@
         :entry="entry"
         :price="price"
         :token="token"
-        :to-region="toRegion"
+        :to-region="orderData.to"
         :pieces="pieces"
       ></order-item>
 

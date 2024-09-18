@@ -26,8 +26,6 @@
           v-model:buyer-name="buyerName"
           v-model:buyer-keys="buyerKeys"
           :seller="seller"
-          :to-region="toRegion"
-          :request-id="requestId"
           v-model="orderData"
           ref="step1Ref"
         ></buy-step1>
@@ -60,7 +58,6 @@
           v-if="orderData && 'buyer' in orderData"
           :entry="entry"
           v-model:price="usdPrice"
-          :to-region="toRegion"
           :seller="seller"
           :buyer-keys="buyerKeys"
           v-model:completed="step3Completed"
@@ -127,7 +124,6 @@
         v-model:price="usdPrice"
         :pieces="pieces"
         :seller="seller"
-        :to-region="toRegion"
         :model-value="orderData"
       ></finished>
       <q-btn
@@ -178,8 +174,6 @@ export default Vue.defineComponent({
       id: -1,
       category: 0n,
     });
-    const requestId = Vue.ref<string>(generateRandomString(8));
-
     const token = Vue.ref<Token>();
     const pieces = Vue.ref<number>();
     const toRegion = Vue.ref<string>(); // Compare with data entry
@@ -319,21 +313,22 @@ export default Vue.defineComponent({
 
     Vue.onMounted(async () => {
       const orderRequest = GetQueryOrderRequest();
-      
-      if (
-        orderRequest?.id === undefined ||
-        orderRequest.id < 0 ||
-        orderRequest.category === undefined ||
-        typeof orderRequest.category !== "bigint"
-      ) {
+      if(!orderRequest){
         Quasar.Notify.create({
           type: "negative",
-          message: "No item selected",
+          message: "Error while getting query parameters",
+          position: "top",
+        });
+      }
+      if(!orderRequest){
+        Quasar.Notify.create({
+          type: "negative",
+          message: "Error while getting query parameters",
           position: "top",
         });
         return;
-      } 
-
+      }
+      
       if (!orderRequest.token) {
         Quasar.Notify.create({
           type: "negative",
@@ -342,8 +337,8 @@ export default Vue.defineComponent({
         });
         return;
       }
-
-      if(!orderRequest.pieces || orderRequest.pieces < 1){
+      
+      if(!orderRequest.pcs || orderRequest.pcs < 1){
         Quasar.Notify.create({
           type: "negative",
           message: "No pieces selected",
@@ -352,17 +347,25 @@ export default Vue.defineComponent({
         return;
       }
 
-      if(!orderRequest.toRegion){
+      if(!orderRequest.to){
+          Quasar.Notify.create({
+            type: "negative",
+            message: "No region selected",
+            position: "top",
+          });
+          return;
+        }
+      
+      if(!orderRequest.item || !('id' in orderRequest.item) || !('category' in orderRequest.item)){
         Quasar.Notify.create({
           type: "negative",
-          message: "No region selected",
+          message: "No item selected",
           position: "top",
         });
         return;
       }
-      
-      item.value.id = orderRequest.id;
-      item.value.category = orderRequest.category;
+      item.value.id = orderRequest.item.id;
+      item.value.category = BigInt(orderRequest.item.category);
       await findEntry(item.value.id, item.value.category);
 
       if(!entry.value){
@@ -375,18 +378,25 @@ export default Vue.defineComponent({
       }
 
       token.value = orderRequest.token; // TODO: Replace with orderData
-      pieces.value = orderRequest.pieces; // TODO: Replace with orderData
-      toRegion.value = orderRequest.toRegion; // TODO: Replace with orderData
+      pieces.value = orderRequest.pcs; // TODO: Replace with orderData
+      toRegion.value = orderRequest.to; // TODO: Replace with orderData
+      if(orderRequest.buyer && 'acc' in orderRequest.buyer){
+        buyerName.value = orderRequest.buyer.acc;
+      }
 
-      if(entry.value){
-        orderData.value = {
-            step: 0,
-            item: { id: orderRequest.id, category: String(orderRequest.category) },
-            rId: requestId.value,
-            seller: entry.value.seller,
-            token: orderRequest.token,
-            pieces: orderRequest.pieces,
-          };
+      const currentStep = orderRequest.step !== undefined && typeof orderRequest.step === 'number'? orderRequest.step: 0;
+      const rId = orderRequest.rId!== undefined && orderRequest.rId.trim().length > 0? orderRequest.rId : generateRandomString(10);
+
+      orderData.value = {...orderRequest, rId, seller: entry.value.seller};
+
+      if(currentStep > 0){
+        step2RawMsg.value = JSON.stringify(orderData.value);
+        step2Msg.value = step2RawMsg.value;
+        if(currentStep > 3){
+          step3MsgRaw.value = JSON.stringify(orderData.value);
+          step3Msg.value = step3MsgRaw.value;
+        }
+        step.value = currentStep;
       }
     });
     // TODO: Fix: Require selected token on refresh. Add payment method with preselected entry from item page, but alert if token is not on user accounts blockchain 
@@ -413,7 +423,6 @@ export default Vue.defineComponent({
       trxLink,
       item,
       DISABLE_ENCRYPTION: state.DISABLE_ENCRYPTION,
-      requestId,
       loadTryPercentage,
       loadingCompleted,
       orderData,

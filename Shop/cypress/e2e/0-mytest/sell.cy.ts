@@ -67,7 +67,7 @@ describe('sell', () => {
     cy.iframe().within(() => {  
       cy.get('div[role="dialog"]').should('be.visible').find('button.q-btn').eq(1).click()
     })
-    checkHistory('EOS8cvaHi1uLH3ddGW9kCyYaGXvzM4X4GfPHh9kvmPWrQaKKBpEwL', 'user.two')
+    checkHistory('EOS7rPddBX71GSqpQn9Yp13a1zqk8PEJVFxjHUpStyDSCaEeiAeZj', 'user.two')
     cy.iframe().within(() => {  
       cy.get('div[role="dialog"]').should('be.visible').find('button.q-btn').eq(2).click()
     })
@@ -100,7 +100,7 @@ describe('sell', () => {
     cy.iframe().within(() => {  
       cy.get('div[role="dialog"]').should('be.visible').find('button.q-btn').eq(1).click()
     })
-    checkHistory('EOS8cvaHi1uLH3ddGW9kCyYaGXvzM4X4GfPHh9kvmPWrQaKKBpEwL', 'user.two')
+    checkHistory('EOS7rPddBX71GSqpQn9Yp13a1zqk8PEJVFxjHUpStyDSCaEeiAeZj', 'user.two')
     cy.iframe().within(() => {  
       cy.get('div[role="dialog"]').should('be.visible').find('button.q-btn').eq(2).click()
     })
@@ -158,6 +158,6 @@ function checkHistory(user: string, to: string){
   cy.get('header i.q-icon').contains('arrow_back_ios_new').click()
 }
 
-const buyStepRequest = `{"step":1,"item":{"id":0,"category":"792915009393917952"},"rId":"BtFpp78f","seller":"user.two","token":{"symbol":{"precision":4,"name":"EOS"},"contract":"eosio.token","chain":"eos"},"pieces":1,"buyer":{"address":{"firstName":"Sav","middleNames":"","lastName":"Act","country":"AE","state":"Front side","city":"Crater","postal":"12345","addressL1":"Sun street 12","addressL2":"","note":"With onions, please"},"acc":"savact","sigDate":1726619342635,"pubPgp":""}}`
-const buyStepInform = `{"step":3,"item":{"id":0,"category":"792915009393917952"},"rId":"BtFpp78f","seller":"user.two","token":{"symbol":{"precision":4,"name":"EOS"},"contract":"eosio.token","chain":"eos"},"pieces":1,"buyer":{"address":{"firstName":"Sav","middleNames":"","lastName":"Act","country":"AE","state":"Front side","city":"Crater","postal":"12345","addressL1":"Sun street 12","addressL2":"","note":"With onions, please"},"acc":"savact","sigDate":1726619342635,"pubPgp":""},"trx":{"to":"user.two","from":"EOS8cvaHi1uLH3ddGW9kCyYaGXvzM4X4GfPHh9kvmPWrQaKKBpEwL","t":1727569744.089,"memo":"EOS8cvaHi1uLH3ddGW9kCyYaGXvzM4X4GfPHh9kvmPWrQaKKBpEwL@user.two!34Xk21;BtFpp78f","pay":"548.8852 EOS eosio.token","chain":"eos"}}`
-const buyStepFinal = `{"step":5,"item":{"id":0,"category":"792915009393917952"},"rId":"BtFpp78f","seller":"user.two","token":{"symbol":{"precision":4,"name":"EOS"},"contract":"eosio.token","chain":"eos"},"pieces":1,"buyer":{"address":{"firstName":"Sav","middleNames":"","lastName":"Act","country":"AE","state":"Front side","city":"Crater","postal":"12345","addressL1":"Sun street 12","addressL2":"","note":"With onions, please"},"acc":"savact","sigDate":1726619342635,"pubPgp":""},"trx":{"to":"user.two","from":"EOS8cvaHi1uLH3ddGW9kCyYaGXvzM4X4GfPHh9kvmPWrQaKKBpEwL","t":1727569744.089,"memo":"EOS8cvaHi1uLH3ddGW9kCyYaGXvzM4X4GfPHh9kvmPWrQaKKBpEwL@user.two!34Xk21;BtFpp78f","pay":"548.8852 EOS eosio.token","chain":"eos"}}`
+const buyStepRequest = `{"id":0,"category":"792915009393917952","to":"ww","token":{"symbol":{"precision":4,"name":"EOS"},"contract":"eosio.token","chain":"eos"},"pcs":1,"item":{"id":0,"category":"792915009393917952"},"rId":"bmA2lXSD08","seller":"user.two","buyer":{"address":{"firstName":"Sav","middleNames":"","lastName":"Act","country":"AE","state":"Front side","city":"Crater","postal":"12345","addressL1":"Sun street 12","addressL2":"","note":"With onions, please"},"acc":"savact","sigDate":1726647384162,"pubPgp":""},"step":1}`
+const buyStepInform =  `{"id":0,"category":"792915009393917952","to":"ww","token":{"symbol":{"precision":4,"name":"EOS"},"contract":"eosio.token","chain":"eos"},"pcs":1,"item":{"id":0,"category":"792915009393917952"},"rId":"ZOyUzc9FbZ","seller":"user.two","buyer":{"address":{"firstName":"Sav","middleNames":"","lastName":"Act","country":"AE","state":"Front side","city":"Crater","postal":"12345","addressL1":"Sun street 12","addressL2":"","note":"With onions, please"},"acc":"savact","sigDate":1726647455227,"pubPgp":""},"step":3,"trx":{"to":"user.two","from":"EOS7rPddBX71GSqpQn9Yp13a1zqk8PEJVFxjHUpStyDSCaEeiAeZj","t":1727597856.805,"memo":"EOS7rPddBX71GSqpQn9Yp13a1zqk8PEJVFxjHUpStyDSCaEeiAeZj@user.two!7KGJN9;huoM4rkf8N","pay":"550.2127 EOS eosio.token","chain":"eos"}}`
+const buyStepFinal =   `{"id":0,"category":"792915009393917952","to":"ww","token":{"symbol":{"precision":4,"name":"EOS"},"contract":"eosio.token","chain":"eos"},"pcs":1,"item":{"id":0,"category":"792915009393917952"},"rId":"huoM4rkf8N","seller":"user.two","buyer":{"address":{"firstName":"Sav","middleNames":"","lastName":"Act","country":"AE","state":"Front side","city":"Crater","postal":"12345","addressL1":"Sun street 12","addressL2":"","note":"With onions, please"},"acc":"savact","sigDate":1726647414033,"pubPgp":""},"step":5,"trx":{"to":"user.two","from":"EOS7rPddBX71GSqpQn9Yp13a1zqk8PEJVFxjHUpStyDSCaEeiAeZj","t":1727597815.484,"memo":"EOS7rPddBX71GSqpQn9Yp13a1zqk8PEJVFxjHUpStyDSCaEeiAeZj@user.two!7KGJN9;huoM4rkf8N","pay":"550.2127 EOS eosio.token","chain":"eos"}}`

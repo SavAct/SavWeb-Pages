@@ -1,14 +1,40 @@
 <template>
   <q-page class="column">
+    <q-inner-loading
+        :showing="!loadingCompleted"
+        :label="loadTryPercentage + '%'"
+        label-class="text-teal"
+        style="z-index: 99; background-color: #000000a0"
+      />
     <q-resize-observer @resize="updateContentHeight" />
     <q-stepper
+      v-if="role === 'seller'"
       class="col fit"
       v-model="step"
       animated
       active-color="blue"
       style="background-color: var(--q-color-page)"
       ref="sellStepperEl"
+      size="sm"
     >
+    <template v-slot:message>
+      <div class="row q-mt-md">
+            <div class="col-grow"></div>
+            <q-btn-toggle
+              class="col-auto q-py-none"
+              v-model="role"
+              toggle-color="primary"
+              push
+              outline
+              size="sm"
+              :options="[
+                {label: 'Seller View', value: 'seller'},
+                {label: 'Customer View', value: 'buyer'},
+              ]"
+            />
+            <div class="col-grow"></div>
+        </div>
+    </template>
       <q-step
         :name="1"
         prefix="1"
@@ -66,7 +92,7 @@
                 :entry="entry"
                 v-model:price="price"
                 :token="orderData.token"
-                :pieces="orderData.pieces"
+                :pieces="orderData.pcs"
                 :to-region="orderData.buyer.address.country"
                 :buyer="orderData.buyer.acc"
               ></order-item>
@@ -196,7 +222,7 @@
               :entry="entry"
               v-model:price="price"
               :token="orderData.token"
-              :pieces="orderData.pieces"
+              :pieces="orderData.pcs"
               :to-region="orderData.buyer.address.country"
               :buyer="orderData.buyer.acc"
             ></order-item>
@@ -247,6 +273,43 @@
         </q-stepper-navigation>
       </template>
     </q-stepper>
+    <div v-else>
+      <div class="row q-mt-md">
+        <div class="col-grow"></div>
+        <q-btn-toggle
+          class="col-auto q-py-none"
+          v-model="role"
+          toggle-color="primary"
+          push
+          outline
+          size="sm"
+          :options="[
+            {label: 'Seller View', value: 'seller'},
+            {label: 'Customer View', value: 'buyer'},
+          ]"
+        />
+        <div class="col-grow"></div>
+      </div>
+      <q-card class="q-ma-lg">
+        <q-card-section>
+          <q-input
+            type="textarea"
+            v-model="buyerResponse"
+            outlined
+            label="Message"
+          >
+            <template v-slot:append>
+              <q-icon
+                v-if="buyerResponse.length > 0"
+                name="close"
+                @click="buyerResponse = ''"
+                class="cursor-pointer"
+              />
+            </template>
+          </q-input>
+        </q-card-section>
+      </q-card>
+    </div>
     <q-dialog v-model="checkPaymentDialog" class="full-width">
       <q-card class="text-center">
         <q-card-section class="text-h6">
@@ -273,10 +336,10 @@
             label="Close"
             @click="checkPaymentDialog = false"
             v-close-popup
-          ></q-btn>
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+            ></q-btn>
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
   </q-page>
 </template>
 <script lang="ts">
@@ -298,6 +361,7 @@ import { ItemTable, UserTable } from "../Components/ContractInterfaces";
 import { chipBgColor } from "../Components/styleHelper";
 import { savWeb } from "../store/connect";
 import { SavWeb } from "../Components/SavWeb";
+import { router } from "../router/simpleRouter";
 
 export default Vue.defineComponent({
   components: { AddPgpBtn, OrderItem, RawDataBtn, UserLink, AddressInput },
@@ -319,6 +383,18 @@ export default Vue.defineComponent({
     const sellersNote = Vue.ref<string>("");
     const orderData = Vue.ref<OrderMsg>();
     const nextLoading = Vue.ref<boolean>(false);
+
+    const _role = Vue.ref<"seller" | "buyer">("seller");
+    const role = Vue.computed<"seller" | "buyer">({
+      get: () => _role.value,
+      set: (v) => {
+        _role.value = v;
+        
+        if(role.value == 'buyer' && orderData.value){
+          goToBuyerPage(orderData.value);
+        } 
+      },
+    });
 
     const checkPaymentDialog = Vue.ref<boolean>(false);
 
@@ -367,20 +443,25 @@ export default Vue.defineComponent({
             switch (response.step) {
               case 1:
                 step.value = 2;
-                // TODO: Option to go to buyer step 2 
-                return;
+                break;
               case 3:
                 payStatus.value = 'send';
                 step.value = 5;
-                return;
+                break;
               case 4:
               case 5: 
                 // Go to buyer step 5
                 step.value = 5;
-                return;
+                break;
               default:
                 console.log("Undefined step");
             }
+
+            messageStep = response.step;
+            if(role.value == 'buyer'){
+              goToBuyerPage(response);
+            } 
+            return;
           } else {
             console.log("Not a response from buyer");
           }
@@ -406,9 +487,30 @@ export default Vue.defineComponent({
       return "";
     });
 
+    let messageStep = 0;
+    function goToBuyerPage(response: OrderMsg) {
+      if(!response.buyer){
+        return;
+      }
+      let sellerStep = 0;
+      switch(messageStep) {
+        case 1: sellerStep = 3; break;
+        case 3: sellerStep = 4; break;
+        case 4: sellerStep = 5; break;
+        case 5: sellerStep = 5; break;
+      }
+      router.push({
+        name: "buy",
+        query: {
+          ...response,
+          step: sellerStep
+        },
+      });
+    }
+
     const loadMaxTries = 3;
     const loadTries = Vue.ref<number>(0);
-    const loadingCompleted = Vue.ref<boolean>(false);
+    const loadingCompleted = Vue.ref<boolean>(true);
     const loadTryPercentage = Vue.computed(() => {
       if(loadingCompleted.value) {
         return 100;
@@ -623,12 +725,12 @@ export default Vue.defineComponent({
       DISABLE_ENCRYPTION: state.DISABLE_ENCRYPTION,
       checkPaymentDialog,
       checkPayment,
+      role,
 
-      // TODO: Show loading of the following
       loadingCompleted,
       loadTryPercentage,
-      seller,
-      loadingSeller,
+      seller, // TODO: Notify if seller is not active or banned
+      loadingSeller, // TODO: Show loading of seller
 
       subContentHeight,
       buyerPayAccount,

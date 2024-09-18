@@ -40,6 +40,18 @@ export const euCountryCodes = [
   "SK", // Slovakia
 ];
 
+// Get all country codes in which this country is part of from specific entries to unspecific.
+export function getCountryCodeGroups(code: string) {
+  const arr = [code];
+  if(code === 'WW') arr;
+  if (code !== 'EU' && euCountryCodes.includes(code)) {
+    arr.push("EU");
+  }
+  arr.push("WW");
+  return arr;
+}
+
+
 export const countryCodesNoGroups = [
   // The following is a complete list of the 249 current officially assigned ISO 3166-1 alpha-2 codes,
   // see https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements

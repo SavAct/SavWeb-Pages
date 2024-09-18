@@ -1,19 +1,21 @@
 import { route } from "../router/simpleRouter";
-import { Token } from "./AntelopeHelpers";
+import { OrderMsg } from "./Generator";
 
 export function GetQueryIdAndCategory() {
   if (route.query) {
+    const orderMsg = route.query as OrderMsg;
+    const itemItr = 'item' in orderMsg ? orderMsg.item : route.query;
     const id =
-      "id" in route.query &&
-      (typeof route.query.id == "number" || typeof route.query.id == "string")
-        ? Number(route.query.id)
+      "id" in itemItr &&
+      (typeof itemItr.id == "number" || typeof itemItr.id == "string")
+        ? Number(itemItr.id)
         : -1;
     const category =
-      "category" in route.query &&
-      (typeof route.query.category == "number" ||
-        typeof route.query.category == "string" ||
-        typeof route.query.category == "bigint")
-        ? BigInt(route.query.category)
+      "category" in itemItr &&
+      (typeof itemItr.category == "number" ||
+        typeof itemItr.category == "string" ||
+        typeof itemItr.category == "bigint")
+        ? BigInt(itemItr.category)
         : 0n;
     return { id, category };
   }
@@ -35,26 +37,20 @@ export function GetCategory() {
 }
 
 export function GetQueryOrderRequest() {
-  const idAndCat = GetQueryIdAndCategory();
-  if (idAndCat) {
-    const token =
-      route.query &&
-      "token" in route.query &&
-      typeof route.query.token == "object"
-        ? (route.query.token as Token)
-        : undefined;
-    const pieces =
-      route.query && "pcs" in route.query && typeof route.query.pcs == "number"
-        ? route.query.pcs
-        : 1;
-    const toRegion =
-      route.query && "to" in route.query && typeof route.query.to == "string"
-        ? route.query.to
-        : undefined;
-    return { ...idAndCat, token, pieces, toRegion };
-  }
+  try{
+    const strJson = JSON.stringify(route.query, (_, v) => (typeof v === 'bigint' ? v.toString() : v))
+    const orderMsg = JSON.parse(strJson) as OrderMsg;
 
-  return undefined;
+    // if the id and category are in the root of the query put them in the item object    
+    if('id' in orderMsg && 'category' in orderMsg && (typeof orderMsg.category === 'number' || typeof orderMsg.category === 'string')){
+      orderMsg.item = { id: Number(orderMsg.id), category: orderMsg.category }
+    }
+    
+    return { ...orderMsg};
+  } catch (e) {
+    console.log('Error while parsing query',e);
+    return undefined;
+  }
 }
 
 export enum ItemPageMode {

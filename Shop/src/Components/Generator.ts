@@ -29,7 +29,8 @@ export interface OrderMsg {
   rId: string;
   seller: string;
   token: Token;
-  pieces: number;
+  pcs: number;
+  to: string;
   buyer?: { acc: string, pubPgp: string, sigDate: number, address: Address};
   trx?: PayParams
 }
