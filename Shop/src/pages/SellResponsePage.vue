@@ -70,7 +70,6 @@
                 :to-region="orderData.buyer.address.country"
                 :buyer="orderData.buyer.acc"
               ></order-item>
-              
               <address-input class="q-mt-md" :model-value="orderData.buyer.address" readonly title="Customers address"></address-input>
               <!-- Implement when encryption is activated -->
               <!-- <div class="q-mt-md row">
@@ -195,12 +194,13 @@
             <order-item
               v-if="entry"
               :entry="entry"
-              :price="price"
+              v-model:price="price"
               :token="orderData.token"
               :pieces="orderData.pieces"
               :to-region="orderData.buyer.address.country"
               :buyer="orderData.buyer.acc"
             ></order-item>
+            <address-input class="q-mt-md" :model-value="orderData.buyer.address" readonly title="Customers address"></address-input>
           </q-card-section>
         </q-card>
       </q-step>
@@ -370,7 +370,6 @@ export default Vue.defineComponent({
                 // TODO: Option to go to buyer step 2 
                 return;
               case 3:
-                // TODO: Title instead of wait to "check and send"
                 payStatus.value = 'send';
                 step.value = 5;
                 return;
@@ -501,7 +500,6 @@ export default Vue.defineComponent({
       encryptedAnswer.value = "";
     }
 
-    // TODO: Display buyer address, use address-formatter-library
     // TODO: Display buyer and memo on last step
     // TODO: Display textarea to enter buyers payment confirmation on last step, change last step wait status to deliver status by setting payStatus = 'paid'
 

@@ -1,4 +1,4 @@
-describe('trade', () => {
+describe('buy', () => {
   beforeEach(() => {
     cy.visit('http://localhost:8000/savact.app/#/_browser_')
   })
