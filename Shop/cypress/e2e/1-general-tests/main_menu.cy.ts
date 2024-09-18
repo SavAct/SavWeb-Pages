@@ -17,3 +17,5 @@ describe('main menu', () => {
     });
   })
 })
+
+// TODO: Images in list do not always change on category change

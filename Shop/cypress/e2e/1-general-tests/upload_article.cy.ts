@@ -23,13 +23,15 @@ describe('upload article', () => {
       cy.get('main.q-page div[role="img"].q-img').should('have.length', 2)
       cy.get('main.q-page input[type="text"]').eq(2).should('be.visible').type('Cave').parent().parent().parent().next().find('button.q-btn').click()
       cy.get('main.q-page input[type="text"]').eq(2).should('be.visible').type('Forrest{enter}')
+
+      // Pieces option per order
       cy.get('main.q-page div.q-btn-group span.block').contains('Multiple').should('be.visible').click()
-      cy.get('main.q-page input[aria-label="Pieces"][type="number"]').eq(0).should('be.visible').parent().parent().parent().parent().parent().next().find('input[aria-label="Price from 1 piece"]').clear().type('3')
-      cy.get('main.q-page input[aria-label="Pieces"][type="number"]').eq(1).should('be.visible').clear().type('5').parent().parent().parent().parent().parent().next().find('input[aria-label="Price from 5 pieces"]').clear().type('10')
+      cy.get('main.q-page div').contains('(Multiple pieces per order are purchasable)').parent().next().find('input[aria-label="Pieces"][type="number"]').eq(0).should('be.visible').parent().parent().parent().parent().parent().next().find('input[aria-label="Price from 1 piece"]').clear().type('3')
+      cy.get('main.q-page div').contains('(Multiple pieces per order are purchasable)').parent().next().find('input[aria-label="Pieces"][type="number"]').eq(1).should('be.visible').clear().type('5').parent().parent().parent().parent().parent().next().find('input[aria-label="Price from 5 pieces"]').clear().type('10')
       cy.get('main.q-page .q-field__messages div').contains('3.00 USD per piece').should('be.visible')
       cy.get('main.q-page .q-field__messages div').contains('2.00 USD per piece').should('be.visible')
       cy.get('main.q-page button.q-btn span.block').contains('Add quantity discount').should('be.visible').click()
-      cy.get('main.q-page input[aria-label="Pieces"][type="number"]').eq(2).should('be.visible').clear().type('100').parent().parent().parent().parent().parent().next().find('input[aria-label="Price from 100 pieces"]').clear().type('95.55')
+      cy.get('main.q-page div').contains('(Multiple pieces per order are purchasable)').parent().next().find('input[aria-label="Pieces"][type="number"]').eq(2).should('be.visible').clear().type('100').parent().parent().parent().parent().parent().next().find('input[aria-label="Price from 100 pieces"]').clear().type('95.55')
       cy.get('main.q-page .q-field__messages div').contains('0.96 USD per piece').should('be.visible')
       cy.get('main.q-page input[type="checkbox"]').eq(0).parent().should('be.visible').click()
       cy.get('main.q-page input[type="number"][aria-label="Max pieces"]').should('be.visible').clear().type('500')
@@ -55,23 +57,41 @@ describe('upload article', () => {
       cy.get('main.q-page button.q-btn span.block').contains('Login user').should('be.visible').click()
     })
     cy.get('div[role="dialog"] div.q-card__section').contains('Page requests user account').should('be.visible').parent().find('button.q-btn span.block').first().contains('Cancel').should('be.visible').click()
-
     cy.iframe().within(() => { 
       cy.get('main.q-page input[aria-label="Seller account name"][type="text"]').should('be.visible').clear().should('be.empty').type('user.two')
       cy.get('main.q-page button.q-btn span.block').contains('Send').should('be.visible').click()
     })
     cy.get('div[role="dialog"] div.q-card__section').contains('Sign transaction on chain lamington').should('be.visible').parent().find('button.q-btn span.block').first().contains('Cancel').should('be.visible').click()
-    cy.iframe().within(() => { 
-      cy.get('main.q-page input[aria-label="Seller account name"][type="text"]').should('be.visible').clear().should('be.empty').type('user.one')
+    cy.iframe().within(() => {
+      // Login known user
+      cy.get('main.q-page input[aria-label="Seller account name"][type="text"]').should('be.visible').clear().should('be.empty').type(seller)
       cy.get('main.q-page button.q-btn span.block').contains('Send').should('be.visible').click().wait(4000)
       cy.get('div[role="dialog"] div.q-dialog__title').contains('Seller settings are not set').should('be.visible')
       cy.get('div[role="dialog"] button.q-btn span.block').contains('Yes').should('be.visible').click()
       cy.get('header i.q-icon').contains('arrow_back_ios_new').click()
+
+      // Preview
       cy.get('main.q-page button.q-btn span.block').contains('Preview').should('be.visible').click()
+      cy.get('main.q-page div.q-chip__content div.ellipsis').contains(seller).should('be.visible')
+      cy.get('main.q-page span').contains('from').should('be.visible').next().find('div').contains('Germany').should('be.visible')
+      cy.get('main.q-page .q-carousel__control').should('be.visible').find('div[role="img"]').should('have.length', 2)
+      cy.get('main.q-page div.q-chip.text-green .q-chip__content div').contains('European Union').should('be.visible')
+      cy.get('main.q-page div.q-chip.text-green .q-chip__content div').contains('Japan').should('be.visible')
+      cy.get('main.q-page div.q-chip.text-red .q-chip__content div').contains('United States').should('be.visible')
+      cy.get('main.q-page div.q-chip.text-red .q-chip__content div').contains('Germany').should('be.visible')
+      cy.get('main.q-page .q-field input[role="combobox"]').first().parent().parent().should('be.visible').click()
+      cy.get('div.q-item__label').contains('3.00 $/piece').should('be.visible')
+      cy.get('div.q-item__label').contains('2.00 $/piece').should('be.visible')
+      cy.get('div.q-item__label').contains('0.96 $/piece').should('be.visible')
+      cy.get('div.q-item__label span').contains('From up of 100 pieces for 0.96 $/pcs').should('be.visible').click()
+      cy.get('main.q-page div.text-h5').contains('Description').should('be.visible').next().contains(description).should('be.visible')
+      cy.get('main.q-page div.text-h5').contains('Note').should('be.visible').next().contains(SellerNote).should('be.visible')
+      cy.get('main.q-page button.q-btn span.block').contains('Close Preview').should('be.visible').click()
     })
   })
   
 })
 
+const seller = 'user.one'
 const description = 'This is a test article.'
 const SellerNote = 'This is a test note of the seller.'   
