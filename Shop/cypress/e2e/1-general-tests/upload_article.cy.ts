@@ -68,8 +68,6 @@ describe('upload article', () => {
       cy.get('div[role="dialog"] button.q-btn span.block').contains('Yes').should('be.visible').click()
       cy.get('header i.q-icon').contains('arrow_back_ios_new').click()
       cy.get('main.q-page button.q-btn span.block').contains('Preview').should('be.visible').click()
-      
-      // TODO: Preview bug fix
     })
   })
   

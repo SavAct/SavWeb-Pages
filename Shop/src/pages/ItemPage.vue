@@ -444,7 +444,7 @@ export default Vue.defineComponent({
 
     const loadMaxTries = 3;
     const loadTries = Vue.ref<number>(0);
-    const loadingCompleted = Vue.ref<boolean>(false);
+    const loadingCompleted = Vue.ref<boolean>(true);
     const loadTryPercentage = Vue.computed(() => {
       if(loadingCompleted.value){
         return 100;
