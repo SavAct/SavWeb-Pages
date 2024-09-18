@@ -133,11 +133,10 @@ export default Vue.defineComponent({
       }))
     );
 
-    let deactivate_sPiece_update_by_pp = false;
     Vue.watch(
       () => pricePiece.value,
       (v) => {
-        if (v?.pcs !== undefined && !deactivate_sPiece_update_by_pp) {
+        if (v?.pcs !== undefined) {
           sPieces.value = v.pcs;
         }
       }
@@ -169,11 +168,9 @@ export default Vue.defineComponent({
             }
           }
           if (fromPp !== undefined && (pricePiece.value.p != fromPp.p || pricePiece.value.pcs != fromPp.pcs)) {
-            let deactivate_sPiece_update = true;
             pricePiece.value = fromPp;
             Vue.nextTick(() => {
               sPieces.value = v;
-              deactivate_sPiece_update = false;
             });
           }
         }

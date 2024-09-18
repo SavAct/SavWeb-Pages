@@ -51,6 +51,7 @@
                 fit="contain"
                 v-if="row.imgs.length > 0"
                 :src="row.imgs[0]"
+                :key="row.imgs[0]"
               ></pro-img>
             </div>
           </q-card-section>
