@@ -553,6 +553,21 @@ export default Vue.defineComponent({
 
     async function getUserData() {
       checkingUserData.value = true;
+      // Unset everything
+      pgpKey.value = {
+        pub: "",
+        pri: "",
+        passphrase: "",
+      };
+      note.value = "";
+      sellerActive.value = false;
+      isBanned.value = false;
+      contacts.value = [];
+      allowedTokens.value = [];
+      items.value = undefined;
+      _isSeller.value = false;
+
+      // Load user data
       const foundUser = await loadUser.loadUser(userName.value);
       if (foundUser) {
         state.user.value = userTableEntryToUser(foundUser);
@@ -577,11 +592,11 @@ export default Vue.defineComponent({
 
         // Set isSeller but use _isSeller instead to avoid opening the seller settings
         _isSeller.value =
-          sellerActive.value === true ||
-          items.value.length > 0 ||
-          allowedTokens.value.length > 0 ||
-          contacts.value.length > 0 ||
-          note.value.length > 0;
+        sellerActive.value === true ||
+        items.value.length > 0 ||
+        allowedTokens.value.length > 0 ||
+        contacts.value.length > 0 ||
+        note.value.length > 0;
       }
 
       checkingUserData.value = false;
@@ -608,7 +623,7 @@ export default Vue.defineComponent({
       }
     });
 
-    // TODO: Add a recipient address for each token that can be a name or eos public key
+    // TODO: Add a recipient address for each token that can be an eos account name or public keyof any blockchain. It will be stored in the property 'chain' of the allowed token definition. If there is no extra address, the user account will be used as recipient.
 
     return {
       userName,
