@@ -306,7 +306,7 @@ export default Vue.defineComponent({
       set: (v) => {
         if (_isSeller.value !== v) {
           _isSeller.value = v;
-          expander.value = v ? 1 : -1;
+          expander.value = v ? 2 : -1;
         }
       },
     });
@@ -607,6 +607,8 @@ export default Vue.defineComponent({
         getUserData();
       }
     });
+
+    // TODO: Add a recipient address for each token that can be a name or eos public key
 
     return {
       userName,
